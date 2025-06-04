@@ -1,0 +1,50 @@
+[project]
+name = "public-python"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle error
+    "E",
+    # pyflakes
+    "F",
+    # isort
+    "I",
+    # pycodestyle warning
+    "W",
+]
+ignore = [
+    # is-literal
+    "F632",
+    # bare-except
+    "E722",
+    # lambda-assignment
+    "E731",
+]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+# keep quotes intact
+quote-style = "preserve"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "jupyter>=1.1.1",
+    "markitdown>=0.1.2",
+    "numpy>=2.2.6",
+    "pandas>=2.2.3",
+    "pip>=25.1.1",
+    "pyinstaller>=6.14.0",
+    "pypdf>=5.6.0",
+    "pyside6>=6.9.1",
+    "pytest>=8.4.0",
+    "ruff>=0.11.12",
+]

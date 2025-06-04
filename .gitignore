@@ -1,0 +1,11 @@
+# https://docs.github.com/ja/get-started/getting-started-with-git/ignoring-files
+*.py[oc]
+*.egg-info
+build/
+dist/
+wheels/
+*cache*/
+samples/
+.venv/
+.envrc
+uv.lock
