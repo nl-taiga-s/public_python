@@ -1,5 +1,6 @@
 import glob
 import os
+import platform
 import sys
 
 from PySide6.QtGui import QFont, QFontDatabase
@@ -20,7 +21,7 @@ class FileSearchApp(QWidget):
     def __init__(self):
         super().__init__()
         # WSL-Ubuntuでフォント設定
-        if sys.platform == 'linux':
+        if platform.system() == "Linux":
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
             font_id = QFontDatabase.addApplicationFont(font_path)
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
@@ -83,7 +84,7 @@ class FileSearchApp(QWidget):
 
 
 def main():
-    app = QApplication(sys.argv)
+    app = QApplication()
     window = FileSearchApp()
     window.show()
     sys.exit(app.exec())
