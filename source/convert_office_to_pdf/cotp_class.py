@@ -2,7 +2,9 @@ import glob
 import os
 import platform
 
-if platform.system() == "Windows":
+if platform.system() != "Windows":
+    raise EnvironmentError
+else:
     from comtypes.client import CreateObject
 
     class ConvertOfficeToPdf:

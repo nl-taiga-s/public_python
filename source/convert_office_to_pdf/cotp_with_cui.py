@@ -1,9 +1,6 @@
 import os
 import platform
 
-from source.convert_office_to_pdf import cotp_class
-
-
 def input_folder_path() -> list:
     """入力する"""
     while True:
@@ -21,11 +18,13 @@ def input_folder_path() -> list:
 
 
 def main():
-    if platform.system() != "Windows":
-        return
-    folder_path_from, folder_path_to = input_folder_path()
-    obj = cotp_class.ConvertOfficeToPdf(folder_path_from, folder_path_to)
-    obj.convert_all()
+    try:
+        from source.convert_office_to_pdf import cotp_class
+        folder_path_from, folder_path_to = input_folder_path()
+        obj = cotp_class.ConvertOfficeToPdf(folder_path_from, folder_path_to)
+        obj.convert_all()
+    except EnvironmentError as e:
+        print("このスクリプトは、Windowsで実行してください。")
 
 
 if __name__ == "__main__":
