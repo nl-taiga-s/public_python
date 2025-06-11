@@ -1,9 +1,8 @@
-import glob
 import os
+from source.search_file import sf_class
 
-
-def search_file():
-    """ファイルを検索します。"""
+def input_folder_path() -> str:
+    """入力する"""
     while True:
         folder_path = input("ファイルを検索したいフォルダを入力してください。: ")
         if folder_path == "":
@@ -12,23 +11,20 @@ def search_file():
             # 存在する場合
             if os.path.isdir(folder_path):
                 # フォルダの場合
-                break
-    # 検索対象のフォルダから再帰的に検索して、ファイルのリストを取得する
-    list_file_before = [
-        f
-        for f in glob.glob(os.path.join(folder_path, "**"), recursive=True)
-        if os.path.isfile(f)
-    ]
-    pattern_of_file_name = input("ファイルの検索パターンを入力してください。: ")
-    # ファイルのリストから検索パターンで抽出したリストを取得する
-    list_file_after = [f for f in list_file_before if pattern_of_file_name in f]
-    print("検索結果: ")
-    print(*list_file_after, sep="\n")
+                return folder_path
 
+def input_pattern() -> str:
+    pattern=input("ファイルの検索パターンを入力してください。: ")
+    return pattern
 
 def main():
-    print(search_file.__doc__)
-    search_file()
+    try:
+        folder_path=input_folder_path()
+        obj=sf_class.SearchFile(folder_path)
+        pattern=input_pattern()
+        obj.extract_by_pattern(pattern)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
