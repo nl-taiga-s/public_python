@@ -3,7 +3,7 @@ import os
 import platform
 
 if platform.system() != "Windows":
-    raise EnvironmentError
+    raise EnvironmentError("このスクリプトは、Windowsで実行してください。")
 else:
     from comtypes.client import CreateObject
 
@@ -37,8 +37,7 @@ else:
             # ファイルの数
             self.number_of_f = len(self.list_of_f)
             if self.number_of_f == 0:
-                print("変換元のファイルがありません。")
-                return
+                raise ValueError("変換元のファイルがありません。")
             # ファイルリストのポインタ
             self.p = 0
             self.__set_file_path()

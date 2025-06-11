@@ -24,7 +24,9 @@ def main():
         obj = cotp_class.ConvertOfficeToPdf(folder_path_from, folder_path_to)
         obj.convert_all()
     except EnvironmentError as e:
-        print("このスクリプトは、Windowsで実行してください。")
+        print(e)
+    except ValueError as e:
+        print(e)
 
 
 if __name__ == "__main__":
