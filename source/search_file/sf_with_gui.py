@@ -1,20 +1,12 @@
-import glob
+import sys
 import os
 import platform
-import sys
-
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
-    QApplication,
-    QFileDialog,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QMessageBox,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLineEdit, QListWidget, QFileDialog, QLabel
 )
+from source.search_file.sf_class import GetFileList
 
 
 class FileSearchApp(QWidget):
@@ -27,68 +19,67 @@ class FileSearchApp(QWidget):
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             font = QFont(font_family)
             self.setFont(font)
-        self.setWindowTitle("ファイル検索アプリ")
-        self.resize(600, 400)
+        self.setWindowTitle("ファイル検索ツール")
 
-        layout = QVBoxLayout()
+        self.file_list_obj = None
 
-        self.folder_label = QLabel("選択されたフォルダ: なし")
-        layout.addWidget(self.folder_label)
-
-        self.select_button = QPushButton("フォルダを選択")
-        self.select_button.clicked.connect(self.select_folder)
-        layout.addWidget(self.select_button)
-
+        # ウィジェット作成
+        self.folder_label = QLabel("フォルダ未選択")
+        self.select_folder_btn = QPushButton("フォルダを選択")
         self.pattern_input = QLineEdit()
-        self.pattern_input.setPlaceholderText("検索パターンを入力（例: .txt）")
-        layout.addWidget(self.pattern_input)
-
-        self.search_button = QPushButton("検索")
-        self.search_button.clicked.connect(self.search_files)
-        layout.addWidget(self.search_button)
-
+        self.pattern_input.setPlaceholderText("検索パターンを入力...")
+        self.search_btn = QPushButton("検索実行")
         self.result_list = QListWidget()
+
+        # レイアウト
+        layout = QVBoxLayout()
+        layout.addWidget(self.folder_label)
+        layout.addWidget(self.select_folder_btn)
+
+        layout.addWidget(QLabel("検索パターン:"))
+        layout.addWidget(self.pattern_input)
+        layout.addWidget(self.search_btn)
+
+        layout.addWidget(QLabel("検索結果:"))
         layout.addWidget(self.result_list)
 
         self.setLayout(layout)
-        self.folder_path = ""
+
+        # シグナル接続
+        self.select_folder_btn.clicked.connect(self.select_folder)
+        self.search_btn.clicked.connect(self.search_files)
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "フォルダを選択")
         if folder:
-            self.folder_path = folder
-            self.folder_label.setText(f"選択されたフォルダ: {folder}")
+            self.folder_label.setText(folder)
+            self.file_list_obj = GetFileList(folder)
 
     def search_files(self):
-        if not self.folder_path or not os.path.exists(self.folder_path):
-            QMessageBox.warning(self, "エラー", "有効なフォルダを選択してください。")
+        if not self.file_list_obj:
+            self.result_list.clear()
+            self.result_list.addItem("フォルダが未選択です。")
             return
 
         pattern = self.pattern_input.text().strip()
         if not pattern:
-            QMessageBox.warning(self, "エラー", "検索パターンを入力してください。")
+            self.result_list.clear()
+            self.result_list.addItem("検索パターンが空です。")
             return
 
-        all_files = [
-            f
-            for f in glob.glob(os.path.join(self.folder_path, "**"), recursive=True)
-            if os.path.isfile(f)
-        ]
-        matched_files = [f for f in all_files if pattern in os.path.basename(f)]
-
+        self.file_list_obj.extract_by_pattern(pattern)
         self.result_list.clear()
-        if matched_files:
-            self.result_list.addItems(matched_files)
+        if self.file_list_obj.list_file_after:
+            self.result_list.addItems(self.file_list_obj.list_file_after)
         else:
-            self.result_list.addItem("該当ファイルなし")
-
+            self.result_list.addItem("一致するファイルが見つかりませんでした。")
 
 def main():
-    app = QApplication()
+    app = QApplication(sys.argv)
     window = FileSearchApp()
+    window.resize(600, 400)
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
