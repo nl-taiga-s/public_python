@@ -89,7 +89,7 @@ class ConvertOfficeToPdf:
         PDF_NUMBER_OF_EXCEL = 0
         try:
             obj = CreateObject("Excel.Application")
-            f = obj.Workbooks.Open(self.current_of_file_path_from)
+            f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL
             )
@@ -109,7 +109,7 @@ class ConvertOfficeToPdf:
         PDF_NUMBER_OF_WORD = 17
         try:
             obj = CreateObject("Word.Application")
-            f = obj.Documents.Open(self.current_of_file_path_from)
+            f = obj.Documents.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 OutputFileName=self.current_of_file_path_to,
                 ExportFormat=PDF_NUMBER_OF_WORD,
@@ -130,7 +130,7 @@ class ConvertOfficeToPdf:
         PDF_NUMBER_OF_POWERPOINT = 2
         try:
             obj = CreateObject("PowerPoint.Application")
-            f = obj.Presentations.Open(self.current_of_file_path_from)
+            f = obj.Presentations.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 Path=self.current_of_file_path_to,
                 FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
