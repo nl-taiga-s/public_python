@@ -2,7 +2,7 @@ import os
 import platform
 
 def input_folder_path() -> list:
-    """入力する"""
+    """フォルダのパスを入力します"""
     while True:
         folder_path_from = input("ファイルを一括変換するフォルダを指定してください。: ")
         folder_path_to = input(
