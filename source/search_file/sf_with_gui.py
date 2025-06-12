@@ -14,6 +14,7 @@ class FileSearchApp(QWidget):
         super().__init__()
         # WSL-Ubuntuでフォント設定
         if platform.system() == "Linux":
+            # install ipafont-gothic
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
             font_id = QFontDatabase.addApplicationFont(font_path)
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
