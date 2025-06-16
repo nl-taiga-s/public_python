@@ -1,5 +1,5 @@
 import os
-import platform
+
 
 def input_folder_path() -> list:
     """フォルダのパスを入力します"""
@@ -20,6 +20,7 @@ def input_folder_path() -> list:
 def main():
     try:
         from source.convert_office_to_pdf import cotp_class
+
         folder_path_from, folder_path_to = input_folder_path()
         obj = cotp_class.ConvertOfficeToPdf(folder_path_from, folder_path_to)
         obj.convert_all()

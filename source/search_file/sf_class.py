@@ -1,8 +1,10 @@
-import os
 import glob
+import os
 
-class GetFileList():
+
+class GetFileList:
     """指定のフォルダ内のファイルのリストを再帰的に取得します"""
+
     def __init__(self, folder_path: str):
         print(self.__class__.__doc__)
         """初期化します"""

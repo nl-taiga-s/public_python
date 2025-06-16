@@ -1,11 +1,18 @@
-import sys
-import os
 import platform
+import sys
+
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLineEdit, QListWidget, QFileDialog, QLabel
+    QApplication,
+    QFileDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
+
 from source.search_file.sf_class import GetFileList
 
 
@@ -75,12 +82,14 @@ class FileSearchApp(QWidget):
         else:
             self.result_list.addItem("一致するファイルが見つかりませんでした。")
 
+
 def main():
     app = QApplication(sys.argv)
     window = FileSearchApp()
     window.resize(600, 400)
     window.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

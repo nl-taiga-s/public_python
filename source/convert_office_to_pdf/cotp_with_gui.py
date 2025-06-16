@@ -1,11 +1,19 @@
 import os
-import sys
 import platform
+import sys
 
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QFileDialog, QLabel, QTextEdit, QListWidget, QProgressBar
+    QApplication,
+    QFileDialog,
+    QLabel,
+    QListWidget,
+    QProgressBar,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
+
 from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPdf
 
 
@@ -80,12 +88,16 @@ class ConvertToPdfApp(QWidget):
             return
 
         try:
-            self.pdf_converter = ConvertOfficeToPdf(self.folder_path_from, self.folder_path_to)
+            self.pdf_converter = ConvertOfficeToPdf(
+                self.folder_path_from, self.folder_path_to
+            )
             self.file_list_widget.clear()
             for f in self.pdf_converter.list_of_f:
                 self.file_list_widget.addItem(os.path.basename(f))
             self.progress_bar.setValue(0)
-            self.log(f"✅ {self.pdf_converter.number_of_f} 件のファイルが見つかりました。")
+            self.log(
+                f"✅ {self.pdf_converter.number_of_f} 件のファイルが見つかりました。"
+            )
         except ValueError as e:
             self.file_list_widget.clear()
             self.log(f"⚠️ {e}")
@@ -104,13 +116,18 @@ class ConvertToPdfApp(QWidget):
         for i in range(total):
             try:
                 self.pdf_converter.handle_file()
-                self.log(f"✅ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → 完了")
+                self.log(
+                    f"✅ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → 完了"
+                )
             except Exception as e:
-                self.log(f"❌ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → エラー: {e}")
+                self.log(
+                    f"❌ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → エラー: {e}"
+                )
             self.progress_bar.setValue(i + 1)
             self.pdf_converter._ConvertOfficeToPdf__next()
 
         self.log("🎉 すべてのファイルの変換が完了しました！")
+
 
 def main():
     app = QApplication(sys.argv)
@@ -118,6 +135,7 @@ def main():
     window.resize(700, 600)
     window.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

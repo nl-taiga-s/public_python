@@ -6,6 +6,7 @@ if platform.system() != "Windows":
     raise EnvironmentError("このスクリプトは、Windowsで実行してください。")
 from comtypes.client import CreateObject
 
+
 class ConvertOfficeToPdf:
     """
     Excel, Word, PowerPointをPDFに一括変換します
@@ -14,6 +15,7 @@ class ConvertOfficeToPdf:
     PowerPoint => .ppt, .pptx
     Windows + Microsoft Office(デスクトップ版)が必要です
     """
+
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
         print(self.__class__.__doc__)
