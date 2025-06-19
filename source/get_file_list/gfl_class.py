@@ -9,7 +9,7 @@ class GetFileList:
         print(self.__class__.__doc__)
         """初期化します"""
         self.list_file_before = [
-            f
+            os.path.abspath(f)
             for f in glob.glob(os.path.join(folder_path, "**"), recursive=True)
             if os.path.isfile(f)
         ]
@@ -21,4 +21,6 @@ class GetFileList:
     def extract_by_pattern(self, pattern: str):
         """検索パターンで抽出します"""
         print(self.__class__.extract_by_pattern.__doc__)
-        self.list_file_after = [f for f in self.list_file_before if pattern in f]
+        self.list_file_after = [
+            os.path.abspath(f) for f in self.list_file_before if pattern in f
+        ]

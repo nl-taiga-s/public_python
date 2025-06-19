@@ -70,10 +70,6 @@ class FileSearchApp(QWidget):
             return
 
         pattern = self.pattern_input.text().strip()
-        if not pattern:
-            self.result_list.clear()
-            self.result_list.addItem("検索パターンが空です。")
-            return
 
         self.file_list_obj.extract_by_pattern(pattern)
         self.result_list.clear()
