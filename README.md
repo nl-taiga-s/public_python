@@ -67,7 +67,7 @@
 ### others
 * `direnv` => [github](https://github.com/direnv/direnv)
 ## NOTE
-* When running GUI scripts on WSL2, the Japanese text in the window title is garbled. That is the way to deal with it.
+* ***When running GUI scripts on WSL2, the Japanese text in the window title is garbled. That is the way to deal with it***.
 ```Python
 import platform
 from PySide6.QtGui import QFont, QFontDatabase
@@ -84,10 +84,9 @@ class SampleApp(QWidget):
             font = QFont(font_family)
             self.setFont(font)
 ```
-* Create and use an executable file on Windows.
+* ***Install python on Windows***.
 ```PowerShell
 # Windows
-# Install Python.
 winget search --name python
 winget install --id Python.Python.X.X
 # Add the folder path of Python to the system environment variable PATH.
@@ -98,8 +97,9 @@ $UpdatedPath = "$OldPath;$NewPath"
 [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
 python --version
 # Install tool to pip.
-pip install pyside6
+pip install "tool_name"
 ```
+* ***Create and use an executable file on Windows***.
 ```Shell
 # WSL2
 cd ~
@@ -110,6 +110,7 @@ cd pyinstaller
 git submodule update --init --recursive
 ```
 ```PowerShell
+# Windows
 cd \\wsl$\Ubuntu\home\"username"\pocket
 pip install .
 pyinstaller --version
