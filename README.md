@@ -117,7 +117,7 @@ pyinstaller --version
 ```
 ```Shell
 # WSL2
-rm -r ~/pocket
+rm -r ~/pocket/pyinstaller
 ```
 ```PowerShell
 # Windows
