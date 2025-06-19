@@ -56,6 +56,9 @@ class ConvertOfficeToPdf:
         self.current_of_file_path_to = os.path.join(
             self.folder_path_to, file_name_no_ext + ".pdf"
         )
+        # 絶対パスにする
+        self.current_of_file_path_from = os.path.abspath(self.current_of_file_path_from)
+        self.current_of_file_path_to = os.path.abspath(self.current_of_file_path_to)
 
     def __previous(self):
         """前のファイルへ"""
