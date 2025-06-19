@@ -84,3 +84,43 @@ class SampleApp(QWidget):
             font = QFont(font_family)
             self.setFont(font)
 ```
+* To create and use an executable file on Windows.
+```PowerShell
+# Windows
+# Install Python.
+winget search --name python
+winget install --id Python.Python.X.X
+# Add the folder path of Python to the system environment variable PATH.
+$NewPath = "C:\your\path\here"
+$OldPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
+$UpdatedPath = "$OldPath;$NewPath"
+[Environment]::SetEnvironmentVariable("Path", $UpdatedPath, [EnvironmentVariableTarget]::Machine)
+[Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
+python --version
+# Install tool to pip.
+pip install pyside6
+```
+```Shell
+# WSL2
+cd ~
+mkdir pocket
+cd pocket
+git clone https://github.com/pyinstaller/pyinstaller.git
+cd pyinstaller
+git submodule update --init --recursive
+```
+```PowerShell
+cd \\wsl$\Ubuntu\hone\username\pocket
+pip install .
+pyinstaller --version
+```
+```Shell
+# WSL2
+rm -r ~/pocket
+```
+```PowerShell
+# Windows
+cd "folderpath"
+pyinstaller --onefile --noconsole "file_path"
+cd dist
+```
