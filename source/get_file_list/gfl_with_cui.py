@@ -1,6 +1,6 @@
 import os
 
-from source.search_file import sf_class
+from source.get_file_list import gfl_class
 
 
 def input_folder_path() -> str:
@@ -25,7 +25,7 @@ def input_pattern() -> str:
 def main():
     try:
         folder_path = input_folder_path()
-        obj = sf_class.GetFileList(folder_path)
+        obj = gfl_class.GetFileList(folder_path)
         pattern = input_pattern()
         obj.extract_by_pattern(pattern)
         obj.print(obj.list_file_after)

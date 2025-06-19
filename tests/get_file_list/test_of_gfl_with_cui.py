@@ -1,4 +1,4 @@
-from source.search_file import sf_with_cui
+from source.get_file_list import gfl_with_cui
 
 
 # テスト関数: 指定されている関数の動作を確認するためのテストをする
@@ -14,4 +14,4 @@ def test_func(monkeypatch):
     # 標準入力の値を無名関数の戻り値のイテレータに置き換える
     monkeypatch.setattr("builtins.input", lambda _: next(iter_of_inputs))
     # 指定された関数を呼び出す
-    sf_with_cui.main()
+    gfl_with_cui.main()

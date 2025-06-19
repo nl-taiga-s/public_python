@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.search_file.sf_class import GetFileList
+from source.get_file_list.gfl_class import GetFileList
 
 
 class FileSearchApp(QWidget):
