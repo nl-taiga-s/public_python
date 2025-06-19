@@ -84,7 +84,7 @@ class SampleApp(QWidget):
             font = QFont(font_family)
             self.setFont(font)
 ```
-* To create and use an executable file on Windows.
+* Create and use an executable file on Windows.
 ```PowerShell
 # Windows
 # Install Python.
@@ -110,7 +110,7 @@ cd pyinstaller
 git submodule update --init --recursive
 ```
 ```PowerShell
-cd \\wsl$\Ubuntu\hone\username\pocket
+cd \\wsl$\Ubuntu\home\"username"\pocket
 pip install .
 pyinstaller --version
 ```
@@ -123,4 +123,6 @@ rm -r ~/pocket
 cd "folderpath"
 pyinstaller --onefile --noconsole "file_path"
 cd dist
+ls .
+# You can run the displayed exe file by double-clicking on it.
 ```
