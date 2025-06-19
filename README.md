@@ -111,7 +111,7 @@ git submodule update --init --recursive
 ```
 ```PowerShell
 # Windows
-cd \\wsl$\Ubuntu\home\"username"\pocket
+cd \\wsl$\Ubuntu\home\"username"\pocket\pyinstaller
 pip install .
 pyinstaller --version
 ```
