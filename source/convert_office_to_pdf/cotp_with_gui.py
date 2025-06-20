@@ -2,6 +2,7 @@ import os
 import platform
 import sys
 
+from cotp_class import ConvertOfficeToPdf
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -13,8 +14,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPdf
 
 
 class ConvertToPdfApp(QWidget):

@@ -19,10 +19,10 @@ def input_folder_path() -> list:
 
 def main():
     try:
-        from source.convert_office_to_pdf import cotp_class
+        from cotp_class import ConvertOfficeToPdf
 
         folder_path_from, folder_path_to = input_folder_path()
-        obj = cotp_class.ConvertOfficeToPdf(folder_path_from, folder_path_to)
+        obj = ConvertOfficeToPdf(folder_path_from, folder_path_to)
         obj.convert_all()
     except EnvironmentError as e:
         print(e)
