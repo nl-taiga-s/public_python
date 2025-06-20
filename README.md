@@ -123,8 +123,21 @@ rm -r ~/pocket/pyinstaller
 ```PowerShell
 # Windows
 cd "folderpath"
-pyinstaller --onefile --noconsole "file_path"
+pyinstaller --onefile --noconsole "file_path_of_script"
 cd dist
 ls .
 # You can run the displayed exe file by double-clicking on it.
 ```
+  * ***If you want to create and apply an icon for the executable file***
+  ```PowerShell
+  # Windows
+  winget search --name inkscape
+  winget install --id Inkscape.Inkscape
+  # Create and save svg file
+  winget search --name imagemagick
+  winget install --id ImageMagick.ImageMagick
+  # Convert svg to ico
+  # Recommended size: Including 256x256 for support of high-resolution display. icon.ico will be the final icon for PyInstaller.
+  magick "file_path_of_svg" -define icon:auto-resize=256,128,64,48,32,16 "file_path_of_ico"
+  pyinstaller --onefile --noconsole "file_path_of_script" --icon="file_path_of_ico"
+  ```
