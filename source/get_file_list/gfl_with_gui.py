@@ -1,6 +1,7 @@
 import platform
 import sys
 
+from gfl_class import GetFileList
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
@@ -12,8 +13,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from source.get_file_list.gfl_class import GetFileList
 
 
 class FileSearchApp(QWidget):
