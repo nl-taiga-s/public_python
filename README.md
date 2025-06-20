@@ -31,6 +31,11 @@
     uv sync
     uv lock
     ```
+  * ***To do when you want to run scripts***
+    ```Shell
+    cd "directory_path_of_scripts"
+    uv run "file_name_of_script"
+    ```
   * ***To do after opening workspace***
     ```Shell
     cd "directory_path_of_workspace"
@@ -38,11 +43,6 @@
     uv tool upgrade --all
     uv sync
     uv lock
-    ```
-  * ***To do when you want to run scripts***
-    ```Shell
-    cd "directory_path_of_scripts"
-    uv run "file_name_of_script"
     ```
   * ***To do when you want to use jupyter***
     ```Shell
@@ -152,11 +152,10 @@
       ```Shell
       sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xkb1
       ```
-    * Please install Japanese fonts
-      ```Shell
-      sudo apt install fonts-ipafont
-      ```
   * ***To do When running GUI scripts, the Japanese text in the window title is garbled***
+    ```Shell
+    sudo apt install fonts-ipafont
+    ```
     ```Python
     import platform
     from PySide6.QtGui import QFont, QFontDatabase
@@ -166,7 +165,6 @@
             super().__init__()
             # WSL-Ubuntuでフォント設定
             if platform.system() == "Linux":
-                # install ipafont-gothic
                 font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
                 font_id = QFontDatabase.addApplicationFont(font_path)
                 font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
