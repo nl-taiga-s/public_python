@@ -37,6 +37,7 @@ quote-style = "preserve"
 [dependency-groups]
 dev = [
     "comtypes>=1.4.11",
+    "feedparser>=6.0.11",
     "ipykernel>=6.29.5",
     "jupyter>=1.1.1",
     "markitdown>=0.1.2",
