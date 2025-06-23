@@ -237,7 +237,7 @@
     winget search --name imagemagick
     winget install --id ImageMagick.ImageMagick
     # Convert svg to ico
-    # Recommended size: Including 256x256 for support of high-resolution display. icon.ico will be the final icon for PyInstaller.
+    # Recommended size: Including 256x256(px) for support of high-resolution display. icon.ico will be the final icon for PyInstaller.
     magick "file_path_of_svg" -define icon:auto-resize=256,128,64,48,32,16 "file_path_of_ico"
     pyinstaller --onefile --noconsole "file_path_of_script" --icon="file_path_of_ico"
     ```
