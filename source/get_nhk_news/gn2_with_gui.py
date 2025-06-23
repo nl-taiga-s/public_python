@@ -1,0 +1,130 @@
+import platform
+import subprocess
+import sys
+
+from gn2_class import GetNHKNews
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+
+class NHKNewsApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("NHKニュース取得アプリ")
+        self.news_obj = GetNHKNews()
+        self.timezone_japan = 9
+        self.num_news_to_show = 10  # 最大表示件数
+
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+
+        genre_layout = QHBoxLayout()
+        genre_label = QLabel("ジャンル:")
+        self.genre_combo = QComboBox()
+        self.genre_combo.addItems(self.news_obj.rss_feeds.keys())
+        genre_layout.addWidget(genre_label)
+        genre_layout.addWidget(self.genre_combo)
+
+        self.fetch_button = QPushButton("ニュース取得")
+        self.fetch_button.clicked.connect(self.fetch_news)
+
+        self.news_list = QListWidget()
+        self.news_list.itemClicked.connect(self.open_news_link)
+
+        layout.addLayout(genre_layout)
+        layout.addWidget(self.fetch_button)
+        layout.addWidget(self.news_list)
+
+        self.setLayout(layout)
+
+    def fetch_news(self):
+        self.news_list.clear()
+        genre_key = self.genre_combo.currentText()
+
+        try:
+            genre_index = list(self.news_obj.rss_feeds.keys()).index(genre_key)
+            self.news_obj.parse_rss(genre_index, genre_key)
+            self.news_obj.get_standard_time_and_today(self.timezone_japan)
+            self.news_obj.extract_news_of_today_from_standard_time()
+
+            if not self.news_obj.today_news:
+                QMessageBox.information(
+                    self, "情報", "今日のニュースはまだありません。"
+                )
+                return
+            for news in self.news_obj.today_news[: self.num_news_to_show]:
+                title = news.title
+                summary = (
+                    (news.summary or "").splitlines()[0]
+                    if hasattr(news, "summary")
+                    else ""
+                )
+
+                # QListWidgetItem + カスタムWidgetのセット
+                item = QListWidgetItem()
+                widget = NewsItemWidget(title, summary)
+
+                # アイテムにURL情報をセット
+                item.setData(Qt.UserRole, news.link)
+                item.setSizeHint(widget.sizeHint())
+
+                self.news_list.addItem(item)
+                self.news_list.setItemWidget(item, widget)
+
+        except Exception as e:
+            QMessageBox.critical(self, "エラー", f"ニュースの取得に失敗しました:\n{e}")
+
+    def open_news_link(self, item: QListWidgetItem):
+        url = item.data(Qt.UserRole)
+        if not url:
+            return
+
+        try:
+            if platform.system() == "Windows":
+                subprocess.run(['cmd.exe', '/c', 'start', '', url], check=True)
+            else:
+                # WSLやLinuxはUbuntuのfirefoxを使う
+                subprocess.run(['firefox', url], check=True)
+        except Exception as e:
+            QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました:\n{e}")
+
+
+class NewsItemWidget(QWidget):
+    def __init__(self, title: str, summary: str):
+        super().__init__()
+        layout = QVBoxLayout()
+        self.title_label = QLabel(title)
+        self.title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        self.summary_label = QLabel(summary)
+        self.summary_label.setStyleSheet("color: gray; font-size: 12px;")
+        self.summary_label.setWordWrap(True)
+
+        layout.addWidget(self.title_label)
+        layout.addWidget(self.summary_label)
+        layout.setContentsMargins(5, 5, 5, 5)
+        self.setLayout(layout)
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = NHKNewsApp()
+    window.resize(600, 400)
+    window.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
