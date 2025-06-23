@@ -50,6 +50,8 @@
     uv add --dev pip ipykernel pandas numpy jupyter
     uv run ipython kernel install --user --name="project_name"
     ```
+  * ***To do when you want to use webbrowser***
+    sudo apt install firefox
   * ***To do when you want to use PySide6***
     ```Shell
     vim ~/.zshrc
