@@ -18,11 +18,10 @@ from PySide6.QtWidgets import (
 
 class ConvertToPdfApp(QWidget):
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Officeファイル → PDF 一括変換")
-
         if platform.system() != "Windows":
             raise EnvironmentError("このアプリはWindows専用です。")
+        super().__init__()
+        self.setWindowTitle("Officeファイル → PDF 一括変換")
 
         # --- UI要素 ---
         self.label_from = QLabel("変換元フォルダ: 未選択")
