@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 
 def is_wsl() -> bool:
-    """WSL環境（WSL1またはWSL2）かどうかをより確実に判定"""
+    """WSL(Windows Subsystem Linux)かどうかを判定します"""
     if platform.system() != "Linux":
         return False
     try:
