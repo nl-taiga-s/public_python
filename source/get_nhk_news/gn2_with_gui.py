@@ -4,6 +4,7 @@ import sys
 
 from gn2_class import GetNHKNews
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -18,9 +19,28 @@ from PySide6.QtWidgets import (
 )
 
 
+def is_wsl() -> bool:
+    """WSL(Windows Subsystem Linux)かどうかを判定します"""
+    if platform.system() != "Linux":
+        return False
+    try:
+        with open("/proc/version", "r") as f:
+            content = f.read().lower()
+            return "microsoft" in content or "wsl" in content
+    except Exception:
+        return False
+
+
 class NHKNewsApp(QWidget):
     def __init__(self):
         super().__init__()
+        # WSL-Ubuntuでフォント設定
+        if is_wsl():
+            font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            font = QFont(font_family)
+            self.setFont(font)
         self.setWindowTitle("NHKニュース取得アプリ")
         self.news_obj = GetNHKNews()
         self.timezone_japan = 9
@@ -93,11 +113,9 @@ class NHKNewsApp(QWidget):
             return
 
         try:
-            if platform.system() == "Windows":
-                subprocess.run(['cmd.exe', '/c', 'start', '', url], check=True)
-            else:
-                # WSLやLinuxはUbuntuのfirefoxを使う
-                subprocess.run(['firefox', url], check=True)
+            system_name = platform.system()
+            if system_name == "Windows" or is_wsl():
+                subprocess.run(['powershell.exe', 'Start-Process', url], check=True)
         except Exception as e:
             QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました:\n{e}")
 
