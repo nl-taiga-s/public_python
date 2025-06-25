@@ -158,13 +158,13 @@ class ConvertToPdfApp(QWidget):
                 self.pdf_converter.handle_file()
                 self.log(
                     f"✅"
-                    f"{os.path.basename(self.pdf_converter.current_of_file_path_from)}"
+                    f" {os.path.basename(self.pdf_converter.current_of_file_path_from)}"
                     f" → 完了"
                 )
             except Exception as e:
                 self.log(
                     f"❌"
-                    f"{os.path.basename(self.pdf_converter.current_of_file_path_from)}"
+                    f" {os.path.basename(self.pdf_converter.current_of_file_path_from)}"
                     f" → エラー: {e}"
                 )
             self.progress_bar.setValue(i + 1)
