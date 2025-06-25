@@ -1,5 +1,6 @@
 import os
 import platform
+import subprocess
 import sys
 
 from cotp_class import ConvertOfficeToPdf
@@ -16,6 +17,18 @@ from PySide6.QtWidgets import (
 )
 
 
+def is_wsl() -> bool:
+    """WSL(Windows Subsystem Linux)かどうかを判定します"""
+    if platform.system() != "Linux":
+        return False
+    try:
+        with open("/proc/version", "r") as f:
+            content = f.read().lower()
+            return "microsoft" in content or "wsl" in content
+    except Exception:
+        return False
+
+
 class ConvertToPdfApp(QWidget):
     def __init__(self):
         if platform.system() != "Windows":
@@ -26,9 +39,11 @@ class ConvertToPdfApp(QWidget):
         # --- UI要素 ---
         self.label_from = QLabel("変換元フォルダ: 未選択")
         self.btn_select_from = QPushButton("変換元フォルダを選択")
+        self.btn_open_from = QPushButton("変換元フォルダを開く")
 
         self.label_to = QLabel("変換先フォルダ: 未選択")
         self.btn_select_to = QPushButton("変換先フォルダを選択")
+        self.btn_open_to = QPushButton("変換先フォルダを開く")
 
         self.file_list_widget = QListWidget()
         self.progress_bar = QProgressBar()
@@ -41,8 +56,10 @@ class ConvertToPdfApp(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.label_from)
         layout.addWidget(self.btn_select_from)
+        layout.addWidget(self.btn_open_from)
         layout.addWidget(self.label_to)
         layout.addWidget(self.btn_select_to)
+        layout.addWidget(self.btn_open_to)
         layout.addWidget(QLabel("変換対象ファイル一覧:"))
         layout.addWidget(self.file_list_widget)
         layout.addWidget(QLabel("進行状況:"))
@@ -59,12 +76,37 @@ class ConvertToPdfApp(QWidget):
 
         # シグナル
         self.btn_select_from.clicked.connect(self.select_from_folder)
+        self.btn_open_from.clicked.connect(
+            lambda: self.open_explorer(self.folder_path_from)
+        )
         self.btn_select_to.clicked.connect(self.select_to_folder)
+        self.btn_open_to.clicked.connect(
+            lambda: self.open_explorer(self.folder_path_to)
+        )
         self.btn_convert.clicked.connect(self.start_conversion)
 
     def log(self, message: str):
         self.log_output.append(message)
         print(message)
+
+    def open_explorer(self, folder: str):
+        if folder:
+            try:
+                system_name = platform.system()
+                if system_name == "Windows":
+                    os.startfile(folder)
+                elif is_wsl():
+                    # Windowsのパスに変換（/mnt/c/... 形式）
+                    wsl_path = (
+                        subprocess.check_output(["wslpath", "-w", folder])
+                        .decode("utf-8")
+                        .strip()
+                    )
+                    subprocess.run(["explorer.exe", wsl_path])
+            except Exception as e:
+                print(f"エクスプローラー起動エラー: {e}")
+        else:
+            self.log("フォルダが未選択のため開けません。")
 
     def select_from_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "変換元フォルダを選択")
