@@ -157,11 +157,15 @@ class ConvertToPdfApp(QWidget):
             try:
                 self.pdf_converter.handle_file()
                 self.log(
-                    f"✅ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → 完了"
+                    f"✅"
+                    f"{os.path.basename(self.pdf_converter.current_of_file_path_from)}"
+                    f" → 完了"
                 )
             except Exception as e:
                 self.log(
-                    f"❌ {os.path.basename(self.pdf_converter.current_of_file_path_from)} → エラー: {e}"
+                    f"❌"
+                    f"{os.path.basename(self.pdf_converter.current_of_file_path_from)}"
+                    f" → エラー: {e}"
                 )
             self.progress_bar.setValue(i + 1)
             self.pdf_converter._ConvertOfficeToPdf__next()
