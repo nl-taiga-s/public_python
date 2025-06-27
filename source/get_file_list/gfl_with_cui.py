@@ -8,6 +8,7 @@ def input_folder_path() -> str:
     while True:
         folder_path = input("ファイルを検索したいフォルダを入力してください。: ")
         if folder_path == "":
+            print("処理を中止します。")
             return
         if os.path.exists(folder_path):
             # 存在する場合

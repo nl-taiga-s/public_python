@@ -9,6 +9,7 @@ def input_folder_path() -> list:
             "一括変換したファイルを格納するフォルダを指定してください。: "
         )
         if folder_path_from == "" or folder_path_to == "":
+            print("処理を中止します。")
             return
         if os.path.exists(folder_path_from) and os.path.exists(folder_path_to):
             # 存在する場合
