@@ -14,7 +14,7 @@ class GetFileList:
             if os.path.isfile(f)
         ]
 
-    def print(self, list: list):
+    def print_list(self, list: list):
         """出力します"""
         print(*list, sep="\n")
 
