@@ -14,9 +14,9 @@ class GetFileList:
             if os.path.isfile(f)
         ]
 
-    def print_list(self, list: list):
+    def print_list(self, target: list):
         """出力します"""
-        print(*list, sep="\n")
+        print(*target, sep="\n")
 
     def extract_by_pattern(self, pattern: str):
         """検索パターンで抽出します"""
