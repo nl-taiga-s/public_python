@@ -2,15 +2,12 @@
 ## WSL2(Ubuntu)
   * `uv` => [github](https://github.com/astral-sh/uv)
     * ***Initial settings***
-      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
       sudo apt install direnv
       vim ~/.zshrc
         # direnv
         eval "$(direnv hook zsh)"
         # uv
-        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
-        export PYTHONPATH=$PYTHONPATH:"directory_path_of_root"
         # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
         export UV_HTTP_TIMEOUT=300
         # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
@@ -33,7 +30,12 @@
       uv lock
       ```
     * ***To do when you want to run scripts***
+      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
+      vim ~/.zshrc
+        # uv
+        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
+        export PYTHONPATH=$PYTHONPATH:"directory_path_of_root"
       cd "directory_path_of_scripts"
       uv run "file_name_of_script"
       ```
@@ -68,7 +70,7 @@
       python "file_name_of_script"
       ```
     * ***TO do when you want to set environment variables***
-      環境変数の設定手順（GUI）
+      * 環境変数の設定手順（GUI）
         1. システムの詳細設定を開きます
           「スタートメニュー」→「設定」を開きます
           「システム」→「バージョン情報」→「関連リンク」→「システムの詳細設定」
