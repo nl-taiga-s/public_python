@@ -18,24 +18,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
-def is_wsl() -> bool:
-    """WSL(Windows Subsystem Linux)かどうかを判定します"""
-    if platform.system() != "Linux":
-        return False
-    try:
-        with open("/proc/version", "r") as f:
-            content = f.read().lower()
-            return "microsoft" in content or "wsl" in content
-    except Exception:
-        return False
+from source.common.common import DateTimeTools, PathTools, PlatFormTools
 
 
 class NHKNewsApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.obj_of_pft = PlatFormTools()
+        self.obj_of_dt2 = DateTimeTools()
+        self.obj_of_pt = PathTools()
         # WSL-Ubuntuでフォント設定
-        if is_wsl():
+        if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
             font_id = QFontDatabase.addApplicationFont(font_path)
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
@@ -49,26 +42,29 @@ class NHKNewsApp(QWidget):
         self.setup_ui()
 
     def setup_ui(self):
+        # ウィジェット作成
         layout = QVBoxLayout()
-
         genre_layout = QHBoxLayout()
         genre_label = QLabel("ジャンル:")
         self.genre_combo = QComboBox()
+        self.fetch_button = QPushButton("ニュース取得")
+        self.save_button = QPushButton("テキストに保存")
+        self.news_list = QListWidget()
+
+        # レイアウト
         self.genre_combo.addItems(self.news_obj.rss_feeds.keys())
         genre_layout.addWidget(genre_label)
         genre_layout.addWidget(self.genre_combo)
-
-        self.fetch_button = QPushButton("ニュース取得")
-        self.fetch_button.clicked.connect(self.fetch_news)
-
-        self.news_list = QListWidget()
-        self.news_list.itemClicked.connect(self.open_news_link)
-
         layout.addLayout(genre_layout)
         layout.addWidget(self.fetch_button)
+        layout.addWidget(self.save_button)
         layout.addWidget(self.news_list)
-
         self.setLayout(layout)
+
+        # シグナル接続
+        self.fetch_button.clicked.connect(self.fetch_news)
+        self.save_button.clicked.connect(self.save_news_to_file)
+        self.news_list.itemClicked.connect(self.open_news_link)
 
     def fetch_news(self):
         self.news_list.clear()
@@ -107,6 +103,32 @@ class NHKNewsApp(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "エラー", f"ニュースの取得に失敗しました:\n{e}")
 
+    def save_news_to_file(self):
+        if not self.news_obj.today_news:
+            QMessageBox.information(self, "情報", "保存するニュースがありません。")
+            return
+
+        dt_str = self.obj_of_dt2.format_for_file_name()
+        file_path = self.obj_of_pt.get_file_path_of_log(__file__, dt_str)
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(f"<<<日付: {self.news_obj.today}>>>\n")
+                f.write(f"<<<ジャンル: {self.genre_combo.currentText()}>>>\n\n")
+                for i, news in enumerate(
+                    self.news_obj.today_news[: self.num_news_to_show], start=1
+                ):
+                    f.write(f"{i}. {news.title}\n")
+                    f.write(f"{news.link}\n")
+                    f.write("\n")
+
+            QMessageBox.information(
+                self, "成功", f"ニュースを保存しました:\n{file_path}"
+            )
+
+        except Exception as e:
+            QMessageBox.critical(self, "エラー", f"ファイルの保存に失敗しました:\n{e}")
+
     def open_news_link(self, item: QListWidgetItem):
         url = item.data(Qt.UserRole)
         if not url:
@@ -114,7 +136,7 @@ class NHKNewsApp(QWidget):
 
         try:
             system_name = platform.system()
-            if system_name == "Windows" or is_wsl():
+            if system_name == "Windows" or self.obj_of_pf.is_wsl():
                 subprocess.run(['powershell.exe', 'Start-Process', url], check=True)
         except Exception as e:
             QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました:\n{e}")

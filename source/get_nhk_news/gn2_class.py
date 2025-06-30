@@ -24,7 +24,6 @@ class GetNHKNews:
 
     def parse_rss(self, num_of_genre: int, key_of_genre: str):
         """RSSを解析します"""
-        print(self.__class__.parse_rss.__doc__)
         self.num_of_genre = num_of_genre
         self.key_of_genre = key_of_genre
         self.genre = list(self.rss_feeds.keys())[self.num_of_genre]
@@ -33,7 +32,6 @@ class GetNHKNews:
 
     def get_standard_time_and_today(self, time_difference: float):
         """指定の標準時と今日の日付を取得します"""
-        print(self.__class__.get_standard_time_and_today.__doc__)
         # 指定の標準時
         self.standard_time = timezone(timedelta(hours=time_difference))
         # 今日の日付
@@ -41,7 +39,6 @@ class GetNHKNews:
 
     def extract_news_of_today_from_standard_time(self):
         """指定の標準時の今日のニュースを抽出します"""
-        print(self.__class__.extract_news_of_today_from_standard_time.__doc__)
         self.today_news = []
         for entry in self.feed.entries:
             if hasattr(entry, "published_parsed"):
@@ -55,7 +52,6 @@ class GetNHKNews:
 
     def print_specified_number_of_news(self, num_of_news: int):
         """上位指定の件数のニュースを出力します"""
-        print(self.__class__.print_specified_number_of_news.__doc__)
         print(f"<<<日付: {self.today}>>>")
         print(f"<<<ジャンル: {self.key_of_genre}>>>")
         if not self.today_news:
