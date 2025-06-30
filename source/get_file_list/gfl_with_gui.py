@@ -2,12 +2,12 @@ import os
 import platform
 import subprocess
 import sys
-from datetime import datetime
 
 from gfl_class import GetFileList
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QFileDialog,
     QLabel,
     QLineEdit,
@@ -17,24 +17,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
-def is_wsl() -> bool:
-    """WSL(Windows Subsystem Linux)かどうかを判定します"""
-    if platform.system() != "Linux":
-        return False
-    try:
-        with open("/proc/version", "r") as f:
-            content = f.read().lower()
-            return "microsoft" in content or "wsl" in content
-    except Exception:
-        return False
+from source.common.common import CsvTools, DateTimeTools, PathTools, PlatFormTools
 
 
 class FileSearchApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.obj_of_pft = PlatFormTools()
+        self.obj_of_dt2 = DateTimeTools()
+        self.obj_of_pt = PathTools()
+        self.obj_of_ct = CsvTools()
         # WSL-Ubuntuでフォント設定
-        if is_wsl():
+        if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
             font_id = QFontDatabase.addApplicationFont(font_path)
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
@@ -48,6 +42,7 @@ class FileSearchApp(QWidget):
         # ウィジェット作成
         self.folder_label = QLabel("フォルダ未選択")
         self.select_folder_btn = QPushButton("フォルダを選択")
+        self.recursive_checkbox = QCheckBox("サブフォルダも含めて検索（再帰）")
         self.pattern_input = QLineEdit()
         self.pattern_input.setPlaceholderText("検索パターンを入力...")
         self.open_folder_btn = QPushButton("フォルダを開く")
@@ -59,6 +54,7 @@ class FileSearchApp(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.folder_label)
         layout.addWidget(self.select_folder_btn)
+        layout.addWidget(self.recursive_checkbox)
         layout.addWidget(QLabel("検索パターン:"))
         layout.addWidget(self.pattern_input)
         layout.addWidget(self.open_folder_btn)
@@ -71,7 +67,7 @@ class FileSearchApp(QWidget):
 
         # シグナル接続
         self.select_folder_btn.clicked.connect(self.select_folder)
-        self.open_folder_btn.clicked.connect(self.open_folder)
+        self.open_folder_btn.clicked.connect(lambda: self.open_folder(self.folder))
         self.search_btn.clicked.connect(self.search_files)
         self.export_btn.clicked.connect(self.export_results)
 
@@ -79,18 +75,19 @@ class FileSearchApp(QWidget):
         self.folder = QFileDialog.getExistingDirectory(self, "フォルダを選択")
         if self.folder:
             self.folder_label.setText(self.folder)
-            self.file_list_obj = GetFileList(self.folder)
+            recursive = self.recursive_checkbox.isChecked()
+            self.file_list_obj = GetFileList(self.folder, recursive)
 
-    def open_folder(self):
-        if hasattr(self, 'folder') and self.folder:
+    def open_folder(self, folder: str):
+        if folder:
             try:
                 system_name = platform.system()
                 if system_name == "Windows":
-                    os.startfile(self.folder)
-                elif is_wsl():
+                    os.startfile(folder)
+                elif self.obj_of_pft.is_wsl():
                     # Windowsのパスに変換（/mnt/c/... 形式）
                     wsl_path = (
-                        subprocess.check_output(["wslpath", "-w", self.folder])
+                        subprocess.check_output(["wslpath", "-w", folder])
                         .decode("utf-8")
                         .strip()
                     )
@@ -107,6 +104,8 @@ class FileSearchApp(QWidget):
             return
 
         pattern = self.pattern_input.text().strip()
+        recursive = self.recursive_checkbox.isChecked()
+        self.file_list_obj = GetFileList(self.folder, recursive)
         self.file_list_obj.extract_by_pattern(pattern)
         self.result_list.clear()
 
@@ -127,20 +126,22 @@ class FileSearchApp(QWidget):
         try:
             # exe 実行時とスクリプト実行時に対応した保存先
             if getattr(sys, 'frozen', False):
-                exe_dir = os.path.dirname(sys.executable)
+                exe_path = sys.executable
             else:
-                exe_dir = os.path.dirname(os.path.abspath(__file__))
+                exe_path = os.path.abspath(__file__)
 
-            output_dir = os.path.join(exe_dir, "output")
-            os.makedirs(output_dir, exist_ok=True)
+            result_file = self.obj_of_pt.get_file_path_of_log(
+                exe_path, self.file_list_obj.now
+            )
 
-            now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_file = os.path.join(output_dir, f"search_result_{now_str}.txt")
+            list_of_csv = [
+                [file_name, self.file_list_obj.now]
+                for file_name in self.file_list_obj.list_file_after
+            ]
 
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write("\n".join(self.file_list_obj.list_file_after))
+            self.obj_of_ct.write_list(result_file, list_of_csv)
 
-            self.result_list.addItem(f"結果を出力しました: {output_file}")
+            self.result_list.addItem(f"結果を出力しました: {result_file}")
 
         except Exception as e:
             self.result_list.addItem(f"出力時にエラーが発生しました: {e}")
