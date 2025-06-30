@@ -23,8 +23,8 @@ def main():
         from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPdf
 
         folder_path_from, folder_path_to = input_folder_path()
-        obj = ConvertOfficeToPdf(folder_path_from, folder_path_to)
-        obj.convert_all()
+        obj_of_cotp = ConvertOfficeToPdf(folder_path_from, folder_path_to)
+        obj_of_cotp.convert_all()
     except EnvironmentError as e:
         print(e)
     except ValueError as e:

@@ -16,17 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
-def is_wsl() -> bool:
-    """WSL(Windows Subsystem Linux)かどうかを判定します"""
-    if platform.system() != "Linux":
-        return False
-    try:
-        with open("/proc/version", "r") as f:
-            content = f.read().lower()
-            return "microsoft" in content or "wsl" in content
-    except Exception:
-        return False
+from source.common.common import PlatFormTools
 
 
 class ConvertToPdfApp(QWidget):
@@ -34,9 +24,10 @@ class ConvertToPdfApp(QWidget):
         if platform.system() != "Windows":
             raise EnvironmentError("このアプリはWindows専用です。")
         super().__init__()
+        self.obj_of_pft = PlatFormTools()
         self.setWindowTitle("Officeファイル → PDF 一括変換")
 
-        # --- UI要素 ---
+        # ウィジェット作成
         self.label_from = QLabel("変換元フォルダ: 未選択")
         self.btn_select_from = QPushButton("変換元フォルダを選択")
         self.btn_open_from = QPushButton("変換元フォルダを開く")
@@ -52,7 +43,7 @@ class ConvertToPdfApp(QWidget):
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
 
-        # --- レイアウト構築 ---
+        # レイアウト
         layout = QVBoxLayout()
         layout.addWidget(self.label_from)
         layout.addWidget(self.btn_select_from)
@@ -74,7 +65,7 @@ class ConvertToPdfApp(QWidget):
         self.folder_path_to = ""
         self.pdf_converter = None
 
-        # シグナル
+        # シグナル接続
         self.btn_select_from.clicked.connect(self.select_from_folder)
         self.btn_open_from.clicked.connect(
             lambda: self.open_explorer(self.folder_path_from)
@@ -95,7 +86,7 @@ class ConvertToPdfApp(QWidget):
                 system_name = platform.system()
                 if system_name == "Windows":
                     os.startfile(folder)
-                elif is_wsl():
+                elif self.obj_of_pft.is_wsl():
                     # Windowsのパスに変換（/mnt/c/... 形式）
                     wsl_path = (
                         subprocess.check_output(["wslpath", "-w", folder])
