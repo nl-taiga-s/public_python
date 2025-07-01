@@ -31,14 +31,14 @@ class DateTimeTools:
         print(self.__class__.__doc__)
         self.dt = datetime.datetime.now()
 
-    def get_datetime_now(self) -> str:
+    def get_datetime_now(self, dt: datetime) -> str:
         """現在の日時を取得します"""
         # datetime型 => str型
-        return self.dt.strftime("%Y-%m-%d_%H:%M:%S")
+        return dt.strftime("%Y-%m-%d_%H:%M:%S")
 
-    def format_for_file_name(self) -> str:
+    def format_for_file_name(self, dt: datetime) -> str:
         """ファイル名用に整形した時間を取得します"""
-        return self.dt.strftime("%Y%m%d_%H%M%S")
+        return dt.strftime("%Y%m%d_%H%M%S")
 
 
 class ListTools:
@@ -77,7 +77,7 @@ class PathTools:
     def __init__(self):
         """初期化します"""
         print(self.__class__.__doc__)
-        self.obj_of_pf = PlatFormTools()
+        self.obj_of_pft = PlatFormTools()
 
     def get_file_path_of_log(self, script: str, dt: str) -> str:
         """ログファイルパスを取得します"""
@@ -98,7 +98,7 @@ class PathTools:
         """
         system_name = platform.system()
         try:
-            if self.obj_of_pf.is_wsl():
+            if self.obj_of_pft.is_wsl():
                 # WSL
                 return os.path.normpath(target_path)
             elif system_name == "Windows":
@@ -108,6 +108,7 @@ class PathTools:
                 return target_path
         except Exception as e:
             print(e)
+            return "error"
 
     def if_unc_path(self, target: str) -> str:
         """
