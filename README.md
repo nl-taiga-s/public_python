@@ -69,7 +69,7 @@
       direnv --version
       notepad $PROFILE
         # direnv
-        Invoke-Expression "$(direnv hook powershell)"
+        Invoke-Expression "$(direnv hook pwsh)"
       mkdir "directory_path_of_workspace"
       cd "directory_path_of_workspace"
       python -m venv "venv_name"
