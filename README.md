@@ -61,22 +61,12 @@
       winget search --name python
       winget install --id Python.Python.X.X
       python --version
+      mkdir "directory_path_of_workspace"
       ```
     * ***To do when you want to create venv***
       ```PowerShell
-      winget search --name direnv
-      winget install --id direnv.direnv
-      direnv --version
-      notepad $PROFILE
-        # direnv
-        Invoke-Expression "$(direnv hook pwsh)"
-      mkdir "directory_path_of_workspace"
       cd "directory_path_of_workspace"
       python -m venv "venv_name"
-      notepad .envrc
-        # direnv
-        layout python "venv_name"
-      direnv allow
       ```
     * ***To do when you want to use any tools***
       ```Shell
@@ -90,6 +80,8 @@
       cd "directory_path_of_scripts"
       python "file_name_of_script"
       ```
+    * ***To do after opening workspace***
+      .\venv\Scripts\Activate.ps1
     * ***To do when you want to set environment variables***
       * 環境変数の設定手順（GUI）
         1. システムの詳細設定を開きます
