@@ -3,10 +3,7 @@
   * `uv` => [github](https://github.com/astral-sh/uv)
     * ***Initial settings***
       ```Shell
-      sudo apt install direnv
       vim ~/.zshrc
-        # direnv
-        eval "$(direnv hook zsh)"
         # uv
         # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
         export UV_HTTP_TIMEOUT=300
@@ -15,6 +12,14 @@
       mkdir "directory_path_of_workspace"
       cd "directory_path_of_workspace"
       uv init --name "project_name"
+      ```
+    * ***To do when you want to create venv***
+      ```Shell
+      sudo apt install direnv
+      vim ~/.zshrc
+        # direnv
+        eval "$(direnv hook zsh)"
+      cd "directory_path_of_workspace"
       uv venv
       vim .envrc
         # direnv
@@ -57,6 +62,22 @@
       winget install --id Python.Python.X.X
       python --version
       ```
+    * ***To do when you want to create venv***
+      ```PowerShell
+      winget search --name direnv
+      winget install --id direnv.direnv
+      direnv --version
+      notepad $PROFILE
+        # direnv
+        Invoke-Expression "$(direnv hook powershell)"
+      mkdir "directory_path_of_workspace"
+      cd "directory_path_of_workspace"
+      python -m venv "venv_name"
+      notepad .envrc
+        # direnv
+        layout python "venv_name"
+      direnv allow
+      ```
     * ***To do when you want to use any tools***
       ```Shell
       cd "directory_path_of_workspace"
@@ -69,7 +90,7 @@
       cd "directory_path_of_scripts"
       python "file_name_of_script"
       ```
-    * ***TO do when you want to set environment variables***
+    * ***To do when you want to set environment variables***
       * 環境変数の設定手順（GUI）
         1. システムの詳細設定を開きます
           「スタートメニュー」→「設定」を開きます
