@@ -108,7 +108,7 @@ class NHKNewsApp(QWidget):
             QMessageBox.information(self, "情報", "保存するニュースがありません。")
             return
 
-        dt_str = self.obj_of_dt2.format_for_file_name()
+        dt_str = self.obj_of_dt2.format_for_file_name(self.obj_of_dt2.dt)
         file_path = self.obj_of_pt.get_file_path_of_log(__file__, dt_str)
 
         try:
@@ -136,7 +136,7 @@ class NHKNewsApp(QWidget):
 
         try:
             system_name = platform.system()
-            if system_name == "Windows" or self.obj_of_pf.is_wsl():
+            if system_name == "Windows" or self.obj_of_pft.is_wsl():
                 subprocess.run(['powershell.exe', 'Start-Process', url], check=True)
         except Exception as e:
             QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました:\n{e}")
