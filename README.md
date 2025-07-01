@@ -3,15 +3,17 @@
   * `uv` => [github](https://github.com/astral-sh/uv)
     * ***Initial settings***
       ```Shell
-      vim ~/.zshrc
-        # uv
-        # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
-        export UV_HTTP_TIMEOUT=300
-        # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
-        export SSL_CERT_FILE="absolute_file_path_of_ca"
       mkdir "directory_path_of_workspace"
       cd "directory_path_of_workspace"
       uv init --name "project_name"
+      vim ~/.zshrc
+        # uv
+        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
+        export PYTHONPATH=$PYTHONPATH:"directory_path_of_workspace"
+        # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
+        export UV_HTTP_TIMEOUT=300
+        # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
+        export SSL_CERT_FILE="file_path_of_ca"
       ```
     * ***To do when you want to create venv***
       ```Shell
@@ -37,10 +39,6 @@
     * ***To do when you want to run scripts***
       * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
-      vim ~/.zshrc
-        # uv
-        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
-        export PYTHONPATH=$PYTHONPATH:"directory_path_of_root"
       cd "directory_path_of_scripts"
       uv run "file_name_of_script"
       ```
@@ -62,6 +60,8 @@
       winget install --id Python.Python.X.X
       python --version
       mkdir "directory_path_of_workspace"
+      notepad $profile
+        $env:PYTHONPATH = "directory_path_of_workspace"
       ```
     * ***To do when you want to create venv***
       ```PowerShell
@@ -74,15 +74,18 @@
       pip install "tool_name"
       ```
     * ***To do when you want to run scripts***
-      * Add the top folder path of Python script to the system environment variable `PYTHONPATH`
       * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
       cd "directory_path_of_scripts"
       python "file_name_of_script"
       ```
     * ***To do after opening workspace***
-      .\venv\Scripts\Activate.ps1
+      ```Shell
+      .\"venv_name"\Scripts\Activate.ps1
+      python -m pip install --upgrade pip
+      ```
     * ***To do when you want to set environment variables***
+      ```Text
       * 環境変数の設定手順（GUI）
         1. システムの詳細設定を開きます
           「スタートメニュー」→「設定」を開きます
@@ -104,4 +107,4 @@
           OK を押してすべて閉じます
         5. 再起動・再ログインについて
           一部のアプリやターミナル（例：VS Code, PowerShellなど）は、再起動しないと新しい環境変数を反映しない場合があります。
-
+      ```
