@@ -130,12 +130,12 @@ class FileSearchApp(QWidget):
             else:
                 exe_path = os.path.abspath(__file__)
 
-            result_file = self.obj_of_pt.get_file_path_of_log(
-                exe_path, self.file_list_obj.now
-            )
+            dt = self.obj_of_dt2.format_for_file_name(self.obj_of_dt2.dt)
+
+            result_file = self.obj_of_pt.get_file_path_of_log(exe_path, dt)
 
             list_of_csv = [
-                [file_name, self.file_list_obj.now]
+                [file_name, self.obj_of_dt2.get_datetime_now(self.obj_of_dt2.dt)]
                 for file_name in self.file_list_obj.list_file_after
             ]
 

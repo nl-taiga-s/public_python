@@ -18,7 +18,7 @@ class GetFileList:
             for f in glob.glob(os.path.join(folder_path, pattern), recursive=bool_of_r)
             if os.path.isfile(f)
         ]
-        self.now = self.obj_of_dt2.get_datetime_now()
+        self.now = self.obj_of_dt2.get_datetime_now(self.obj_of_dt2.dt)
 
     def print_list(self, target: list):
         """リストを出力します"""
