@@ -1,4 +1,4 @@
-from source.get_nhk_news.gn2_class import GetNHKNews
+from gn2_class import GetNHKNews
 
 
 def select_genre(d: dict) -> list:
