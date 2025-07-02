@@ -159,7 +159,7 @@ class ConvertToPdfApp(QWidget):
                     f" → エラー: {e}"
                 )
             self.progress_bar.setValue(i + 1)
-            self.pdf_converter._ConvertOfficeToPdf__next()
+            self.pdf_converter.move_to_next_file()
 
         self.log("🎉 すべてのファイルの変換が完了しました！")
 

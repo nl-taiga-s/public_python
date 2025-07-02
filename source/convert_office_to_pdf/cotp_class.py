@@ -43,9 +43,9 @@ class ConvertOfficeToPdf:
             raise ValueError("変換元のファイルがありません。")
         # ファイルリストのポインタ
         self.p = 0
-        self.__set_file_path()
+        self.set_file_path()
 
-    def __set_file_path(self):
+    def set_file_path(self):
         """ファイルパスを設定します"""
         # 対象の変換元のファイルパス
         self.current_of_file_path_from = self.list_of_f[self.p]
@@ -60,21 +60,21 @@ class ConvertOfficeToPdf:
         self.current_of_file_path_from = os.path.abspath(self.current_of_file_path_from)
         self.current_of_file_path_to = os.path.abspath(self.current_of_file_path_to)
 
-    def __previous(self):
+    def move_to_previous_file(self):
         """前のファイルへ"""
         if self.p == 0:
             self.p = self.number_of_f - 1
         else:
             self.p -= 1
-        self.__set_file_path()
+        self.set_file_path()
 
-    def __next(self):
+    def move_to_next_file(self):
         """次のファイルへ"""
         if self.p == self.number_of_f - 1:
             self.p = 0
         else:
             self.p += 1
-        self.__set_file_path()
+        self.set_file_path()
 
     def handle_file(self):
         """ファイルの種類を判定して、各処理を実行します"""
@@ -154,4 +154,4 @@ class ConvertOfficeToPdf:
         print(self.__class__.convert_all.__doc__)
         for _ in range(self.number_of_f):
             self.handle_file()
-            self.__next()
+            self.move_to_next_file()

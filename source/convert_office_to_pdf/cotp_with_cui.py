@@ -20,7 +20,7 @@ def input_folder_path() -> list:
 
 def main():
     try:
-        from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPdf
+        from cotp_class import ConvertOfficeToPdf
 
         folder_path_from, folder_path_to = input_folder_path()
         obj_of_cotp = ConvertOfficeToPdf(folder_path_from, folder_path_to)
