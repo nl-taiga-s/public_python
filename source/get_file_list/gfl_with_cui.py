@@ -1,7 +1,8 @@
 import os
 
+from gfl_class import GetFileList
+
 from source.common.common import CsvTools, PathTools
-from source.get_file_list.gfl_class import GetFileList
 
 
 def input_folder_path() -> str:
