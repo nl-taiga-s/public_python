@@ -17,16 +17,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import CsvTools, DateTimeTools, PathTools, PlatFormTools
+from source.common.common import (
+    DatetimeTools,
+    PathTools,
+    PlatformTools,
+)
 
 
 class FileSearchApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.obj_of_pft = PlatFormTools()
-        self.obj_of_dt2 = DateTimeTools()
+        self.obj_of_pft = PlatformTools()
+        self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
-        self.obj_of_ct = CsvTools()
         # WSL-Ubuntuでフォント設定
         if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
@@ -36,8 +39,6 @@ class FileSearchApp(QWidget):
             self.setFont(font)
 
         self.setWindowTitle("ファイル検索ツール")
-
-        self.file_list_obj = None
 
         # ウィジェット作成
         self.folder_label = QLabel("フォルダ未選択")
@@ -128,20 +129,19 @@ class FileSearchApp(QWidget):
             if getattr(sys, 'frozen', False):
                 exe_path = sys.executable
             else:
-                exe_path = os.path.abspath(__file__)
+                exe_path = __file__
 
-            dt = self.obj_of_dt2.format_for_file_name(self.obj_of_dt2.dt)
+            file_path_of_result = self.obj_of_pt.get_file_path_of_result(exe_path)
+            file_path_of_result = self.obj_of_pt.convert_path_to_str(
+                file_path_of_result
+            )
+            # ファイルに書き出し
+            with open(file_path_of_result, "w", encoding="utf-8", newline="") as f:
+                for element in self.file_list_obj.list_file_after:
+                    f.write(f"{element},")
+                    f.write(f"{self.obj_of_dt2.convert_dt_to_str()}\n")
 
-            result_file = self.obj_of_pt.get_file_path_of_log(exe_path, dt)
-
-            list_of_csv = [
-                [file_name, self.obj_of_dt2.get_datetime_now(self.obj_of_dt2.dt)]
-                for file_name in self.file_list_obj.list_file_after
-            ]
-
-            self.obj_of_ct.write_list(result_file, list_of_csv)
-
-            self.result_list.addItem(f"結果を出力しました: {result_file}")
+            self.result_list.addItem(f"結果を出力しました: {file_path_of_result}")
 
         except Exception as e:
             self.result_list.addItem(f"出力時にエラーが発生しました: {e}")
