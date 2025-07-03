@@ -1,15 +1,14 @@
-import csv
 import datetime
-import os
 import platform
+from pathlib import Path
 
 
-class PlatFormTools:
+class PlatformTools:
     """プラットフォームのツール"""
 
     def __init__(self):
         """初期化します"""
-        print(self.__class__.__doc__)
+        pass
 
     def is_wsl(self) -> bool:
         """WSL環境かどうか判定します"""
@@ -23,52 +22,24 @@ class PlatFormTools:
             return False
 
 
-class DateTimeTools:
+class DatetimeTools:
     """日付と時間のツール"""
 
     def __init__(self):
         """初期化します"""
-        print(self.__class__.__doc__)
         self.dt = datetime.datetime.now()
 
-    def get_datetime_now(self, dt: datetime) -> str:
-        """現在の日時を取得します"""
+    def convert_dt_to_str(self, dt: datetime.datetime = None) -> str:
+        """datetime型からstr型に変換します"""
+        dt = dt or self.dt
         # datetime型 => str型
         return dt.strftime("%Y-%m-%d_%H:%M:%S")
 
-    def format_for_file_name(self, dt: datetime) -> str:
-        """ファイル名用に整形した時間を取得します"""
+    def convert_for_file_name(self, dt: datetime.datetime = None) -> str:
+        """ファイル名用に変換します"""
+        dt = dt or self.dt
+        # datetime型 => str型
         return dt.strftime("%Y%m%d_%H%M%S")
-
-
-class ListTools:
-    """リスト型のツール"""
-
-    def __init__(self):
-        """初期化します"""
-        print(self.__class__.__doc__)
-
-    def is_list_of_more_than_2nd(self, lst: list) -> bool:
-        """2次元以上のリストか判定します"""
-        return isinstance(lst, list) and all(isinstance(i, list) for i in lst)
-
-
-class CsvTools:
-    """CSVのツール"""
-
-    def __init__(self):
-        """初期化します"""
-        print(self.__class__.__doc__)
-        self.obj_of_l = ListTools()
-
-    def write_list(self, file_path: str, lst: list):
-        """リストを書き込みます"""
-        with open(file_path, "w", encoding="utf-8") as f:
-            w_of_csv = csv.writer(f)
-            if self.obj_of_l.is_list_of_more_than_2nd(lst):
-                w_of_csv.writerows(lst)
-            else:
-                w_of_csv.writerow(lst)
 
 
 class PathTools:
@@ -76,45 +47,31 @@ class PathTools:
 
     def __init__(self):
         """初期化します"""
-        print(self.__class__.__doc__)
-        self.obj_of_pft = PlatFormTools()
+        self.obj_of_dt2 = DatetimeTools()
 
-    def get_file_path_of_log(self, script: str, dt: str) -> str:
-        """ログファイルパスを取得します"""
-        # スクリプトのあるディレクトリを取得します
-        script_dir = os.path.dirname(os.path.abspath(script))
-        # resultフォルダのパス
-        result_dir = os.path.join(script_dir, 'result')
-        # フォルダが存在しない場合は作成します
-        os.makedirs(result_dir, exist_ok=True)
+    def convert_path_to_str(self, p: Path) -> str:
+        """Path型からstr型に変換します"""
+        return str(p)
+
+    def get_file_path_of_result(self, file_path_of_exe: str) -> Path:
+        """resultファイルのパスを取得します"""
+        # 実行するファイルのディレクトリを取得します
+        folder_path_of_exe = Path(file_path_of_exe).parent
+        # resultsフォルダのパス
+        folder_path_of_results = folder_path_of_exe / 'results'
+        # resultsフォルダが存在しない場合は作成します
+        folder_path_of_results.mkdir(parents=True, exist_ok=True)
+        # 作成するファイル名
+        file_name = f"result_{self.obj_of_dt2.convert_for_file_name()}.txt"
         # 作成するファイルのパス
-        return os.path.join(result_dir, f'result_{dt}.log')
+        return folder_path_of_results / file_name
 
-    def to_path_seaparator_for_os(self, target_path: str) -> str:
-        """
-        OSに応じて、パスの区切り文字を統一します
-        * Windows: "/" => "\\"
-        * WSL: "\\" => "/"
-        """
-        system_name = platform.system()
-        try:
-            if self.obj_of_pft.is_wsl():
-                # WSL
-                return os.path.normpath(target_path)
-            elif system_name == "Windows":
-                # Windows
-                return target_path.replace("\\", "/")
-            else:
-                return target_path
-        except Exception as e:
-            print(e)
-            return "error"
-
-    def if_unc_path(self, target: str) -> str:
-        """
-        UNC(Universal Naming Convention)パスの条件分岐をします
-        ex. \\\\ZZ.ZZZ.ZZZ.Z
-        """
-        if target.startswith(r"\\"):
-            return target
-        return os.path.abspath(target)
+    # def if_unc_path(self, file_path: str) -> Path:
+    #     """
+    #     UNC(Universal Naming Convention)パスの条件分岐をします
+    #     ex. \\\\ZZ.ZZZ.ZZZ.Z
+    #     """
+    #     fp = Path(file_path)
+    #     if fp.startswith(r"\\"):
+    #         return fp
+    #     return fp.resolve()
