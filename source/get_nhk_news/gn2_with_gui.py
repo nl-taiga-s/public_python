@@ -18,15 +18,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import DateTimeTools, PathTools, PlatFormTools
+from source.common.common import DatetimeTools, PathTools, PlatformTools
 
 
 class NHKNewsApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.obj_of_pft = PlatFormTools()
-        self.obj_of_dt2 = DateTimeTools()
+        self.obj_of_pft = PlatformTools()
+        self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
+        self.news_obj = GetNHKNews()
         # WSL-Ubuntuでフォント設定
         if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
@@ -35,9 +36,6 @@ class NHKNewsApp(QWidget):
             font = QFont(font_family)
             self.setFont(font)
         self.setWindowTitle("NHKニュース取得アプリ")
-        self.news_obj = GetNHKNews()
-        self.timezone_japan = 9
-        self.num_news_to_show = 10  # 最大表示件数
 
         self.setup_ui()
 
@@ -73,7 +71,7 @@ class NHKNewsApp(QWidget):
         try:
             genre_index = list(self.news_obj.rss_feeds.keys()).index(genre_key)
             self.news_obj.parse_rss(genre_index, genre_key)
-            self.news_obj.get_standard_time_and_today(self.timezone_japan)
+            self.news_obj.get_standard_time_and_today(self.news_obj.TIMEZONE_OF_JAPAN)
             self.news_obj.extract_news_of_today_from_standard_time()
 
             if not self.news_obj.today_news:
@@ -81,7 +79,7 @@ class NHKNewsApp(QWidget):
                     self, "情報", "今日のニュースはまだありません。"
                 )
                 return
-            for news in self.news_obj.today_news[: self.num_news_to_show]:
+            for news in self.news_obj.today_news[: self.news_obj.NUM_OF_NEWS_TO_SHOW]:
                 title = news.title
                 summary = (
                     (news.summary or "").splitlines()[0]
@@ -108,22 +106,28 @@ class NHKNewsApp(QWidget):
             QMessageBox.information(self, "情報", "保存するニュースがありません。")
             return
 
-        dt_str = self.obj_of_dt2.format_for_file_name(self.obj_of_dt2.dt)
-        file_path = self.obj_of_pt.get_file_path_of_log(__file__, dt_str)
+        # exe 実行時とスクリプト実行時に対応した保存先
+        if getattr(sys, 'frozen', False):
+            exe_path = sys.executable
+        else:
+            exe_path = __file__
+
+        file_path_of_result = self.obj_of_pt.get_file_path_of_result(exe_path)
+        file_path_of_result = self.obj_of_pt.convert_path_to_str(file_path_of_result)
 
         try:
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(file_path_of_result, "w", encoding="utf-8", newline="") as f:
                 f.write(f"<<<日付: {self.news_obj.today}>>>\n")
                 f.write(f"<<<ジャンル: {self.genre_combo.currentText()}>>>\n\n")
                 for i, news in enumerate(
-                    self.news_obj.today_news[: self.num_news_to_show], start=1
+                    self.news_obj.today_news[: self.news_obj.NUM_OF_NEWS_TO_SHOW],
+                    start=1,
                 ):
                     f.write(f"{i}. {news.title}\n")
-                    f.write(f"{news.link}\n")
-                    f.write("\n")
+                    f.write(f"{news.link}\n\n")
 
             QMessageBox.information(
-                self, "成功", f"ニュースを保存しました:\n{file_path}"
+                self, "成功", f"ニュースを保存しました:\n{file_path_of_result}"
             )
 
         except Exception as e:

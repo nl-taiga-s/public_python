@@ -21,6 +21,10 @@ class GetNHKNews:
             "文化・エンタメ": "https://www.nhk.or.jp/rss/news/cat2.xml",
             "LIVE": "https://www.nhk.or.jp/rss/news/cat-live.xml",
         }
+        # 日本のタイムゾーン
+        self.TIMEZONE_OF_JAPAN = 9
+        # 表示するニュースの数
+        self.NUM_OF_NEWS_TO_SHOW = 10
 
     def parse_rss(self, num_of_genre: int, key_of_genre: str):
         """RSSを解析します"""
