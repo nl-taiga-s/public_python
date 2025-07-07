@@ -174,7 +174,8 @@ class ConvertOfficeToPdf:
     def write_log(self, file_path_of_exe: Path):
         """変換ログを書き出す"""
         fp_l = self.obj_of_pt.get_file_path_of_log(file_path_of_exe)
-        file_path_of_log = str(fp_l)
+        tmp = self.obj_of_pt.if_unc_path(fp_l)
+        file_path_of_log = str(tmp)
         try:
             with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.convert_log))

@@ -104,14 +104,16 @@ class ConvertToPdfApp(QWidget):
     def select_from_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "変換元フォルダを選択")
         if folder:
-            self.folder_path_from = folder
+            fp_f = self.obj_of_pt.if_unc_path(folder)
+            self.folder_path_from = str(fp_f)
             self.label_from.setText(f"変換元フォルダ: {folder}")
             self.try_load_files()
 
     def select_to_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "変換先フォルダを選択")
         if folder:
-            self.folder_path_to = folder
+            fp_t = self.obj_of_pt.if_unc_path(folder)
+            self.folder_path_to = str(fp_t)
             self.label_to.setText(f"変換先フォルダ: {folder}")
             self.try_load_files()
 

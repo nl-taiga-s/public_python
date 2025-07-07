@@ -18,8 +18,8 @@ class COTP:
                 "一括変換したファイルを格納するフォルダを指定してください。: "
             )
 
-            fp_f = Path(folder_path_from)
-            fp_t = Path(folder_path_to)
+            fp_f = self.obj_of_pt.if_unc_path(folder_path_from)
+            fp_t = self.obj_of_pt.if_unc_path(folder_path_to)
             if folder_path_from == "" or folder_path_to == "":
                 print("処理を中止します。")
                 return None, None
