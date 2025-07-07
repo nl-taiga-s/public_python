@@ -43,35 +43,72 @@ class DatetimeTools:
 
 
 class PathTools:
-    """パスのツール"""
+    """
+    パスのツール
+    * `Path()`は、引数の文字列をもとに、その環境に合わせたパスオブジェクトを作成します。
+    """
 
     def __init__(self):
         """初期化します"""
         self.obj_of_dt2 = DatetimeTools()
 
-    def convert_path_to_str(self, p: Path) -> str:
-        """Path型からstr型に変換します"""
-        return str(p)
+    def get_dir_path(self, p: Path) -> Path:
+        """ディレクトリのパスを取得します"""
+        if p.is_file():
+            return p.parent
+        else:
+            return None
 
-    def get_file_path_of_result(self, file_path_of_exe: str) -> Path:
-        """resultファイルのパスを取得します"""
-        # 実行するファイルのディレクトリを取得します
-        folder_path_of_exe = Path(file_path_of_exe).parent
-        # resultsフォルダのパス
-        folder_path_of_results = folder_path_of_exe / 'results'
-        # resultsフォルダが存在しない場合は作成します
-        folder_path_of_results.mkdir(parents=True, exist_ok=True)
-        # 作成するファイル名
-        file_name = f"result_{self.obj_of_dt2.convert_for_file_name()}.txt"
-        # 作成するファイルのパス
-        return folder_path_of_results / file_name
+    def get_absolute_file_path(self, p: Path) -> Path:
+        """ファイルの絶対パスを取得します"""
+        if p.is_file():
+            return p.resolve()
+        else:
+            return None
 
-    # def if_unc_path(self, file_path: str) -> Path:
-    #     """
-    #     UNC(Universal Naming Convention)パスの条件分岐をします
-    #     ex. \\\\ZZ.ZZZ.ZZZ.Z
-    #     """
-    #     fp = Path(file_path)
-    #     if fp.startswith(r"\\"):
-    #         return fp
-    #     return fp.resolve()
+    def get_entire_file_name(self, p: Path) -> str:
+        """ファイル名の全体を取得します"""
+        if p.is_file():
+            return p.name
+        else:
+            return None
+
+    def get_file_name_without_extension(self, p: Path) -> str:
+        """拡張子を除いたファイル名を取得します"""
+        if p.is_file():
+            return p.stem
+        else:
+            return None
+
+    def get_extension(self, p: Path) -> str:
+        """ファイルの拡張子を取得します"""
+        if p.is_file():
+            return p.suffix.lower()
+        else:
+            return None
+
+    def get_file_path_of_log(self, file_path_of_exe: Path) -> Path:
+        """logファイルのパスを取得します"""
+        try:
+            # 実行するファイルのディレクトリを取得します
+            folder_path_of_exe = self.get_dir_path(file_path_of_exe)
+            # logフォルダのパス
+            folder_path_of_log = folder_path_of_exe / "__log__"
+            # logフォルダが存在しない場合は作成します
+            folder_path_of_log.mkdir(parents=True, exist_ok=True)
+            # 作成するファイル名
+            file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
+            # 作成するファイルのパス
+            return folder_path_of_log / file_name_of_log
+        except Exception as e:
+            print(e)
+
+    def if_unc_path(self, file_path: str) -> Path:
+        """
+        UNC(Universal Naming Convention)パスの条件分岐をします
+        ex. \\\\ZZ.ZZZ.ZZZ.Z
+        """
+        fp = Path(file_path)
+        if file_path.startswith(r"\\"):
+            return fp
+        return fp.resolve()
