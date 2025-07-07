@@ -2,8 +2,8 @@ import os
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
-from cotp_class import ConvertOfficeToPdf
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -16,7 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import PlatFormTools
+from source.common.common import PathTools, PlatformTools
+from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPdf
 
 
 class ConvertToPdfApp(QWidget):
@@ -24,7 +25,8 @@ class ConvertToPdfApp(QWidget):
         if platform.system() != "Windows":
             raise EnvironmentError("このアプリはWindows専用です。")
         super().__init__()
-        self.obj_of_pft = PlatFormTools()
+        self.obj_of_pft = PlatformTools()
+        self.obj_of_pt = PathTools()
         self.setWindowTitle("Officeファイル → PDF 一括変換")
 
         # ウィジェット作成
@@ -124,14 +126,17 @@ class ConvertToPdfApp(QWidget):
             )
             self.file_list_widget.clear()
             for f in self.pdf_converter.list_of_f:
-                self.file_list_widget.addItem(os.path.basename(f))
+                fp = Path(f)
+                file_path = self.obj_of_pt.get_entire_file_name(fp)
+                self.file_list_widget.addItem(file_path)
             self.progress_bar.setValue(0)
-            self.log(
-                f"✅ {self.pdf_converter.number_of_f} 件のファイルが見つかりました。"
-            )
         except ValueError as e:
             self.file_list_widget.clear()
             self.log(f"⚠️ {e}")
+        else:
+            self.log(
+                f"✅ {self.pdf_converter.number_of_f} 件のファイルが見つかりました。"
+            )
 
     def start_conversion(self):
         self.log_output.clear()
@@ -146,22 +151,19 @@ class ConvertToPdfApp(QWidget):
         self.log("📄 一括変換を開始します...")
         for i in range(total):
             try:
+                c_fp_f = Path(self.pdf_converter.current_of_file_path_from)
+                file_name = self.obj_of_pt.get_entire_file_name(c_fp_f)
                 self.pdf_converter.handle_file()
-                self.log(
-                    f"✅"
-                    f" {os.path.basename(self.pdf_converter.current_of_file_path_from)}"
-                    f" → 完了"
-                )
+                self.progress_bar.setValue(i + 1)
+                self.pdf_converter.move_to_next_file()
             except Exception as e:
-                self.log(
-                    f"❌"
-                    f" {os.path.basename(self.pdf_converter.current_of_file_path_from)}"
-                    f" → エラー: {e}"
-                )
-            self.progress_bar.setValue(i + 1)
-            self.pdf_converter.move_to_next_file()
-
+                self.log(f"❌ {file_name} → エラー: {e}")
+            else:
+                self.log(f"✅ {file_name} → 完了")
         self.log("🎉 すべてのファイルの変換が完了しました！")
+        fp_e = Path(__file__)
+        self.pdf_converter.write_log(fp_e)
+        self.log("📄 変換ログを出力しました。")
 
 
 def main():
