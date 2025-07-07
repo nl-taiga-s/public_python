@@ -13,11 +13,15 @@ class GetFileList:
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
         pattern = "**" if bool_of_r else "*"
-        self.list_file_before = [
-            f
-            for f in glob.glob(str(Path(folder_path) / pattern), recursive=bool_of_r)
-            if Path(f).is_file()
-        ]
+        s_f = Path(folder_path) / pattern
+        search_folder = str(s_f)
+        self.list_file_before = []
+        for f in glob.glob(
+            search_folder,
+            recursive=bool_of_r,
+        ):
+            if Path(f).is_file():
+                self.list_file_before.append(f)
 
     def extract_by_pattern(self, pattern: str):
         """検索パターンで抽出します"""

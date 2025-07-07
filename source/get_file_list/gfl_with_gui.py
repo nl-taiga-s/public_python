@@ -2,8 +2,8 @@ import os
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
-from gfl_class import GetFileList
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
@@ -22,6 +22,7 @@ from source.common.common import (
     PathTools,
     PlatformTools,
 )
+from source.get_file_list.gfl_class import GetFileList
 
 
 class FileSearchApp(QWidget):
@@ -75,6 +76,8 @@ class FileSearchApp(QWidget):
     def select_folder(self):
         self.folder = QFileDialog.getExistingDirectory(self, "フォルダを選択")
         if self.folder:
+            fp = self.obj_of_pt.if_unc_path(self.folder)
+            self.folder = str(fp)
             self.folder_label.setText(self.folder)
             recursive = self.recursive_checkbox.isChecked()
             self.file_list_obj = GetFileList(self.folder, recursive)
@@ -121,30 +124,27 @@ class FileSearchApp(QWidget):
             return
 
         if not self.file_list_obj.list_file_after:
-            self.result_list.addItem("出力する検索結果がありません。")
+            self.log_list.addItem("出力する検索結果がありません。")
             return
 
         try:
             # exe 実行時とスクリプト実行時に対応した保存先
-            if getattr(sys, 'frozen', False):
-                exe_path = sys.executable
+            if getattr(sys, "frozen", False):
+                fp_e = Path(sys.executable)
             else:
-                exe_path = __file__
+                fp_e = Path(__file__)
 
-            file_path_of_result = self.obj_of_pt.get_file_path_of_result(exe_path)
-            file_path_of_result = self.obj_of_pt.convert_path_to_str(
-                file_path_of_result
-            )
+            fp_l = self.obj_of_pt.get_file_path_of_log(fp_e)
+            file_path_of_log = str(fp_l)
             # ファイルに書き出し
-            with open(file_path_of_result, "w", encoding="utf-8", newline="") as f:
+            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
                 for element in self.file_list_obj.list_file_after:
                     f.write(f"{element},")
                     f.write(f"{self.obj_of_dt2.convert_dt_to_str()}\n")
-
-            self.result_list.addItem(f"結果を出力しました: {file_path_of_result}")
-
         except Exception as e:
             self.result_list.addItem(f"出力時にエラーが発生しました: {e}")
+        else:
+            self.result_list.addItem(f"結果を出力しました: {file_path_of_log}")
 
 
 def main():
