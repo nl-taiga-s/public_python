@@ -1,8 +1,8 @@
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
-from gn2_class import GetNHKNews
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from source.common.common import DatetimeTools, PathTools, PlatformTools
+from source.get_nhk_news.gn2_class import GetNHKNews
 
 
 class NHKNewsApp(QWidget):
@@ -108,15 +109,15 @@ class NHKNewsApp(QWidget):
 
         # exe 実行時とスクリプト実行時に対応した保存先
         if getattr(sys, 'frozen', False):
-            exe_path = sys.executable
+            fp_e = Path(sys.executable)
         else:
-            exe_path = __file__
+            fp_e = Path(__file__)
 
-        file_path_of_result = self.obj_of_pt.get_file_path_of_result(exe_path)
-        file_path_of_result = self.obj_of_pt.convert_path_to_str(file_path_of_result)
+        fp_l = self.obj_of_pt.get_file_path_of_log(fp_e)
+        file_path_of_log = str(fp_l)
 
         try:
-            with open(file_path_of_result, "w", encoding="utf-8", newline="") as f:
+            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
                 f.write(f"<<<日付: {self.news_obj.today}>>>\n")
                 f.write(f"<<<ジャンル: {self.genre_combo.currentText()}>>>\n\n")
                 for i, news in enumerate(
@@ -125,13 +126,12 @@ class NHKNewsApp(QWidget):
                 ):
                     f.write(f"{i}. {news.title}\n")
                     f.write(f"{news.link}\n\n")
-
-            QMessageBox.information(
-                self, "成功", f"ニュースを保存しました:\n{file_path_of_result}"
-            )
-
         except Exception as e:
             QMessageBox.critical(self, "エラー", f"ファイルの保存に失敗しました:\n{e}")
+        else:
+            QMessageBox.information(
+                self, "成功", f"ニュースを保存しました:\n{file_path_of_log}"
+            )
 
     def open_news_link(self, item: QListWidgetItem):
         url = item.data(Qt.UserRole)

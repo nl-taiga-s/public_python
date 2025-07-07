@@ -14,4 +14,5 @@ def test_func(monkeypatch):
     # 標準入力の値を無名関数の戻り値のイテレータに置き換える
     monkeypatch.setattr("builtins.input", lambda _: next(iter_of_inputs))
     # 指定された関数を呼び出す
-    gn2_with_cui.main()
+    obj_of_cui = gn2_with_cui.GN2()
+    obj_of_cui.main()
