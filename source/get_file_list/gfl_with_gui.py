@@ -27,6 +27,7 @@ from source.get_file_list.gfl_class import GetFileList
 
 class FileSearchApp(QWidget):
     def __init__(self):
+        """初期化します"""
         super().__init__()
         self.obj_of_pft = PlatformTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -38,10 +39,13 @@ class FileSearchApp(QWidget):
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             font = QFont(font_family)
             self.setFont(font)
+        self.setup_ui()
 
+    def setup_ui(self):
+        """User Interfaceを設定します"""
+        # タイトル
         self.setWindowTitle("ファイル検索ツール")
-
-        # ウィジェット作成
+        # ウィジェット
         self.folder_label = QLabel("フォルダ未選択")
         self.select_folder_btn = QPushButton("フォルダを選択")
         self.recursive_checkbox = QCheckBox("サブフォルダも含めて検索（再帰）")
@@ -51,7 +55,6 @@ class FileSearchApp(QWidget):
         self.search_btn = QPushButton("検索実行")
         self.export_btn = QPushButton("検索結果を出力")
         self.result_list = QListWidget()
-
         # レイアウト
         layout = QVBoxLayout()
         layout.addWidget(self.folder_label)
@@ -64,25 +67,25 @@ class FileSearchApp(QWidget):
         layout.addWidget(self.export_btn)
         layout.addWidget(QLabel("検索結果:"))
         layout.addWidget(self.result_list)
-
         self.setLayout(layout)
-
         # シグナル接続
         self.select_folder_btn.clicked.connect(self.select_folder)
-        self.open_folder_btn.clicked.connect(lambda: self.open_folder(self.folder))
+        self.open_folder_btn.clicked.connect(lambda: self.open_explorer(self.folder))
         self.search_btn.clicked.connect(self.search_files)
         self.export_btn.clicked.connect(self.export_results)
 
     def select_folder(self):
+        """フォルダを選択します"""
         self.folder = QFileDialog.getExistingDirectory(self, "フォルダを選択")
+        folder_as_path_type = Path(self.folder)
+        self.folder = str(folder_as_path_type)
         if self.folder:
-            fp = self.obj_of_pt.if_unc_path(self.folder)
-            self.folder = str(fp)
             self.folder_label.setText(self.folder)
             recursive = self.recursive_checkbox.isChecked()
             self.file_list_obj = GetFileList(self.folder, recursive)
 
-    def open_folder(self, folder: str):
+    def open_explorer(self, folder: str):
+        """エクスプローラーを開きます"""
         if folder:
             try:
                 system_name = platform.system()
@@ -90,11 +93,7 @@ class FileSearchApp(QWidget):
                     os.startfile(folder)
                 elif self.obj_of_pft.is_wsl():
                     # Windowsのパスに変換（/mnt/c/... 形式）
-                    wsl_path = (
-                        subprocess.check_output(["wslpath", "-w", folder])
-                        .decode("utf-8")
-                        .strip()
-                    )
+                    wsl_path = subprocess.check_output(["wslpath", "-w", folder]).decode("utf-8").strip()
                     subprocess.run(["explorer.exe", wsl_path])
             except Exception as e:
                 print(f"エクスプローラー起動エラー: {e}")
@@ -102,52 +101,41 @@ class FileSearchApp(QWidget):
             self.result_list.addItem("フォルダが未選択のため開けません。")
 
     def search_files(self):
+        """ファイルを検索します"""
         if not self.file_list_obj:
             self.result_list.clear()
             self.result_list.addItem("フォルダが未選択です。")
             return
-
         pattern = self.pattern_input.text().strip()
         recursive = self.recursive_checkbox.isChecked()
         self.file_list_obj = GetFileList(self.folder, recursive)
         self.file_list_obj.extract_by_pattern(pattern)
         self.result_list.clear()
-
         if self.file_list_obj.list_file_after:
             self.result_list.addItems(self.file_list_obj.list_file_after)
         else:
             self.result_list.addItem("一致するファイルが見つかりませんでした。")
 
     def export_results(self):
+        """処理結果を出力します"""
         if not self.file_list_obj:
             self.result_list.addItem("検索対象のフォルダが未選択です。")
             return
-
         if not self.file_list_obj.list_file_after:
             self.log_list.addItem("出力する検索結果がありません。")
             return
-
         try:
-            # exe 実行時とスクリプト実行時に対応した保存先
-            if getattr(sys, "frozen", False):
-                fp_e = Path(sys.executable)
-            else:
-                fp_e = Path(__file__)
-
-            fp_l = self.obj_of_pt.get_file_path_of_log(fp_e)
-            file_path_of_log = str(fp_l)
-            # ファイルに書き出し
-            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
-                for element in self.file_list_obj.list_file_after:
-                    f.write(f"{element},")
-                    f.write(f"{self.obj_of_dt2.convert_dt_to_str()}\n")
+            file_of_exe_as_path_type = Path(__file__)
+            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+            self.file_list_obj.write_log(file_of_log_as_path_type, self.file_list_obj.list_file_after)
         except Exception as e:
-            self.result_list.addItem(f"出力時にエラーが発生しました: {e}")
+            self.result_list.addItem(f"ログファイルの出力に失敗しました。: \n{e}")
         else:
-            self.result_list.addItem(f"結果を出力しました: {file_path_of_log}")
+            self.result_list.addItem(f"ログファイルの出力に成功しました。: \n{str(file_of_log_as_path_type)}")
 
 
 def main():
+    """主要関数"""
     app = QApplication(sys.argv)
     window = FileSearchApp()
     window.resize(600, 400)
