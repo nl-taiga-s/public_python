@@ -2,14 +2,12 @@ import glob
 import platform
 from pathlib import Path
 
-from source.common.common import DatetimeTools, PathTools
-
-if platform.system() != "Windows":
-    raise EnvironmentError("このスクリプトは、Windowsで実行してください。")
 from comtypes.client import CreateObject
 
+from source.common.common import DatetimeTools, PathTools
 
-class ConvertOfficeToPdf:
+
+class ConvertOfficeToPDF:
     """
     Excel, Word, PowerPointをPDFに一括変換します
     Excel => .xls, .xlsx
@@ -20,6 +18,8 @@ class ConvertOfficeToPdf:
 
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
+        if platform.system() != "Windows":
+            raise EnvironmentError("このスクリプトは、Windowsで実行してください。")
         print(self.__class__.__doc__)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -34,14 +34,14 @@ class ConvertOfficeToPdf:
         # 対象の拡張子の辞書をリストにまとめる
         valid_exts = sum(self.file_types.values(), [])
         # 変換元のフォルダのファイルリストを取得する
-        s_f = Path(self.folder_path_from) / "*"
-        search_folder = str(s_f)
+        folder_of_search_as_path_type = Path(self.folder_path_from) / "*"
+        search_folder = str(folder_of_search_as_path_type)
         self.l_f = glob.glob(search_folder)
         # 絶対パスに変換する
         self.list_of_f = []
         for f in self.l_f:
-            fp = Path(f)
-            if self.obj_of_pt.get_extension(fp) in valid_exts:
+            file_as_path_type = Path(f)
+            if self.obj_of_pt.get_extension(file_as_path_type) in valid_exts:
                 self.list_of_f.append(f)
         # ファイルの数
         self.number_of_f = len(self.list_of_f)
@@ -57,11 +57,11 @@ class ConvertOfficeToPdf:
         """ファイルパスを設定します"""
         # 対象の変換元のファイルパス
         self.current_of_file_path_from = self.list_of_f[self.p]
-        c_fp_f = Path(self.current_of_file_path_from)
-        file_name_no_ext = self.obj_of_pt.get_file_name_without_extension(c_fp_f)
+        file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
+        file_name_no_ext = self.obj_of_pt.get_file_name_without_extension(file_of_currentfrom_as_path_type)
         # 対象の変換先のファイルパス
-        c_fp_t = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
-        self.current_of_file_path_to = str(c_fp_t)
+        file_of_currentto_as_path_type = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
+        self.current_of_file_path_to = str(file_of_currentto_as_path_type)
 
     def move_to_previous_file(self):
         """前のファイルへ"""
@@ -81,8 +81,8 @@ class ConvertOfficeToPdf:
 
     def handle_file(self):
         """ファイルの種類を判定して、各処理を実行します"""
-        c_fp_f = Path(self.current_of_file_path_from)
-        ext = self.obj_of_pt.get_extension(c_fp_f)
+        file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
+        ext = self.obj_of_pt.get_extension(file_of_currentfrom_as_path_type)
         match ext:
             case var if var in self.file_types["excel"]:
                 self.convert_excel_to_pdf()
@@ -99,9 +99,7 @@ class ConvertOfficeToPdf:
         try:
             obj = CreateObject("Excel.Application")
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
-            f.ExportAsFixedFormat(
-                Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL
-            )
+            f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
         except Exception as e:
             print(f"Convert Error from Excel to PDF: {e}")
         else:
@@ -171,14 +169,13 @@ class ConvertOfficeToPdf:
         time_stamp = self.obj_of_dt2.convert_dt_to_str()
         self.convert_log.append(f"{file_path},{time_stamp}")
 
-    def write_log(self, file_path_of_exe: Path):
-        """変換ログを書き出す"""
-        fp_l = self.obj_of_pt.get_file_path_of_log(file_path_of_exe)
-        tmp = self.obj_of_pt.if_unc_path(fp_l)
-        file_path_of_log = str(tmp)
+    def write_log(self, file_of_log_as_path_type: Path):
+        """処理結果をログに書き出す"""
+        file_path_of_log = str(file_of_log_as_path_type)
         try:
             with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.convert_log))
-            print(f"\n変換結果のログを出力しました: {file_path_of_log}")
         except Exception as e:
-            print(f"ログファイルの出力に失敗しました: {e}")
+            print(f"ログファイルの出力に失敗しました。: \n{e}")
+        else:
+            print(f"ログファイルの出力に成功しました。: \n{file_path_of_log}")
