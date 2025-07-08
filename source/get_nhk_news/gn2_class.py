@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import feedparser
 
@@ -46,11 +47,7 @@ class GetNHKNews:
         self.today_news = []
         for entry in self.feed.entries:
             if hasattr(entry, "published_parsed"):
-                pub_date = (
-                    datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                    .astimezone(self.standard_time)
-                    .date()
-                )
+                pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).astimezone(self.standard_time).date()
                 if pub_date == self.today:
                     self.today_news.append(entry)
 
@@ -64,3 +61,21 @@ class GetNHKNews:
             for i, news in enumerate(self.today_news[:num_of_news], start=1):
                 print(f"{i}. {news.title}: ")
                 print(f"\t{news.link}")
+
+    def write_log(self, file_of_log_as_path_type: Path):
+        """処理結果をログに書き出す"""
+        file_path_of_log = str(file_of_log_as_path_type)
+        try:
+            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
+                f.write(f"<<<日付: {self.today}>>>\n")
+                f.write(f"<<<ジャンル: {self.key_of_genre}>>>\n\n")
+                for i, news in enumerate(
+                    self.today_news[: self.NUM_OF_NEWS_TO_SHOW],
+                    start=1,
+                ):
+                    f.write(f"{i}. {news.title}\n")
+                    f.write(f"{news.link}\n\n")
+        except Exception as e:
+            print(f"ログファイルの出力に失敗しました。: \n{e}")
+        else:
+            print(f"ログファイルの出力に成功しました。: \n{file_path_of_log}")
