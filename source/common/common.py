@@ -45,24 +45,24 @@ class DatetimeTools:
 class PathTools:
     """
     パスのツール
-    * `Path()`は、引数の文字列をもとに、その環境に合わせたパスオブジェクトを作成します。
+    * `Path()`は、引数に相対パスもしくは絶対パスの文字列を指定して、その環境に合わせた`Path`オブジェクトを作成します。
     """
 
     def __init__(self):
         """初期化します"""
         self.obj_of_dt2 = DatetimeTools()
 
+    def get_absolute_path(self, p: Path) -> Path:
+        """絶対パスを取得します"""
+        if p.is_dir() or p.is_file():
+            return p.resolve(strict=False)
+        else:
+            return None
+
     def get_dir_path(self, p: Path) -> Path:
         """ディレクトリのパスを取得します"""
         if p.is_file():
             return p.parent
-        else:
-            return None
-
-    def get_absolute_file_path(self, p: Path) -> Path:
-        """ファイルの絶対パスを取得します"""
-        if p.is_file():
-            return p.resolve()
         else:
             return None
 
@@ -87,28 +87,18 @@ class PathTools:
         else:
             return None
 
-    def get_file_path_of_log(self, file_path_of_exe: Path) -> Path:
+    def get_file_path_of_log(self, file_of_exe_as_path_type: Path) -> Path:
         """logファイルのパスを取得します"""
         try:
             # 実行するファイルのディレクトリを取得します
-            folder_path_of_exe = self.get_dir_path(file_path_of_exe)
+            folder_of_exe_as_path_type = self.get_dir_path(file_of_exe_as_path_type)
             # logフォルダのパス
-            folder_path_of_log = folder_path_of_exe / "__log__"
+            folder_of_log_as_path_type = folder_of_exe_as_path_type / "__log__"
             # logフォルダが存在しない場合は作成します
-            folder_path_of_log.mkdir(parents=True, exist_ok=True)
+            folder_of_log_as_path_type.mkdir(parents=True, exist_ok=True)
             # 作成するファイル名
             file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
             # 作成するファイルのパス
-            return folder_path_of_log / file_name_of_log
+            return folder_of_log_as_path_type / file_name_of_log
         except Exception as e:
             print(e)
-
-    def if_unc_path(self, file_path: str) -> Path:
-        """
-        UNC(Universal Naming Convention)パスの条件分岐をします
-        ex. \\\\ZZ.ZZZ.ZZZ.Z
-        """
-        fp = Path(file_path)
-        if file_path.startswith(r"\\"):
-            return fp
-        return fp.resolve()
