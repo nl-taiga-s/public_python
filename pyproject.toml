@@ -9,6 +9,9 @@ dependencies = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.ruff]
+line-length = 150
+
 [tool.ruff.lint]
 select = [
     # pycodestyle error
