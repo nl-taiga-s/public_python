@@ -33,18 +33,18 @@ class ConvertOfficeToPDF:
         }
         # 対象の拡張子の辞書をリストにまとめる
         valid_exts = sum(self.file_types.values(), [])
-        # 変換元のフォルダのファイルリストを取得する
         folder_of_search_as_path_type = Path(self.folder_path_from) / "*"
         search_folder = str(folder_of_search_as_path_type)
-        self.l_f = glob.glob(search_folder)
-        # 絶対パスに変換する
-        self.list_of_f = []
-        for f in self.l_f:
+        # フィルター前のファイルのリスト
+        unfiltered_list_of_f = glob.glob(search_folder)
+        # フィルター後のファイルのリスト
+        self.filtered_list_of_f = []
+        for f in unfiltered_list_of_f:
             file_as_path_type = Path(f)
             if self.obj_of_pt.get_extension(file_as_path_type) in valid_exts:
-                self.list_of_f.append(f)
+                self.filtered_list_of_f.append(f)
         # ファイルの数
-        self.number_of_f = len(self.list_of_f)
+        self.number_of_f = len(self.filtered_list_of_f)
         if self.number_of_f == 0:
             raise ValueError("変換元のファイルがありません。")
         # ファイルリストのポインタ
@@ -56,7 +56,7 @@ class ConvertOfficeToPDF:
     def set_file_path(self):
         """ファイルパスを設定します"""
         # 対象の変換元のファイルパス
-        self.current_of_file_path_from = self.list_of_f[self.p]
+        self.current_of_file_path_from = self.filtered_list_of_f[self.p]
         file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
         file_name_no_ext = self.obj_of_pt.get_file_name_without_extension(file_of_currentfrom_as_path_type)
         # 対象の変換先のファイルパス

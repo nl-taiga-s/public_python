@@ -1,6 +1,5 @@
 import os
 import platform
-import subprocess
 import sys
 from pathlib import Path
 
@@ -82,10 +81,6 @@ class ConvertToPdfApp(QWidget):
                 system_name = platform.system()
                 if system_name == "Windows":
                     os.startfile(folder)
-                elif self.obj_of_pft.is_wsl():
-                    # Windowsのパスに変換（/mnt/c/... 形式）
-                    wsl_path = subprocess.check_output(["wslpath", "-w", folder]).decode("utf-8").strip()
-                    subprocess.run(["explorer.exe", wsl_path])
             except Exception as e:
                 print(f"エクスプローラー起動エラー: {e}")
         else:
@@ -118,7 +113,7 @@ class ConvertToPdfApp(QWidget):
         try:
             self.pdf_converter = ConvertOfficeToPDF(self.folder_path_from, self.folder_path_to)
             self.file_list_widget.clear()
-            for f in self.pdf_converter.list_of_f:
+            for f in self.pdf_converter.filtered_list_of_f:
                 file_as_path_type = Path(f)
                 file_path = self.obj_of_pt.get_entire_file_name(file_as_path_type)
                 self.file_list_widget.addItem(file_path)
