@@ -88,17 +88,17 @@ class PathTools:
             return None
 
     def get_file_path_of_log(self, file_of_exe_as_path_type: Path) -> Path:
-        """logファイルのパスを取得します"""
+        """ログファイルのパスを取得します"""
         try:
-            # 実行するファイルのディレクトリを取得します
+            # 実行するファイルのディレクトリ
             folder_of_exe_as_path_type = self.get_dir_path(file_of_exe_as_path_type)
-            # logフォルダのパス
+            # ログフォルダのパス
             folder_of_log_as_path_type = folder_of_exe_as_path_type / "__log__"
-            # logフォルダが存在しない場合は作成します
+            # ログフォルダが存在しない場合は作成します
             folder_of_log_as_path_type.mkdir(parents=True, exist_ok=True)
-            # 作成するファイル名
+            # ログファイル名
             file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
-            # 作成するファイルのパス
+            # ログファイルのパス
             return folder_of_log_as_path_type / file_name_of_log
         except Exception as e:
             print(e)
