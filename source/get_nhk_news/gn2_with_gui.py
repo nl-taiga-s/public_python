@@ -111,8 +111,7 @@ class NHKNewsApp(QWidget):
         if not url:
             return
         try:
-            system_name = platform.system()
-            if system_name == "Windows" or self.obj_of_pft.is_wsl():
+            if platform.system().lower() == "windows" or self.obj_of_pft.is_wsl():
                 subprocess.run(['powershell.exe', 'Start-Process', url], check=True)
         except Exception as e:
             QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました。: \n{e}")

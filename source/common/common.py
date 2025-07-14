@@ -12,7 +12,7 @@ class PlatformTools:
 
     def is_wsl(self) -> bool:
         """WSL環境かどうか判定します"""
-        if platform.system() != "Linux":
+        if platform.system().lower() != "linux":
             return False
         try:
             with open("/proc/version", "r") as f:

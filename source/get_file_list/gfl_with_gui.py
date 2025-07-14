@@ -88,8 +88,7 @@ class FileSearchApp(QWidget):
         """エクスプローラーを開きます"""
         if folder:
             try:
-                system_name = platform.system()
-                if system_name == "Windows":
+                if platform.system().lower() == "windows":
                     os.startfile(folder)
                 elif self.obj_of_pft.is_wsl():
                     # Windowsのパスに変換（/mnt/c/... 形式）
