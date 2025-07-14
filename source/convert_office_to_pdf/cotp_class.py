@@ -1,10 +1,16 @@
 import glob
+import os
 import platform
 from pathlib import Path
 
-from comtypes.client import CreateObject
-
 from source.common.common import DatetimeTools, PathTools
+
+SPECIFIED_OS = "windows"
+if platform.system().lower() == SPECIFIED_OS.lower():
+    from comtypes.client import CreateObject
+else:
+    print(f"このスクリプトは、{SPECIFIED_OS}で実行してください。")
+    os._exit(0)
 
 
 class ConvertOfficeToPDF:
@@ -18,8 +24,6 @@ class ConvertOfficeToPDF:
 
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
-        if platform.system() != "Windows":
-            raise EnvironmentError("このスクリプトは、Windowsで実行してください。")
         print(self.__class__.__doc__)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
