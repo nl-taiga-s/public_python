@@ -37,11 +37,11 @@
       uv lock
       ```
     * ***To do when you want to run scripts***
-      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
       cd "directory_path_of_scripts"
       uv run "file_name_of_script"
       ```
+      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
     * ***To do after opening workspace***
       ```Shell
       cd "directory_path_of_workspace"
@@ -53,7 +53,6 @@
 ## Windows
   * `Python` => [url](https://www.python.org/)
     * ***Initial settings***
-      * Add the folder path of Python to the system environment variable `PATH`
       ```PowerShell
       # Windows
       winget search --name python
@@ -74,11 +73,11 @@
       pip install "tool_name"
       ```
     * ***To do when you want to run scripts***
-      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
       ```Shell
       cd "directory_path_of_scripts"
       python "file_name_of_script"
       ```
+      * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
     * ***To do after opening workspace***
       ```Shell
       .\"venv_name"\Scripts\Activate.ps1
