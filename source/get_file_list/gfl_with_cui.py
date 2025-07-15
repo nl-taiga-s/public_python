@@ -31,14 +31,14 @@ class GFL:
     def input_bool_of_recursive(self) -> bool:
         """フォルダを再帰的に検索するかどうかを入力します"""
         while True:
-            str_of_r = input("フォルダを再帰的に検索するかどうかを入力してください。\n(Yes => y or No => n): ")
-            match str_of_r:
+            str_of_bool = input("フォルダを再帰的に検索するかどうかを入力してください。\n(Yes => y or No => n): ")
+            match str_of_bool:
                 case var if var in self.d_of_bool["yes"]:
                     return True
                 case var if var in self.d_of_bool["no"]:
                     return False
                 case _:
-                    raise ValueError(f"無効な入力です。: {str_of_r}")
+                    raise ValueError(f"無効な入力です。: {str_of_bool}")
 
     def input_pattern(self) -> str:
         """検索パターンを入力します"""
