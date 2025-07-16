@@ -83,3 +83,7 @@
       .\"venv_name"\Scripts\Activate.ps1
       python -m pip install --upgrade pip
       ```
+    * ***To do before closing workspace***
+      ```Shell
+      deactivate
+      ```
