@@ -41,6 +41,12 @@ class DatetimeTools:
         # datetime型 => str型
         return dt.strftime("%Y%m%d_%H%M%S")
 
+    def convert_for_metadata_in_pdf(self, utc: str, dt: datetime.datetime = None) -> str:
+        """pdfのメタデータ用に変換します"""
+        dt = dt or self.dt
+        # datetime型 => str型
+        return dt.strftime(f"D\072%Y%m%d%H%M%S{utc}")
+
 
 class PathTools:
     """
