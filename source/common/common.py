@@ -1,6 +1,10 @@
 import datetime
 import platform
+import sys
 from pathlib import Path
+
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 
 class PlatformTools:
@@ -58,6 +62,14 @@ class PathTools:
         """初期化します"""
         self.obj_of_dt2 = DatetimeTools()
 
+    def get_expanded_in_home_dir(self, p: Path) -> Path:
+        """ホームディレクトリに展開します。"""
+        p = p.expanduser()
+        if p.is_dir() or p.is_file():
+            return p
+        else:
+            return None
+
     def get_absolute_path(self, p: Path) -> Path:
         """絶対パスを取得します"""
         if p.is_dir() or p.is_file():
@@ -108,3 +120,29 @@ class PathTools:
             return folder_of_log_as_path_type / file_name_of_log
         except Exception as e:
             print(e)
+
+
+class GUITools:
+    def __init__(self):
+        pass
+
+    def show_error(self, se: str):
+        """エラーのウィンドウを表示します"""
+        app = QApplication(sys.argv)
+        window = QWidget()
+        window.setWindowTitle("error")
+        window.resize(300, 300)
+        label = QLabel(se)
+        # ラベル内のテキストを中央ぞろえにする
+        label.setAlignment(Qt.AlignCenter)
+        layout = QVBoxLayout(window)
+        # 上に余白を入れる
+        layout.addStretch(1)
+        layout.addWidget(label)
+        # 下に余白を入れる
+        layout.addStretch(1)
+        window.show()
+        # 一定時間後に自動終了する
+        MILLI_SECONDS = 10000
+        QTimer.singleShot(MILLI_SECONDS, app.quit)
+        app.exec()
