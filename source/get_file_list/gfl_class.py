@@ -29,13 +29,13 @@ class GetFileList:
 
     def write_log(self, file_of_log_as_path_type: Path, lst: list):
         """処理結果をログに書き出す"""
-        file_path_of_log = str(file_of_log_as_path_type)
+        file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
-            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
+            with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 for element in lst:
                     f.write(f"{element},")
                     f.write(f"{self.obj_of_dt2.convert_dt_to_str()}\n")
         except Exception as e:
             print(f"ログファイルの出力に失敗しました。: \n{e}")
         else:
-            print(f"ログファイルの出力に成功しました。: \n{file_path_of_log}")
+            print(f"ログファイルの出力に成功しました。: \n{file_of_log_as_str_type}")
