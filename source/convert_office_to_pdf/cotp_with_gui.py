@@ -3,7 +3,6 @@ import platform
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -17,39 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from source.common.common import PathTools, PlatformTools
-
-
-def check_os_error_with_gui(specified_os: str) -> bool:
-    """os error with gui"""
-    if platform.system().lower() == specified_os.lower():
-        return True
-    app = QApplication(sys.argv)
-    window = QWidget()
-    window.setWindowTitle("OS error")
-    window.resize(300, 300)
-    label = QLabel(f"{specified_os}専用です。")
-    # ラベル内のテキストを中央ぞろえにする
-    label.setAlignment(Qt.AlignCenter)
-    layout = QVBoxLayout(window)
-    # 上に余白を入れる
-    layout.addStretch(1)
-    layout.addWidget(label)
-    # 下に余白を入れる
-    layout.addStretch(1)
-    window.show()
-    # 一定時間後に自動終了する
-    MILLI_SECONDS = 10000
-    QTimer.singleShot(MILLI_SECONDS, app.quit)
-    app.exec()
-    return False
-
-
-SPECIFIED_OS = "windows"
-if check_os_error_with_gui(SPECIFIED_OS):
-    from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
-else:
-    print(f"このスクリプトは、{SPECIFIED_OS}で実行してください。")
-    os._exit(0)
+from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
 
 
 class ConvertToPdfApp(QWidget):

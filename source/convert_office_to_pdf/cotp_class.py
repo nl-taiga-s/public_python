@@ -3,13 +3,23 @@ import os
 import platform
 from pathlib import Path
 
-from source.common.common import DatetimeTools, PathTools
+import __main__
+from source.common.common import DatetimeTools, GUITools, PathTools
 
-SPECIFIED_OS = "windows"
-if platform.system().lower() == SPECIFIED_OS.lower():
-    from comtypes.client import CreateObject
-else:
-    print(f"このスクリプトは、{SPECIFIED_OS}で実行してください。")
+try:
+    SPECIFIED_OS = "windows"
+    if platform.system().lower() == SPECIFIED_OS.lower():
+        from comtypes.client import CreateObject
+    else:
+        raise EnvironmentError(f"このプログラムは、{SPECIFIED_OS}で実行してください。")
+except EnvironmentError as e:
+    # 実行元のファイル名
+    match Path(__main__.__file__).name.lower():
+        case var if "cui" in var:
+            print(e)
+        case var if "gui" in var:
+            obj_of_gt = GUITools()
+            obj_of_gt.show_error(str(e))
     os._exit(0)
 
 
@@ -35,27 +45,30 @@ class ConvertOfficeToPDF:
             "word": [".doc", ".docx"],
             "powerpoint": [".ppt", ".pptx"],
         }
-        # 対象の拡張子の辞書をリストにまとめる
-        valid_exts = sum(self.file_types.values(), [])
-        folder_of_search_as_path_type = Path(self.folder_path_from) / "*"
-        search_folder = str(folder_of_search_as_path_type)
-        # フィルター前のファイルのリスト
-        unfiltered_list_of_f = glob.glob(search_folder)
-        # フィルター後のファイルのリスト
-        self.filtered_list_of_f = []
-        for f in unfiltered_list_of_f:
-            file_as_path_type = Path(f)
-            if self.obj_of_pt.get_extension(file_as_path_type) in valid_exts:
-                self.filtered_list_of_f.append(f)
-        # ファイルの数
-        self.number_of_f = len(self.filtered_list_of_f)
-        if self.number_of_f == 0:
-            raise ValueError("変換元のファイルがありません。")
         # ファイルリストのポインタ
         self.p = 0
-        self.set_file_path()
         # ログファイルのリスト
         self.convert_log = []
+        try:
+            folder_of_search_as_path_type = Path(self.folder_path_from) / "*"
+            search_folder = str(folder_of_search_as_path_type)
+            # フィルター前のファイルのリスト
+            unfiltered_list_of_f = glob.glob(search_folder)
+            # フィルター後のファイルのリスト
+            self.filtered_list_of_f = []
+            # 対象の拡張子の辞書をリストにまとめる
+            valid_exts = sum(self.file_types.values(), [])
+            for f in unfiltered_list_of_f:
+                file_as_path_type = Path(f)
+                if self.obj_of_pt.get_extension(file_as_path_type) in valid_exts:
+                    self.filtered_list_of_f.append(f)
+            # ファイルの数
+            self.number_of_f = len(self.filtered_list_of_f)
+            if self.number_of_f == 0:
+                raise ValueError("変換元のファイルがありません。")
+            self.set_file_path()
+        except ValueError as e:
+            print(e)
 
     def set_file_path(self):
         """ファイルパスを設定します"""
@@ -175,11 +188,11 @@ class ConvertOfficeToPDF:
 
     def write_log(self, file_of_log_as_path_type: Path):
         """処理結果をログに書き出す"""
-        file_path_of_log = str(file_of_log_as_path_type)
+        file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
-            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
+            with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.convert_log))
         except Exception as e:
             print(f"ログファイルの出力に失敗しました。: \n{e}")
         else:
-            print(f"ログファイルの出力に成功しました。: \n{file_path_of_log}")
+            print(f"ログファイルの出力に成功しました。: \n{file_of_log_as_str_type}")
