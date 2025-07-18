@@ -64,9 +64,9 @@ class GetNHKNews:
 
     def write_log(self, file_of_log_as_path_type: Path):
         """処理結果をログに書き出す"""
-        file_path_of_log = str(file_of_log_as_path_type)
+        file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
-            with open(file_path_of_log, "w", encoding="utf-8", newline="") as f:
+            with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write(f"<<<日付: {self.today}>>>\n")
                 f.write(f"<<<ジャンル: {self.key_of_genre}>>>\n\n")
                 for i, news in enumerate(
@@ -78,4 +78,4 @@ class GetNHKNews:
         except Exception as e:
             print(f"ログファイルの出力に失敗しました。: \n{e}")
         else:
-            print(f"ログファイルの出力に成功しました。: \n{file_path_of_log}")
+            print(f"ログファイルの出力に成功しました。: \n{file_of_log_as_str_type}")
