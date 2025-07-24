@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = []
 
 [tool.pytest.ini_options]
+pythonpath = ["source"]
 testpaths = ["tests"]
 
 [tool.ruff]
