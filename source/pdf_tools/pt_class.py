@@ -1,4 +1,5 @@
 import datetime
+import textwrap
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
@@ -36,6 +37,7 @@ class PdfTools:
     def encrypt(self, file_path: str, password: str) -> bool:
         """暗号化します"""
         try:
+            b = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.writer = PdfWriter(clone_from=self.reader)
@@ -43,11 +45,10 @@ class PdfTools:
             with open(file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            b = False
             log_msg = f"暗号化に失敗しました。: {e}"
         else:
             b = True
-            log_msg = "暗号化に成功しました。"
+            log_msg = f"暗号化に成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -58,6 +59,7 @@ class PdfTools:
     def decrypt(self, file_path: str, password: str) -> bool:
         """復号化します"""
         try:
+            b = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.reader.decrypt(password)
@@ -65,33 +67,10 @@ class PdfTools:
             with open(file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            b = False
             log_msg = f"復号化に失敗しました。: {e}"
         else:
             b = True
-            log_msg = "復号化に成功しました。"
-        finally:
-            print(log_msg)
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
-            return b
-
-    def print_metadata(self) -> bool:
-        """メタデータを出力します"""
-        try:
-            log_msg = None
-            if self.meta_of_reader is None:
-                raise ValueError("出力するメタデータがありません。")
-            else:
-                for key, _ in self.fields:
-                    value = getattr(self.meta_of_reader, key, None)
-                    print(f"{key.capitalize().replace("_", " ")}: {value or None}")
-        except ValueError as e:
-            b = False
-            log_msg = str(e)
-        else:
-            b = True
-            log_msg = self.__class__.print_metadata.__doc__
+            log_msg = f"復号化に成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -101,17 +80,34 @@ class PdfTools:
     def read_metadata(self, file_path: str) -> bool:
         """メタデータを読み込みます"""
         try:
+            b = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.meta_of_reader = self.reader.metadata
-            if self.meta_of_reader is None:
-                raise ValueError("取得したメタデータがありません。")
-        except ValueError as e:
-            b = False
-            log_msg = str(e)
+        except Exception as e:
+            log_msg = f"メタデータの読み込みに失敗しました。: {e}"
         else:
             b = True
-            log_msg = self.__class__.read_metadata.__doc__
+            log_msg = f"メタデータの読み込みに成功しました。: {file_path}"
+        finally:
+            print(log_msg)
+            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            self.log.append(f"{log_msg},{time_stamp}")
+            return b
+
+    def print_metadata(self) -> bool:
+        """メタデータを出力します"""
+        try:
+            b = False
+            log_msg = None
+            for key, _ in self.fields:
+                value = getattr(self.meta_of_reader, key, None)
+                print(f"{key.capitalize().replace("_", " ")}: {value or None}")
+        except Exception as e:
+            log_msg = f"メタデータの出力に失敗しました。: {e}"
+        else:
+            b = True
+            log_msg = "メタデータの出力に成功しました。"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -121,6 +117,7 @@ class PdfTools:
     def write_metadata(self, file_path: str) -> bool:
         """メタデータを書き込みます"""
         try:
+            b = False
             log_msg = None
             self.writer = PdfWriter()
             for page in self.reader.pages:
@@ -140,11 +137,10 @@ class PdfTools:
             with open(file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            b = False
-            log_msg = str(e)
+            log_msg = f"メタデータの書き込みに失敗しました。: {e}"
         else:
             b = True
-            log_msg = self.__class__.write_metadata.__doc__
+            log_msg = f"メタデータの書き込みに成功しました。{file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -154,6 +150,7 @@ class PdfTools:
     def merge(self, pdfs: list) -> bool:
         """マージします"""
         try:
+            b = False
             log_msg = None
             first_file_of_pdf_as_path_type = Path(pdfs[0])
             folder_of_pdf_as_path_type = self.obj_of_pt.get_dir_path(first_file_of_pdf_as_path_type)
@@ -167,20 +164,26 @@ class PdfTools:
             with open(file_path_of_pdf_as_str_type, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            b = False
             log_msg = f"マージが失敗しました。: {e}"
         else:
             b = True
-            log_msg = "マージが成功しました。"
+            log_msg = textwrap.dedent(f"""\
+                マージが成功しました。
+                from:
+                {"\n".join(pdfs)}
+                to:
+                {file_path_of_pdf_as_str_type}
+                """)
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            self.log.append(f"{log_msg}{time_stamp}")
             return b
 
     def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """ページを抽出します"""
         try:
+            b = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.writer = PdfWriter()
@@ -195,35 +198,76 @@ class PdfTools:
             with open(file_path_of_pdf_as_str_type, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            b = False
             log_msg = f"ページの抽出に失敗しました。: {e}"
         else:
             b = True
-            log_msg = "ページの抽出に成功しました。"
+            log_msg = textwrap.dedent(f"""\
+                ページの抽出に成功しました。
+                from:
+                {file_path}
+                begin page: {begin_page}
+                end page: {end_page}
+                to:
+                {file_path_of_pdf_as_str_type}
+                """)
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            self.log.append(f"{log_msg}{time_stamp}")
             return b
 
     def extract_text(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """テキストを抽出します"""
         try:
+            b = False
             log_msg = None
             self.reader = PdfReader(file_path)
             for i in range(begin_page - 1, end_page):
                 print(f"{i + 1}ページ: ")
                 print(self.reader.pages[i].extract_text())
         except Exception as e:
-            b = False
             log_msg = f"テキストの抽出に失敗しました。: {e}"
         else:
             b = True
-            log_msg = "テキストの抽出に成功しました。"
+            log_msg = textwrap.dedent(f"""\
+                テキストの抽出に成功しました。
+                {file_path}
+                begin page: {begin_page}
+                tend page: {end_page}
+                """)
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            self.log.append(f"{log_msg}{time_stamp}")
+            return b
+
+    def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> bool:
+        """ページを時計回りで回転します"""
+        try:
+            b = False
+            log_msg = None
+            self.reader = PdfReader(file_path)
+            self.writer = PdfWriter()
+            for p in range(self.num_of_pages):
+                self.writer.add_page(self.reader.pages[p])
+                if p == page - 1:
+                    self.writer.pages[p].rotate(degrees)
+            with open(file_path, "wb") as f:
+                self.writer.write(f)
+        except Exception as e:
+            log_msg = f"ページの時計回りの回転に失敗しました。: {e}"
+        else:
+            b = True
+            log_msg = textwrap.dedent(f"""\
+                ページの時計回りの回転に成功しました。
+                {file_path}
+                page: {page}
+                degrees: {degrees}
+                """)
+        finally:
+            print(log_msg)
+            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            self.log.append(f"{log_msg}{time_stamp}")
             return b
 
     def write_log(self, file_of_log_as_path_type: Path):
