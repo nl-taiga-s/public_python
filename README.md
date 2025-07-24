@@ -9,11 +9,11 @@
       vim ~/.zshrc
         # uv
         # https://docs.astral.sh/uv/configuration/environment/#pythonpath
-        export PYTHONPATH=$PYTHONPATH:"directory_path_of_workspace"
+        export PYTHONPATH="directory_path_of_workspace":
         # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
         export UV_HTTP_TIMEOUT=300
         # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
-        export SSL_CERT_FILE="file_path_of_ca"
+        export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
       ```
     * ***To do when you want to create venv***
       ```Shell
@@ -38,8 +38,8 @@
       ```
     * ***To do when you want to run scripts***
       ```Shell
-      cd "directory_path_of_scripts"
-      uv run "file_name_of_script"
+      cd "directory_path_of_workspace"
+      uv run "relative_file_path_of_script"
       ```
       * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
     * ***To do after opening workspace***
