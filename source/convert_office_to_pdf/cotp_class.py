@@ -6,20 +6,29 @@ from pathlib import Path
 import __main__
 from source.common.common import DatetimeTools, GUITools, PathTools
 
-try:
+
+def get_co() -> object:
+    """coを取得します"""
     SPECIFIED_OS = "windows"
     if platform.system().lower() == SPECIFIED_OS.lower():
         from comtypes.client import CreateObject
+
+        co = CreateObject
+        return co
     else:
-        raise EnvironmentError(f"このプログラムは、{SPECIFIED_OS}で実行してください。")
-except EnvironmentError as e:
-    # 実行元のファイル名
-    match Path(__main__.__file__).name.lower():
-        case var if "cui" in var:
-            print(e)
-        case var if "gui" in var:
-            obj_of_gt = GUITools()
-            obj_of_gt.show_error(str(e))
+        log_msg = f"このプログラムは、{SPECIFIED_OS}で実行してください。"
+        # 実行元のファイル名
+        match Path(__main__.__file__).name.lower():
+            case var if "cui" in var:
+                print(log_msg)
+            case var if "gui" in var:
+                obj_of_gt = GUITools()
+                obj_of_gt.show_error(str(log_msg))
+        return None
+
+
+co = get_co()
+if co is None:
     os._exit(0)
 
 
@@ -114,7 +123,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_EXCEL = 0
         try:
-            obj = CreateObject("Excel.Application")
+            obj = co("Excel.Application")
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
         except Exception as e:
@@ -134,7 +143,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_WORD = 17
         try:
-            obj = CreateObject("Word.Application")
+            obj = co("Word.Application")
             f = obj.Documents.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 OutputFileName=self.current_of_file_path_to,
@@ -157,7 +166,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_POWERPOINT = 2
         try:
-            obj = CreateObject("PowerPoint.Application")
+            obj = co("PowerPoint.Application")
             f = obj.Presentations.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 Path=self.current_of_file_path_to,
