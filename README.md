@@ -59,7 +59,6 @@
   * `Python` => [url](https://www.python.org/)
     * ***Initial settings***
       ```PowerShell
-      # Windows
       mkdir "directory_path_of_workspace"
       notepad $profile
         $env:PYTHONPATH = "directory_path_of_workspace"
