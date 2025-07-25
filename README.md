@@ -8,8 +8,6 @@
       uv init --name "project_name"
       vim ~/.zshrc
         # uv
-        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
-        export PYTHONPATH="directory_path_of_workspace":
         # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
         export UV_HTTP_TIMEOUT=300
         # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
@@ -26,6 +24,8 @@
       vim .envrc
         # direnv
         source ./.venv/bin/activate
+        # https://docs.astral.sh/uv/configuration/environment/#pythonpath
+        export PYTHONPATH=$PWD
       direnv allow
       ```
     * ***To do when you want to use any tools***
@@ -74,8 +74,8 @@
       ```
     * ***To do when you want to run scripts***
       ```Shell
-      cd "directory_path_of_scripts"
-      python "file_name_of_script"
+      cd "directory_path_of_workspace"
+      python "relative_file_path_of_script"
       ```
       * If you want to import scripts, create `__init__.py` file in each folder from the `PYTHONPATH` to that script
     * ***To do after opening workspace***
