@@ -28,6 +28,14 @@
         export PYTHONPATH=$PWD
       direnv allow
       ```
+    * ***To do after opening workspace***
+      ```Shell
+      cd "directory_path_of_workspace"
+      uv self update
+      uv tool upgrade --all
+      uv sync
+      uv lock
+      ```
     * ***To do when you want to use any tools***
       ```Shell
       cd "directory_path_of_workspace"
@@ -47,22 +55,11 @@
       cd "directory_path_of_workspace"
       pytest
       ```
-    * ***To do after opening workspace***
-      ```Shell
-      cd "directory_path_of_workspace"
-      uv self update
-      uv tool upgrade --all
-      uv sync
-      uv lock
-      ```
 ## Windows
   * `Python` => [url](https://www.python.org/)
     * ***Initial settings***
       ```PowerShell
       # Windows
-      winget search --name python
-      winget install --id Python.Python.X.X
-      python --version
       mkdir "directory_path_of_workspace"
       notepad $profile
         $env:PYTHONPATH = "directory_path_of_workspace"
@@ -72,23 +69,23 @@
       cd "directory_path_of_workspace"
       python -m venv "venv_name"
       ```
+    * ***To do after opening workspace***
+      ```PowerShell
+      .\"venv_name"\Scripts\Activate.ps1
+      python -m pip install --upgrade pip
+      ```
     * ***To do when you want to use any tools***
-      ```Shell
+      ```PowerShell
       cd "directory_path_of_workspace"
       pip install "tool_name"
       ```
     * ***To do when you want to run scripts***
-      ```Shell
+      ```PowerShell
       cd "directory_path_of_workspace"
       python "relative_file_path_of_script"
       ```
       * Please place `__init__.py` in each folder leading from one level down in the workspace to the folder containing the script.
-    * ***To do after opening workspace***
-      ```Shell
-      .\"venv_name"\Scripts\Activate.ps1
-      python -m pip install --upgrade pip
-      ```
     * ***To do before closing workspace***
-      ```Shell
+      ```PowerShell
       deactivate
       ```
