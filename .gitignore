@@ -8,5 +8,4 @@ wheels/
 *cache*/
 samples/
 .venv/
-.envrc
 uv.lock
