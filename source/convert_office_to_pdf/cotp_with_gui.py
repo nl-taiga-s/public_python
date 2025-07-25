@@ -16,12 +16,23 @@ from PySide6.QtWidgets import (
 )
 
 from source.common.common import PathTools, PlatformTools
-from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+
+
+def check_os() -> object:
+    try:
+        from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+    except SystemExit:
+        return None
+    else:
+        return ConvertOfficeToPDF
 
 
 class ConvertToPdfApp(QWidget):
     def __init__(self):
         """初期化します"""
+        self.cotp = check_os()
+        if self.cotp is None:
+            sys.exit(0)
         super().__init__()
         self.obj_of_pft = PlatformTools()
         self.obj_of_pt = PathTools()
@@ -108,7 +119,7 @@ class ConvertToPdfApp(QWidget):
         if not self.folder_path_from or not self.folder_path_to:
             return
         try:
-            self.pdf_converter = ConvertOfficeToPDF(self.folder_path_from, self.folder_path_to)
+            self.pdf_converter = self.cotp(self.folder_path_from, self.folder_path_to)
             self.file_list_widget.clear()
             for f in self.pdf_converter.filtered_list_of_f:
                 file_as_path_type = Path(f)

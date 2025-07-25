@@ -2,12 +2,23 @@ import sys
 from pathlib import Path
 
 from source.common.common import PathTools
-from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+
+
+def check_os() -> object:
+    try:
+        from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+    except SystemExit:
+        return None
+    else:
+        return ConvertOfficeToPDF
 
 
 class COTP:
     def __init__(self):
         """初期化します"""
+        self.cotp = check_os()
+        if self.cotp is None:
+            sys.exit(0)
         self.obj_of_pt = PathTools()
 
     def input_folder_path(self) -> list:
@@ -16,11 +27,11 @@ class COTP:
             while True:
                 folder_path_from = input("ファイルを一括変換するフォルダを指定してください。: ")
                 folder_path_to = input("一括変換したファイルを格納するフォルダを指定してください。: ")
-                folder_of_from_as_path_type = Path(folder_path_from)
-                folder_of_to_as_path_type = Path(folder_path_to)
                 if folder_path_from == "" and folder_path_to == "":
                     return [None, None]
-                elif folder_of_from_as_path_type.exists() and folder_of_to_as_path_type.exists():
+                folder_of_from_as_path_type = Path(folder_path_from)
+                folder_of_to_as_path_type = Path(folder_path_to)
+                if folder_of_from_as_path_type.exists() and folder_of_to_as_path_type.exists():
                     # 存在する場合
                     if folder_of_from_as_path_type.is_dir() and folder_of_to_as_path_type.is_dir():
                         # フォルダの場合
@@ -35,7 +46,7 @@ class COTP:
         folder_path_from, folder_path_to = self.input_folder_path()
         if folder_path_from is None and folder_path_to is None:
             return False
-        obj_of_cls = ConvertOfficeToPDF(folder_path_from, folder_path_to)
+        obj_of_cls = self.cotp(folder_path_from, folder_path_to)
         obj_of_cls.convert_all()
         file_of_exe_as_path_type = Path(__file__)
         file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
