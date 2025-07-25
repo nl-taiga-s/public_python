@@ -41,7 +41,7 @@
       cd "directory_path_of_workspace"
       uv run "relative_file_path_of_script"
       ```
-      * Please place `__init__.py` in the folder that contains the script, one level below the workspace.
+      * Please place `__init__.py` in each folder leading from one level down in the workspace to the folder containing the script.
     * ***To do when you want to test scripts***
       ```Shell
       cd "directory_path_of_workspace"
@@ -82,7 +82,7 @@
       cd "directory_path_of_workspace"
       python "relative_file_path_of_script"
       ```
-      * Please place `__init__.py` in the folder that contains the script, one level below the workspace.
+      * Please place `__init__.py` in each folder leading from one level down in the workspace to the folder containing the script.
     * ***To do after opening workspace***
       ```Shell
       .\"venv_name"\Scripts\Activate.ps1
