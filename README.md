@@ -23,7 +23,7 @@
       uv venv
       vim .envrc
         # direnv
-        source ./.venv/bin/activate
+        source .venv/bin/activate
         # https://docs.astral.sh/uv/configuration/environment/#pythonpath
         export PYTHONPATH=$PWD
       direnv allow
@@ -70,7 +70,7 @@
       ```
     * ***To do after opening workspace***
       ```PowerShell
-      .\"venv_name"\Scripts\Activate.ps1
+      "venv_name"\Scripts\Activate.ps1
       python -m pip install --upgrade pip
       ```
     * ***To do when you want to use any tools***
