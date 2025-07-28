@@ -242,10 +242,13 @@ class PT:
                         self.obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
                 case var if var == self.MENU.メタデータを出力します:
                     # メタデータを出力します
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
+                    if self.obj_of_cls.reader is None:
+                        print("メタデータを読み込んでください。")
                     else:
-                        self.obj_of_cls.print_metadata()
+                        if self.obj_of_cls.reader.is_encrypted:
+                            print("復号化してください。")
+                        else:
+                            self.obj_of_cls.print_metadata()
                 case var if var == self.MENU.メタデータを書き込みます:
                     # メタデータを書き込みます
                     file_path_of_pdf_as_str_type = self.input_target_of_pdf()

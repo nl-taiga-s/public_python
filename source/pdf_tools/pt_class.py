@@ -1,5 +1,4 @@
 import datetime
-import textwrap
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
@@ -167,13 +166,8 @@ class PdfTools:
             log_msg = f"マージが失敗しました。: {e}"
         else:
             b = True
-            log_msg = textwrap.dedent(f"""\
-                マージが成功しました。
-                from:
-                {"\n".join(pdfs)}
-                to:
-                {file_path_of_pdf_as_str_type}
-                """)
+            log_msg = f"マージが成功しました。\nfrom: \n{"\n".join(pdfs)}\nto: \n{file_path_of_pdf_as_str_type}\n"
+            log_msg = log_msg.expandtabs()
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -201,15 +195,15 @@ class PdfTools:
             log_msg = f"ページの抽出に失敗しました。: {e}"
         else:
             b = True
-            log_msg = textwrap.dedent(f"""\
-                ページの抽出に成功しました。
-                from:
-                {file_path}
-                begin page: {begin_page}
-                end page: {end_page}
-                to:
-                {file_path_of_pdf_as_str_type}
-                """)
+            log_msg = (
+                "ページの抽出に成功しました。\n"
+                "from: \n"
+                f"{file_path}\n"
+                f"begin page: {begin_page}\n"
+                f"end page: {end_page}\n"
+                f"to: \n"
+                f"{file_path_of_pdf_as_str_type}\n"
+            )
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -229,12 +223,7 @@ class PdfTools:
             log_msg = f"テキストの抽出に失敗しました。: {e}"
         else:
             b = True
-            log_msg = textwrap.dedent(f"""\
-                テキストの抽出に成功しました。
-                {file_path}
-                begin page: {begin_page}
-                tend page: {end_page}
-                """)
+            log_msg = f"テキストの抽出に成功しました。\n{file_path}\nbegin page: {begin_page}\nend page: {end_page}\n"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -258,12 +247,7 @@ class PdfTools:
             log_msg = f"ページの時計回りの回転に失敗しました。: {e}"
         else:
             b = True
-            log_msg = textwrap.dedent(f"""\
-                ページの時計回りの回転に成功しました。
-                {file_path}
-                page: {page}
-                degrees: {degrees}
-                """)
+            log_msg = f"ページの時計回りの回転に成功しました。\n{file_path}\npage: {page}\ndegrees: {degrees}\n"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
