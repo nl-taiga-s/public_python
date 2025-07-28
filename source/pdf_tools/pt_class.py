@@ -167,7 +167,6 @@ class PdfTools:
         else:
             b = True
             log_msg = f"マージが成功しました。\nfrom: \n{"\n".join(pdfs)}\nto: \n{file_path_of_pdf_as_str_type}\n"
-            log_msg = log_msg.expandtabs()
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
