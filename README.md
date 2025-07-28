@@ -70,6 +70,7 @@
       ```
     * ***To do after opening workspace***
       ```PowerShell
+      cd "directory_path_of_workspace"
       "venv_name"\Scripts\Activate.ps1
       python -m pip install --upgrade pip
       ```
