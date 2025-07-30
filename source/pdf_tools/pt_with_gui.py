@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -60,11 +61,17 @@ class MainWindow(QMainWindow):
         layout.addWidget(decrypt_btn)
 
         # メタデータ
-        meta_btn = QPushButton("メタデータ読み込み＆表示")
-        meta_btn.clicked.connect(self.read_and_show_metadata)
+        meta_btn = QPushButton("メタデータの表示")
+        meta_btn.clicked.connect(self.show_metadata)
         layout.addWidget(meta_btn)
 
-        write_meta_btn = QPushButton("メタデータ書き込み")
+        # メタデータ表示用
+        self.meta_output = QTextEdit()
+        self.meta_output.setReadOnly(True)
+        layout.addWidget(QLabel("メタデータの出力"))
+        layout.addWidget(self.meta_output)
+
+        write_meta_btn = QPushButton("メタデータの書き込み")
         write_meta_btn.clicked.connect(self.write_metadata)
         layout.addWidget(write_meta_btn)
 
@@ -83,7 +90,7 @@ class MainWindow(QMainWindow):
         page_layout.addWidget(self.end_spin)
         layout.addLayout(page_layout)
 
-        extract_btn = QPushButton("ページ抽出")
+        extract_btn = QPushButton("ページの抽出")
         extract_btn.clicked.connect(self.extract_pages)
         layout.addWidget(extract_btn)
 
@@ -98,6 +105,7 @@ class MainWindow(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if file_path:
             self.file_input.setText(file_path)
+            self.pdf.read_metadata(file_path)
 
     def encrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
@@ -115,16 +123,13 @@ class MainWindow(QMainWindow):
         success = self.pdf.decrypt(path, pw)
         self.show_result("復号化", success)
 
-    def read_and_show_metadata(self):
+    def show_metadata(self):
         path = self.file_input.text()
         if not path:
             self.show_error("PDFファイルパスを入力してください。")
             return
-        if self.pdf.read_metadata(path):
-            self.pdf.print_metadata()
-            self.show_result("メタデータの読み込み", True)
-        else:
-            self.show_result("メタデータの読み込み", False)
+        text = self.pdf.get_text_of_metadata(self.pdf.metadata_of_reader)
+        self.meta_output.setPlainText(text)
 
     def write_metadata(self):
         path = self.file_input.text()
@@ -145,8 +150,7 @@ class MainWindow(QMainWindow):
         if not path or begin < 1 or end < begin:
             self.show_error("ページ範囲またはパスが不正です。")
             return
-        self.pdf.reader = self.pdf.reader or PdfTools().reader
-        self.pdf.num_of_pages = len(PdfTools().reader.pages)
+        self.pdf.num_of_pages = len(self.pdf.reader.pages)
         self.pdf.extract_pages(path, begin, end)
 
     def rotate_page(self):
@@ -155,7 +159,7 @@ class MainWindow(QMainWindow):
         if not path or page < 1:
             self.show_error("ページ番号が不正です。")
             return
-        self.pdf.num_of_pages = len(PdfTools().reader.pages)
+        self.pdf.num_of_pages = len(self.pdf.reader.pages)
         self.pdf.rotate_page_clockwise(path, page, 90)
 
     def show_result(self, label: str, success: bool):

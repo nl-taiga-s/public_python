@@ -1,7 +1,7 @@
 import datetime
 from pathlib import Path
 
-from pypdf import PdfReader, PdfWriter
+from pypdf import DocumentInformation, PdfReader, PdfWriter
 
 from source.common.common import DatetimeTools, PathTools
 
@@ -82,7 +82,7 @@ class PdfTools:
             b = False
             log_msg = None
             self.reader = PdfReader(file_path)
-            self.meta_of_reader = self.reader.metadata
+            self.metadata_of_reader = self.reader.metadata
         except Exception as e:
             log_msg = f"メタデータの読み込みに失敗しました。: {e}"
         else:
@@ -94,13 +94,23 @@ class PdfTools:
             self.log.append(f"{log_msg},{time_stamp}")
             return b
 
+    def get_text_of_metadata(self, metadata: DocumentInformation) -> str:
+        """メタデータをテキストで受け取ります"""
+        if not metadata:
+            print("PDFファイルが読み込まれていません。")
+            return None
+        lines = []
+        for k, v in metadata.items():
+            lines.append(f"{k}: {v}")
+        return "\n".join(lines)
+
     def print_metadata(self) -> bool:
         """メタデータを出力します"""
         try:
             b = False
             log_msg = None
             for key, _ in self.fields:
-                value = getattr(self.meta_of_reader, key, None)
+                value = getattr(self.metadata_of_reader, key, None)
                 print(f"{key.capitalize().replace("_", " ")}: {value or None}")
         except Exception as e:
             log_msg = f"メタデータの出力に失敗しました。: {e}"
