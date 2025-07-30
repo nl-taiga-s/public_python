@@ -22,7 +22,7 @@ from source.pdf_tools.pt_class import PdfTools
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PDFツール - GUI完全版★")
+        self.setWindowTitle("PDFツール")
         self.resize(500, 600)
 
         self.pt = PathTools()
