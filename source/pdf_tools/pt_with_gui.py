@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import GUITools, PathTools
+from source.common.common import PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -28,9 +28,12 @@ class MainWindow(QMainWindow):
 
         self.pt = PathTools()
         self.pdf = PdfTools()
-        self.gui = GUITools()
 
         self.init_ui()
+
+    def closeEvent(self, event):
+        self.write_log()
+        super().closeEvent(event)
 
     def init_ui(self):
         central = QWidget()
@@ -98,18 +101,15 @@ class MainWindow(QMainWindow):
         rotate_btn.clicked.connect(self.rotate_page)
         layout.addWidget(rotate_btn)
 
-        # 終了時にログ出力
-        self.destroyed.connect(self.write_log)
-
     def select_pdf(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
-        if file_path:
+        if file_path.strip():
             self.file_input.setText(file_path)
             self.pdf.read_metadata(file_path)
 
     def encrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
-        if not path or not pw:
+        if not path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
             return
         success = self.pdf.encrypt(path, pw)
@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
 
     def decrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
-        if not path or not pw:
+        if not path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
             return
         success = self.pdf.decrypt(path, pw)
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
 
     def show_metadata(self):
         path = self.file_input.text()
-        if not path:
+        if not path.strip():
             self.show_error("PDFファイルパスを入力してください。")
             return
         text = self.pdf.get_text_of_metadata(self.pdf.metadata_of_reader)
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
 
     def write_metadata(self):
         path = self.file_input.text()
-        if not path:
+        if not path.strip():
             self.show_error("PDFファイルパスを入力してください。")
             return
         self.pdf.write_metadata(path)
@@ -147,7 +147,10 @@ class MainWindow(QMainWindow):
     def extract_pages(self):
         path = self.file_input.text()
         begin, end = self.begin_spin.value(), self.end_spin.value()
-        if not path or begin < 1 or end < begin:
+        if begin == 0 or end == 0:
+            self.show_error("ページ範囲を指定してください。")
+            return
+        if not path.strip() or begin < 1 or end < begin:
             self.show_error("ページ範囲またはパスが不正です。")
             return
         self.pdf.num_of_pages = len(self.pdf.reader.pages)
@@ -156,17 +159,17 @@ class MainWindow(QMainWindow):
     def rotate_page(self):
         path = self.file_input.text()
         page = self.begin_spin.value()
-        if not path or page < 1:
+        if not path.strip() or page < 1:
             self.show_error("ページ番号が不正です。")
             return
         self.pdf.num_of_pages = len(self.pdf.reader.pages)
         self.pdf.rotate_page_clockwise(path, page, 90)
 
     def show_result(self, label: str, success: bool):
-        QMessageBox.information(self, f"{label}結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
 
     def show_error(self, msg: str):
-        self.gui.show_error(msg)
+        QMessageBox.information(self, "エラー", msg)
 
     def write_log(self):
         exe_path = Path(__file__)
