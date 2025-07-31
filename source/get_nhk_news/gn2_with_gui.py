@@ -29,7 +29,7 @@ class NHKNewsApp(QWidget):
         self.obj_of_pft = PlatformTools()
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
-        self.news_obj = GetNHKNews()
+        self.obj_of_cls = GetNHKNews()
         # WSL-Ubuntuでフォント設定
         if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
@@ -52,7 +52,7 @@ class NHKNewsApp(QWidget):
         self.save_button = QPushButton("テキストに保存")
         self.news_list = QListWidget()
         # レイアウト
-        self.genre_combo.addItems(self.news_obj.rss_feeds.keys())
+        self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
         genre_layout.addWidget(genre_label)
         genre_layout.addWidget(self.genre_combo)
         layout.addLayout(genre_layout)
@@ -70,14 +70,14 @@ class NHKNewsApp(QWidget):
         self.news_list.clear()
         genre_key = self.genre_combo.currentText()
         try:
-            genre_index = list(self.news_obj.rss_feeds.keys()).index(genre_key)
-            self.news_obj.parse_rss(genre_index, genre_key)
-            self.news_obj.get_standard_time_and_today(self.news_obj.TIMEZONE_OF_JAPAN)
-            self.news_obj.extract_news_of_today_from_standard_time()
-            if not self.news_obj.today_news:
+            genre_index = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
+            self.obj_of_cls.parse_rss(genre_index, genre_key)
+            self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN)
+            self.obj_of_cls.extract_news_of_today_from_standard_time()
+            if not self.obj_of_cls.today_news:
                 QMessageBox.information(self, "情報", "今日のニュースはまだありません。")
                 return
-            for news in self.news_obj.today_news[: self.news_obj.NUM_OF_NEWS_TO_SHOW]:
+            for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
                 title = news.title
                 summary = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
                 # QListWidgetItem + カスタムWidgetのセット
@@ -93,13 +93,13 @@ class NHKNewsApp(QWidget):
 
     def save_news_to_file(self):
         """ニュースを保存します"""
-        if not self.news_obj.today_news:
+        if not self.obj_of_cls.today_news:
             QMessageBox.information(self, "情報", "保存するニュースがありません。")
             return
         try:
             file_of_exe_as_path_type = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            self.news_obj.write_log(file_of_log_as_path_type)
+            self.obj_of_cls.write_log(file_of_log_as_path_type)
         except Exception as e:
             QMessageBox.critical(self, "エラー", f"ニュースの保存に失敗しました。: \n{e}")
         else:
