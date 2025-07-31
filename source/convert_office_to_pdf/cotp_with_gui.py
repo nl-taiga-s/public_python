@@ -119,9 +119,9 @@ class ConvertToPdfApp(QWidget):
         if not self.folder_path_from or not self.folder_path_to:
             return
         try:
-            self.pdf_converter = self.cotp(self.folder_path_from, self.folder_path_to)
+            self.obj_of_cls = self.cotp(self.folder_path_from, self.folder_path_to)
             self.file_list_widget.clear()
-            for f in self.pdf_converter.filtered_list_of_f:
+            for f in self.obj_of_cls.filtered_list_of_f:
                 file_as_path_type = Path(f)
                 file_path = self.obj_of_pt.get_entire_file_name(file_as_path_type)
                 self.file_list_widget.addItem(file_path)
@@ -130,33 +130,33 @@ class ConvertToPdfApp(QWidget):
             self.file_list_widget.clear()
             self.log(f"⚠️ {e}")
         else:
-            self.log(f"✅ {self.pdf_converter.number_of_f} 件のファイルが見つかりました。")
+            self.log(f"✅ {self.obj_of_cls.number_of_f} 件のファイルが見つかりました。")
 
     def convert_file(self):
         """変換します"""
         self.log_output.clear()
-        if not self.pdf_converter:
+        if not self.obj_of_cls:
             self.log("⚠️ ファイルリストが初期化されていません。")
             return
-        total = self.pdf_converter.number_of_f
+        total = self.obj_of_cls.number_of_f
         self.progress_bar.setRange(0, total)
         self.log("📄 一括変換を開始します...")
         for i in range(total):
             try:
-                file_of_currentfrom_as_path_type = Path(self.pdf_converter.current_of_file_path_from)
+                file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
                 file_name = self.obj_of_pt.get_entire_file_name(file_of_currentfrom_as_path_type)
-                self.pdf_converter.handle_file()
+                self.obj_of_cls.handle_file()
             except Exception as e:
                 self.log(f"❌ {file_name} → エラー: {e}")
             else:
                 self.log(f"✅ {file_name} → 完了")
                 self.progress_bar.setValue(i + 1)
-                self.pdf_converter.move_to_next_file()
+                self.obj_of_cls.move_to_next_file()
         self.log("🎉 すべてのファイルの変換が完了しました！")
         try:
             file_of_exe_as_path_type = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            self.pdf_converter.write_log(file_of_log_as_path_type)
+            self.obj_of_cls.write_log(file_of_log_as_path_type)
         except Exception as e:
             self.log(f"📄 ログファイルの出力に失敗しました。: \n{e}")
         else:
