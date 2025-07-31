@@ -1,7 +1,7 @@
 import datetime
 from pathlib import Path
 
-from pypdf import DocumentInformation, PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 
 from source.common.common import DatetimeTools, PathTools
 
@@ -18,7 +18,7 @@ class PdfTools:
         self.num_of_pages = None
         self.writer = None
         self.metadata_of_reader = None
-        self.metadata_of_writer = None
+        self.metadata_of_writer = {}
         self.EXTENSION = ".pdf"
         self.UTC_OF_JP = "+09'00'"
         self.fields = [
@@ -31,6 +31,8 @@ class PdfTools:
             ("creation_date", "/CreationDate"),  # 作成日
             ("modification_date", "/ModDate"),  # 更新日
         ]
+        self.creation_date = None
+        self.modification_date = None
         self.log = []
 
     def encrypt(self, file_path: str, password: str) -> bool:
@@ -83,6 +85,7 @@ class PdfTools:
             log_msg = None
             self.reader = PdfReader(file_path)
             self.metadata_of_reader = self.reader.metadata
+            self.creation_date = self.metadata_of_reader.get("/CreationDate")
         except Exception as e:
             log_msg = f"メタデータの読み込みに失敗しました。: {e}"
         else:
@@ -93,16 +96,6 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
             return b
-
-    def get_text_of_metadata(self, metadata: DocumentInformation) -> str:
-        """メタデータをテキストで受け取ります"""
-        if not metadata:
-            print("PDFファイルが読み込まれていません。")
-            return None
-        lines = []
-        for k, v in metadata.items():
-            lines.append(f"{k}: {v}")
-        return "\n".join(lines)
 
     def print_metadata(self) -> bool:
         """メタデータを出力します"""
@@ -123,28 +116,20 @@ class PdfTools:
             self.log.append(f"{log_msg},{time_stamp}")
             return b
 
-    def write_metadata(self, file_path: str) -> bool:
+    def write_metadata(self, file_path: str, metadata_of_writer: dict) -> bool:
         """メタデータを書き込みます"""
         try:
             b = False
             log_msg = None
-            self.writer = PdfWriter()
-            for page in self.reader.pages:
-                self.writer.add_page(page)
-            self.metadata_of_writer = {}
-            for key_of_r, key_of_w in self.fields:
-                match key_of_r:
-                    case "creation_date":
-                        pass
-                    case "modification_date":
-                        time = self.obj_of_dt2.convert_for_metadata_in_pdf(self.UTC_OF_JP)
-                        self.metadata_of_writer[f"{key_of_w}"] = time
-                    case _:
-                        value = input(f"{key_of_r.capitalize().replace("_", " ")}: ")
-                        self.metadata_of_writer[f"{key_of_w}"] = value
-            self.writer.add_metadata(self.metadata_of_writer)
-            with open(file_path, "wb") as f:
-                self.writer.write(f)
+            if not self.metadata_of_reader:
+                print("メタデータを読み込んでください。")
+            else:
+                self.writer = PdfWriter()
+                for page in self.reader.pages:
+                    self.writer.add_page(page)
+                self.writer.add_metadata(metadata_of_writer)
+                with open(file_path, "wb") as f:
+                    self.writer.write(f)
         except Exception as e:
             log_msg = f"メタデータの書き込みに失敗しました。: {e}"
         else:

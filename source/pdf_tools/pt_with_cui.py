@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from source.common.common import PathTools
+from source.common.common import DatetimeTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -17,6 +17,7 @@ class PT:
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
         self.obj_of_pt = PathTools()
+        self.obj_of_dt2 = DatetimeTools()
         self.obj_of_cls = PdfTools()
         self.MENU = Enum(
             "MENU",
@@ -101,6 +102,25 @@ class PT:
                 print(e)
             except KeyboardInterrupt:
                 sys.exit(0)
+
+    def input_writing_metadata(self, metadata_of_writer: dict, fields: list) -> dict:
+        """書き込み用のメタデータを入力します"""
+        try:
+            for key_of_r, key_of_w in fields:
+                match key_of_r:
+                    case "creation_date":
+                        metadata_of_writer[key_of_w] = self.obj_of_cls.creation_date
+                    case "modification_date":
+                        time = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
+                        metadata_of_writer[key_of_w] = time
+                    case _:
+                        value = input(f"{key_of_r.capitalize().replace("_", " ")}: ")
+                        metadata_of_writer[key_of_w] = value
+            return metadata_of_writer
+        except Exception as e:
+            print(e)
+        except KeyboardInterrupt:
+            sys.exit(0)
 
     def input_list_of_merge(self) -> list:
         """マージ元の全てのファイルを入力します"""
@@ -255,7 +275,8 @@ class PT:
                     if self.obj_of_cls.reader.is_encrypted:
                         print("復号化してください。")
                     else:
-                        self.obj_of_cls.write_metadata(file_path_of_pdf_as_str_type)
+                        self.obj_of_cls.metadata_of_writer = self.input_writing_metadata(self.obj_of_cls.metadata_of_writer, self.obj_of_cls.fields)
+                        self.obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, self.obj_of_cls.metadata_of_writer)
                 case var if var == self.MENU.ファイルをマージします:
                     # ファイルをマージします
                     b = False

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import PathTools
+from source.common.common import DatetimeTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -26,8 +26,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PDFツール")
         self.resize(500, 600)
 
-        self.pt = PathTools()
-        self.pdf = PdfTools()
+        self.obj_of_pt = PathTools()
+        self.obj_of_dt2 = DatetimeTools()
+        self.obj_of_cls = PdfTools()
 
         self.init_ui()
 
@@ -68,11 +69,16 @@ class MainWindow(QMainWindow):
         meta_btn.clicked.connect(self.show_metadata)
         layout.addWidget(meta_btn)
 
-        # メタデータ表示用
-        self.meta_output = QTextEdit()
-        self.meta_output.setReadOnly(True)
-        layout.addWidget(QLabel("メタデータの出力"))
-        layout.addWidget(self.meta_output)
+        # メタデータの入力
+        layout.addWidget(QLabel("メタデータの入力"))
+        self.widget_of_metadata = {}
+        self.line_edits_of_metadata = {}
+        for value, key in self.obj_of_cls.fields:
+            if value in ["creation_date", "modification_date"]:
+                continue
+            self.line_edits_of_metadata[key] = QLineEdit()
+            layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
+            layout.addWidget(self.line_edits_of_metadata[key])
 
         write_meta_btn = QPushButton("メタデータの書き込み")
         write_meta_btn.clicked.connect(self.write_metadata)
@@ -101,69 +107,95 @@ class MainWindow(QMainWindow):
         rotate_btn.clicked.connect(self.rotate_page)
         layout.addWidget(rotate_btn)
 
+        # ログの出力
+        self.output = QTextEdit()
+        self.output.setReadOnly(True)
+        layout.addWidget(QLabel("出力"))
+        layout.addWidget(self.output)
+
     def select_pdf(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if file_path.strip():
             self.file_input.setText(file_path)
-            self.pdf.read_metadata(file_path)
+            self.obj_of_cls.read_metadata(file_path)
 
     def encrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
         if not path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
-            return
-        success = self.pdf.encrypt(path, pw)
+            return None
+        success = self.obj_of_cls.encrypt(path, pw)
         self.show_result("暗号化", success)
+        self.output_log()
 
     def decrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
         if not path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
-            return
-        success = self.pdf.decrypt(path, pw)
+            return None
+        success = self.obj_of_cls.decrypt(path, pw)
         self.show_result("復号化", success)
+        self.output_log()
 
     def show_metadata(self):
         path = self.file_input.text()
         if not path.strip():
             self.show_error("PDFファイルパスを入力してください。")
-            return
-        text = self.pdf.get_text_of_metadata(self.pdf.metadata_of_reader)
-        self.meta_output.setPlainText(text)
+            return None
+        self.obj_of_cls.read_metadata(path)
+        lines = []
+        for k, v in self.obj_of_cls.metadata_of_reader.items():
+            lines.append(f"{k}: {v}")
+        text = "\n".join(lines)
+        self.output_log()
+        self.output.setPlainText(text)
 
     def write_metadata(self):
         path = self.file_input.text()
         if not path.strip():
             self.show_error("PDFファイルパスを入力してください。")
-            return
-        self.pdf.write_metadata(path)
+            return None
+        for value, key in self.obj_of_cls.fields:
+            match value:
+                case "creation_date":
+                    self.widget_of_metadata[key] = self.obj_of_cls.creation_date
+                case "modification_date":
+                    time = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
+                    self.widget_of_metadata[key] = time
+                case _:
+                    self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
+        self.obj_of_cls.write_metadata(path, self.widget_of_metadata)
+        self.output_log()
 
     def merge_pdfs(self):
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
         if files:
-            success = self.pdf.merge(files)
+            success = self.obj_of_cls.merge(files)
             self.show_result("マージ", success)
+        self.output_log()
 
     def extract_pages(self):
         path = self.file_input.text()
         begin, end = self.begin_spin.value(), self.end_spin.value()
         if begin == 0 or end == 0:
             self.show_error("ページ範囲を指定してください。")
-            return
+            return None
         if not path.strip() or begin < 1 or end < begin:
             self.show_error("ページ範囲またはパスが不正です。")
-            return
-        self.pdf.num_of_pages = len(self.pdf.reader.pages)
-        self.pdf.extract_pages(path, begin, end)
+            return None
+        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
+        self.obj_of_cls.extract_pages(path, begin, end)
+        self.output_log()
 
     def rotate_page(self):
         path = self.file_input.text()
         page = self.begin_spin.value()
         if not path.strip() or page < 1:
             self.show_error("ページ番号が不正です。")
-            return
-        self.pdf.num_of_pages = len(self.pdf.reader.pages)
-        self.pdf.rotate_page_clockwise(path, page, 90)
+            return None
+        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
+        self.obj_of_cls.rotate_page_clockwise(path, page, 90)
+        self.output_log()
 
     def show_result(self, label: str, success: bool):
         QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
@@ -171,10 +203,14 @@ class MainWindow(QMainWindow):
     def show_error(self, msg: str):
         QMessageBox.information(self, "エラー", msg)
 
+    def output_log(self):
+        log = "\n".join(self.obj_of_cls.log)
+        self.output.setPlainText(log)
+
     def write_log(self):
         exe_path = Path(__file__)
-        log_path = self.pt.get_file_path_of_log(exe_path)
-        self.pdf.write_log(log_path)
+        log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
+        self.obj_of_cls.write_log(log_path)
 
 
 if __name__ == "__main__":
