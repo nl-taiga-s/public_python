@@ -82,7 +82,7 @@ class FileSearchApp(QWidget):
         if self.folder:
             self.folder_label.setText(self.folder)
             recursive = self.recursive_checkbox.isChecked()
-            self.file_list_obj = GetFileList(self.folder, recursive)
+            self.obj_of_cls = GetFileList(self.folder, recursive)
 
     def open_explorer(self, folder: str):
         """エクスプローラーを開きます"""
@@ -101,32 +101,32 @@ class FileSearchApp(QWidget):
 
     def search_files(self):
         """ファイルを検索します"""
-        if not self.file_list_obj:
+        if not self.obj_of_cls:
             self.result_list.clear()
             self.result_list.addItem("フォルダが未選択です。")
             return
         pattern = self.pattern_input.text().strip()
         recursive = self.recursive_checkbox.isChecked()
-        self.file_list_obj = GetFileList(self.folder, recursive)
-        self.file_list_obj.extract_by_pattern(pattern)
+        self.obj_of_cls = GetFileList(self.folder, recursive)
+        self.obj_of_cls.extract_by_pattern(pattern)
         self.result_list.clear()
-        if self.file_list_obj.list_file_after:
-            self.result_list.addItems(self.file_list_obj.list_file_after)
+        if self.obj_of_cls.list_file_after:
+            self.result_list.addItems(self.obj_of_cls.list_file_after)
         else:
             self.result_list.addItem("一致するファイルが見つかりませんでした。")
 
     def export_results(self):
         """処理結果を出力します"""
-        if not self.file_list_obj:
+        if not self.obj_of_cls:
             self.result_list.addItem("検索対象のフォルダが未選択です。")
             return
-        if not self.file_list_obj.list_file_after:
+        if not self.obj_of_cls.list_file_after:
             self.log_list.addItem("出力する検索結果がありません。")
             return
         try:
             file_of_exe_as_path_type = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            self.file_list_obj.write_log(file_of_log_as_path_type, self.file_list_obj.list_file_after)
+            self.obj_of_cls.write_log(file_of_log_as_path_type, self.obj_of_cls.list_file_after)
         except Exception as e:
             self.result_list.addItem(f"ログファイルの出力に失敗しました。: \n{e}")
         else:
