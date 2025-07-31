@@ -3,8 +3,8 @@ import platform
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 
 class PlatformTools:
@@ -126,21 +126,10 @@ class GUITools:
     def __init__(self):
         pass
 
-    def show_error(self, se: str):
+    def show_error(self, msg: str):
         """エラーのウィンドウを表示します"""
         app = QApplication(sys.argv)
-        window = QWidget()
-        window.setWindowTitle("error")
-        window.resize(300, 300)
-        label = QLabel(se)
-        # ラベル内のテキストを中央ぞろえにする
-        label.setAlignment(Qt.AlignCenter)
-        layout = QVBoxLayout(window)
-        # 上に余白を入れる
-        layout.addStretch(1)
-        layout.addWidget(label)
-        # 下に余白を入れる
-        layout.addStretch(1)
+        window = QMessageBox.information(self, "エラー", msg)
         window.show()
         # 一定時間後に自動終了する
         MILLI_SECONDS = 10000
