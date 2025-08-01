@@ -61,9 +61,9 @@ class MainApp_Of_COTP(QWidget):
         layout.addWidget(self.log_output)
         self.setLayout(layout)
         # シグナル接続
-        self.btn_select_from.clicked.connect(self.select_from_folder(obj_of_cls))
+        self.btn_select_from.clicked.connect(lambda: self.select_from_folder(obj_of_cls))
         self.btn_open_from.clicked.connect(lambda: self.open_explorer(self.folder_path_from))
-        self.btn_select_to.clicked.connect(self.select_to_folder(obj_of_cls))
+        self.btn_select_to.clicked.connect(lambda: self.select_to_folder(obj_of_cls))
         self.btn_open_to.clicked.connect(lambda: self.open_explorer(self.folder_path_to))
         self.btn_convert.clicked.connect(self.convert_file)
 
