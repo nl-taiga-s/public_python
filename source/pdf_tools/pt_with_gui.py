@@ -20,7 +20,7 @@ from source.common.common import DatetimeTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
-class MainWindow(QMainWindow):
+class MainApp_Of_PT(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PDFツール")
@@ -213,8 +213,12 @@ class MainWindow(QMainWindow):
         self.obj_of_cls.write_log(log_path)
 
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
-    main = MainWindow()
+    main = MainApp_Of_PT()
     main.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

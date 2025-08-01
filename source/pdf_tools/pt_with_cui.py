@@ -9,7 +9,7 @@ from source.common.common import DatetimeTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
-class PT:
+class PT_With_Cui:
     def __init__(self):
         """初期化します"""
         self.d_of_bool = {
@@ -229,79 +229,82 @@ class PT:
             except KeyboardInterrupt:
                 sys.exit(0)
 
-    def main(self) -> bool:
-        """主要関数"""
-        while True:
-            try:
-                # メニューを選択します
-                option = self.select_menu()
-                if option is None:
-                    return False
-                match option:
-                    case var if var == self.MENU.ファイルを暗号化します:
-                        # ファイルを暗号化します
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        password = self.input_password_of_encrypt()
-                        self.obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
-                    case var if var == self.MENU.ファイルを復号化します:
-                        # ファイルを復号化します
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        password = self.input_password_of_decrypt()
-                        self.obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
-                    case var if var == self.MENU.メタデータを読み込みます:
-                        # メタデータを読み込みます
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        self.obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
-                    case var if var == self.MENU.メタデータを出力します:
-                        # メタデータを出力します
-                        if self.obj_of_cls.reader is None:
-                            print("メタデータを読み込んでください。")
-                        else:
-                            self.obj_of_cls.print_metadata()
-                    case var if var == self.MENU.メタデータを書き込みます:
-                        # メタデータを書き込みます
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        self.obj_of_cls.metadata_of_writer = self.input_writing_metadata(self.obj_of_cls.metadata_of_writer, self.obj_of_cls.fields)
-                        self.obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, self.obj_of_cls.metadata_of_writer)
-                    case var if var == self.MENU.ファイルをマージします:
-                        # ファイルをマージします
-                        pdfs = self.input_list_of_merge()
-                        for pdf in pdfs:
-                            self.obj_of_cls.reader = PdfReader(pdf)
-                        self.obj_of_cls.merge(pdfs)
-                    case var if var == self.MENU.ページを抽出します:
-                        # ページを抽出します
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
-                        begin_page, end_page = self.input_extracting_pages()
-                        self.obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    case var if var == self.MENU.テキストを抽出します:
-                        # テキストを抽出します
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
-                        begin_page, end_page = self.input_pages_of_extracting_text()
-                        self.obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    case var if var == self.MENU.ページを時計回りで回転します:
-                        # ページを時計回りで回転します
-                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
-                        page = self.input_rotating_page()
-                        degrees = self.input_degrees()
-                        self.obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
-                    case var if var == self.MENU.終了します:
-                        # 終了します
-                        break
-                    case _:
-                        pass
-            except Exception as e:
-                print(f"エラー: {e}")
-            print()
-        file_of_exe_as_path_type = Path(__file__)
-        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-        self.obj_of_cls.write_log(file_of_log_as_path_type)
-        return True
+
+def main() -> bool:
+    """主要関数"""
+    obj_of_cls = PdfTools()
+    obj_with_cui = PT_With_Cui()
+    while True:
+        try:
+            # メニューを選択します
+            option = obj_with_cui.select_menu()
+            if option is None:
+                return False
+            match option:
+                case var if var == obj_with_cui.MENU.ファイルを暗号化します:
+                    # ファイルを暗号化します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    password = obj_with_cui.input_password_of_encrypt()
+                    obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
+                case var if var == obj_with_cui.MENU.ファイルを復号化します:
+                    # ファイルを復号化します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    password = obj_with_cui.input_password_of_decrypt()
+                    obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
+                case var if var == obj_with_cui.MENU.メタデータを読み込みます:
+                    # メタデータを読み込みます
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                case var if var == obj_with_cui.MENU.メタデータを出力します:
+                    # メタデータを出力します
+                    if obj_of_cls.reader is None:
+                        print("メタデータを読み込んでください。")
+                    else:
+                        obj_of_cls.print_metadata()
+                case var if var == obj_with_cui.MENU.メタデータを書き込みます:
+                    # メタデータを書き込みます
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(obj_of_cls.metadata_of_writer, obj_of_cls.fields)
+                    obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, obj_of_cls.metadata_of_writer)
+                case var if var == obj_with_cui.MENU.ファイルをマージします:
+                    # ファイルをマージします
+                    pdfs = obj_with_cui.input_list_of_merge()
+                    for pdf in pdfs:
+                        obj_of_cls.reader = PdfReader(pdf)
+                    obj_of_cls.merge(pdfs)
+                case var if var == obj_with_cui.MENU.ページを抽出します:
+                    # ページを抽出します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    obj_of_cls.num_of_pages = len(obj_of_cls.reader.pages)
+                    begin_page, end_page = obj_with_cui.input_extracting_pages()
+                    obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                case var if var == obj_with_cui.MENU.テキストを抽出します:
+                    # テキストを抽出します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    obj_of_cls.num_of_pages = len(obj_of_cls.reader.pages)
+                    begin_page, end_page = obj_with_cui.input_pages_of_extracting_text()
+                    obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
+                case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
+                    # ページを時計回りで回転します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf()
+                    obj_of_cls.num_of_pages = len(obj_of_cls.reader.pages)
+                    page = obj_with_cui.input_rotating_page()
+                    degrees = obj_with_cui.input_degrees()
+                    obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
+                case var if var == obj_with_cui.MENU.終了します:
+                    # 終了します
+                    break
+                case _:
+                    pass
+        except Exception as e:
+            print(f"エラー: {e}")
+        print()
+    obj_of_pt = PathTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_cls.write_log(file_of_log_as_path_type)
+    return True
 
 
 if __name__ == "__main__":
-    obj_with_cui = PT()
-    obj_with_cui.main()
+    main()
