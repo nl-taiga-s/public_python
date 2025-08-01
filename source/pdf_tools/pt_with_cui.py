@@ -232,8 +232,8 @@ class PT_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    obj_of_cls = PdfTools()
     obj_with_cui = PT_With_Cui()
+    obj_of_cls = obj_with_cui.obj_of_cls
     while True:
         try:
             # メニューを選択します
