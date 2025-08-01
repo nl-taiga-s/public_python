@@ -15,30 +15,34 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import PathTools, PlatformTools
+from source.common.common import GUITools, PathTools, PlatformTools
 
 
 def check_os() -> object:
     try:
         from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
-    except SystemExit:
-        return None
+    except ImportError as e:
+        obj_of_gt = GUITools()
+        obj_of_gt.show_error(str(e))
     else:
         return ConvertOfficeToPDF
 
 
-class ConvertToPdfApp(QWidget):
+class MainApp_Of_COTP(QWidget):
     def __init__(self):
         """初期化します"""
-        self.cotp = check_os()
-        if self.cotp is None:
-            sys.exit(0)
-        super().__init__()
-        self.obj_of_pft = PlatformTools()
-        self.obj_of_pt = PathTools()
-        self.folder_path_from = ""
-        self.folder_path_to = ""
-        self.setup_ui()
+        try:
+            self.cotp = check_os()
+            if self.cotp is None:
+                raise EnvironmentError
+            super().__init__()
+            self.obj_of_pft = PlatformTools()
+            self.obj_of_pt = PathTools()
+            self.folder_path_from = ""
+            self.folder_path_to = ""
+            self.setup_ui()
+        except EnvironmentError:
+            pass
 
     def setup_ui(self):
         """User Interfaceを設定します"""
@@ -163,13 +167,16 @@ class ConvertToPdfApp(QWidget):
             self.log(f"📄 ログファイルの出力に成功しました。: \n{str(file_of_log_as_path_type)}")
 
 
-def main():
+def main() -> bool:
     """主要関数"""
     app = QApplication(sys.argv)
-    window = ConvertToPdfApp()
+    window = MainApp_Of_COTP()
+    if window.cotp is None:
+        return False
     window.resize(700, 600)
     window.show()
     sys.exit(app.exec())
+    return True
 
 
 if __name__ == "__main__":

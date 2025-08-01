@@ -1,29 +1,10 @@
 import glob
-import platform
 import sys
 from pathlib import Path
 
-import __main__
-from source.common.common import DatetimeTools, GUITools, PathTools
+from comtypes.client import CreateObject
 
-
-def check_os() -> object:
-    """OSを確認します"""
-    SPECIFIED_OS = "windows"
-    if platform.system().lower() == SPECIFIED_OS.lower():
-        from comtypes.client import CreateObject
-
-        return CreateObject
-    else:
-        log_msg = f"このプログラムは、{SPECIFIED_OS}で実行してください。"
-        # 実行元のファイル名
-        match Path(__main__.__file__).name.lower():
-            case var if "cui" in var:
-                print(log_msg)
-            case var if "gui" in var:
-                obj_of_gt = GUITools()
-                obj_of_gt.show_error(str(log_msg))
-        return None
+from source.common.common import DatetimeTools, PathTools
 
 
 class ConvertOfficeToPDF:
@@ -38,7 +19,7 @@ class ConvertOfficeToPDF:
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
         print(self.__class__.__doc__)
-        self.co = check_os()
+        self.co = CreateObject
         if self.co is None:
             sys.exit(0)
         self.obj_of_pt = PathTools()
