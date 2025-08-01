@@ -232,95 +232,69 @@ class PT:
     def main(self) -> bool:
         """主要関数"""
         while True:
-            # メニューを選択します
-            option = self.select_menu()
-            if option is None:
-                return False
-            match option:
-                case var if var == self.MENU.ファイルを暗号化します:
-                    # ファイルを暗号化します
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("既に暗号化されています。")
-                    else:
+            try:
+                # メニューを選択します
+                option = self.select_menu()
+                if option is None:
+                    return False
+                match option:
+                    case var if var == self.MENU.ファイルを暗号化します:
+                        # ファイルを暗号化します
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         password = self.input_password_of_encrypt()
                         self.obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
-                case var if var == self.MENU.ファイルを復号化します:
-                    # ファイルを復号化します
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if not self.obj_of_cls.reader.is_encrypted:
-                        print("既に復号化されています。")
-                    else:
+                    case var if var == self.MENU.ファイルを復号化します:
+                        # ファイルを復号化します
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         password = self.input_password_of_decrypt()
                         self.obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
-                case var if var == self.MENU.メタデータを読み込みます:
-                    # メタデータを読み込みます
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
-                    else:
+                    case var if var == self.MENU.メタデータを読み込みます:
+                        # メタデータを読み込みます
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         self.obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
-                case var if var == self.MENU.メタデータを出力します:
-                    # メタデータを出力します
-                    if self.obj_of_cls.reader is None:
-                        print("メタデータを読み込んでください。")
-                    else:
-                        if self.obj_of_cls.reader.is_encrypted:
-                            print("復号化してください。")
+                    case var if var == self.MENU.メタデータを出力します:
+                        # メタデータを出力します
+                        if self.obj_of_cls.reader is None:
+                            print("メタデータを読み込んでください。")
                         else:
                             self.obj_of_cls.print_metadata()
-                case var if var == self.MENU.メタデータを書き込みます:
-                    # メタデータを書き込みます
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
-                    else:
+                    case var if var == self.MENU.メタデータを書き込みます:
+                        # メタデータを書き込みます
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         self.obj_of_cls.metadata_of_writer = self.input_writing_metadata(self.obj_of_cls.metadata_of_writer, self.obj_of_cls.fields)
                         self.obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, self.obj_of_cls.metadata_of_writer)
-                case var if var == self.MENU.ファイルをマージします:
-                    # ファイルをマージします
-                    b = False
-                    pdfs = self.input_list_of_merge()
-                    for pdf in pdfs:
-                        self.obj_of_cls.reader = PdfReader(pdf)
-                        if self.obj_of_cls.reader.is_encrypted:
-                            b = True
-                            print(f"復号化してください。: {pdf}")
-                    if not b:
+                    case var if var == self.MENU.ファイルをマージします:
+                        # ファイルをマージします
+                        pdfs = self.input_list_of_merge()
+                        for pdf in pdfs:
+                            self.obj_of_cls.reader = PdfReader(pdf)
                         self.obj_of_cls.merge(pdfs)
-                case var if var == self.MENU.ページを抽出します:
-                    # ページを抽出します
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
-                    else:
+                    case var if var == self.MENU.ページを抽出します:
+                        # ページを抽出します
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
                         begin_page, end_page = self.input_extracting_pages()
                         self.obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
-                case var if var == self.MENU.テキストを抽出します:
-                    # テキストを抽出します
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
-                    else:
+                    case var if var == self.MENU.テキストを抽出します:
+                        # テキストを抽出します
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
                         begin_page, end_page = self.input_pages_of_extracting_text()
                         self.obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
-                case var if var == self.MENU.ページを時計回りで回転します:
-                    # ページを時計回りで回転します
-                    file_path_of_pdf_as_str_type = self.input_target_of_pdf()
-                    if self.obj_of_cls.reader.is_encrypted:
-                        print("復号化してください。")
-                    else:
+                    case var if var == self.MENU.ページを時計回りで回転します:
+                        # ページを時計回りで回転します
+                        file_path_of_pdf_as_str_type = self.input_target_of_pdf()
                         self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
                         page = self.input_rotating_page()
                         degrees = self.input_degrees()
                         self.obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
-                case var if var == self.MENU.終了します:
-                    # 終了します
-                    break
-                case _:
-                    pass
+                    case var if var == self.MENU.終了します:
+                        # 終了します
+                        break
+                    case _:
+                        pass
+            except Exception as e:
+                print(f"エラー: {e}")
             print()
         file_of_exe_as_path_type = Path(__file__)
         file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
