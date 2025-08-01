@@ -22,7 +22,7 @@ from source.common.common import DatetimeTools, PathTools, PlatformTools
 from source.get_nhk_news.gn2_class import GetNHKNews
 
 
-class NHKNewsApp(QWidget):
+class MainApp_Of_GN2(QWidget):
     def __init__(self):
         """初期化します"""
         super().__init__()
@@ -30,6 +30,10 @@ class NHKNewsApp(QWidget):
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
         self.obj_of_cls = GetNHKNews()
+        self.setup_ui()
+
+    def setup_ui(self):
+        """User Interfaceを設定します"""
         # WSL-Ubuntuでフォント設定
         if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
@@ -37,10 +41,6 @@ class NHKNewsApp(QWidget):
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             font = QFont(font_family)
             self.setFont(font)
-        self.setup_ui()
-
-    def setup_ui(self):
-        """User Interfaceを設定します"""
         # タイトル
         self.setWindowTitle("NHKニュース取得アプリ")
         # ウィジェット
@@ -82,7 +82,7 @@ class NHKNewsApp(QWidget):
                 summary = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
                 # QListWidgetItem + カスタムWidgetのセット
                 item = QListWidgetItem()
-                widget = NewsItemWidget(title, summary)
+                widget = NewsItem_Of_GN2(title, summary)
                 # アイテムにURL情報をセット
                 item.setData(Qt.UserRole, news.link)
                 item.setSizeHint(widget.sizeHint())
@@ -117,7 +117,7 @@ class NHKNewsApp(QWidget):
             QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました。: \n{e}")
 
 
-class NewsItemWidget(QWidget):
+class NewsItem_Of_GN2(QWidget):
     def __init__(self, title: str, summary: str):
         """初期化します"""
         super().__init__()
@@ -142,7 +142,7 @@ class NewsItemWidget(QWidget):
 def main():
     """主要関数"""
     app = QApplication(sys.argv)
-    window = NHKNewsApp()
+    window = MainApp_Of_GN2()
     window.resize(600, 400)
     window.show()
     sys.exit(app.exec())

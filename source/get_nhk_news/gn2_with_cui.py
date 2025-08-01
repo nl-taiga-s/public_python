@@ -5,10 +5,10 @@ from source.common.common import PathTools
 from source.get_nhk_news.gn2_class import GetNHKNews
 
 
-class GN2:
+class GN2_With_Cui:
     def __init__(self):
         """初期化します"""
-        self.obj_of_pt = PathTools()
+        pass
 
     def select_genre(self, d: dict) -> list:
         """ジャンルを選択します"""
@@ -30,23 +30,25 @@ class GN2:
         except KeyboardInterrupt:
             sys.exit(0)
 
-    def main(self) -> bool:
-        """主要関数"""
-        self.obj_of_cls = GetNHKNews()
-        # ジャンルを選択します
-        num_of_genre, key_of_genre = self.select_genre(self.obj_of_cls.rss_feeds)
-        if num_of_genre is None and key_of_genre is None:
-            return False
-        self.obj_of_cls.parse_rss(num_of_genre, key_of_genre)
-        self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN)
-        self.obj_of_cls.extract_news_of_today_from_standard_time()
-        self.obj_of_cls.print_specified_number_of_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW)
-        file_of_exe_as_path_type = Path(__file__)
-        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-        self.obj_of_cls.write_log(file_of_log_as_path_type)
-        return True
+
+def main() -> bool:
+    """主要関数"""
+    obj_of_cls = GetNHKNews()
+    obj_of_cui = GN2_With_Cui()
+    # ジャンルを選択します
+    num_of_genre, key_of_genre = obj_of_cui.select_genre(obj_of_cls.rss_feeds)
+    if num_of_genre is None and key_of_genre is None:
+        return False
+    obj_of_cls.parse_rss(num_of_genre, key_of_genre)
+    obj_of_cls.get_standard_time_and_today(obj_of_cls.TIMEZONE_OF_JAPAN)
+    obj_of_cls.extract_news_of_today_from_standard_time()
+    obj_of_cls.print_specified_number_of_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW)
+    obj_of_pt = PathTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_cls.write_log(file_of_log_as_path_type)
+    return True
 
 
 if __name__ == "__main__":
-    obj_with_cui = GN2()
-    obj_with_cui.main()
+    main()
