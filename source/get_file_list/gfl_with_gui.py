@@ -25,13 +25,17 @@ from source.common.common import (
 from source.get_file_list.gfl_class import GetFileList
 
 
-class FileSearchApp(QWidget):
+class MainApp_Of_GFL(QWidget):
     def __init__(self):
         """初期化します"""
         super().__init__()
         self.obj_of_pft = PlatformTools()
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
+        self.setup_ui()
+
+    def setup_ui(self):
+        """User Interfaceを設定します"""
         # WSL-Ubuntuでフォント設定
         if self.obj_of_pft.is_wsl():
             font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
@@ -39,10 +43,6 @@ class FileSearchApp(QWidget):
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             font = QFont(font_family)
             self.setFont(font)
-        self.setup_ui()
-
-    def setup_ui(self):
-        """User Interfaceを設定します"""
         # タイトル
         self.setWindowTitle("ファイル検索ツール")
         # ウィジェット
@@ -136,7 +136,7 @@ class FileSearchApp(QWidget):
 def main():
     """主要関数"""
     app = QApplication(sys.argv)
-    window = FileSearchApp()
+    window = MainApp_Of_GFL()
     window.resize(600, 400)
     window.show()
     sys.exit(app.exec())

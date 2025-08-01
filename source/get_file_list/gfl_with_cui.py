@@ -5,7 +5,7 @@ from source.common.common import DatetimeTools, PathTools
 from source.get_file_list.gfl_class import GetFileList
 
 
-class GFL:
+class GFL_With_Cui:
     def __init__(self):
         """初期化します"""
         self.d_of_bool = {
@@ -17,19 +17,25 @@ class GFL:
 
     def input_folder_path(self) -> str:
         """フォルダのパスを入力します"""
-        try:
-            while True:
-                folder_path = input("ファイルを検索したいフォルダを入力してください。: ")
-                if folder_path == "":
+        TILDE = "~"
+        while True:
+            try:
+                folder_path_of_pdf_as_str_type = input("ファイルを検索したいフォルダを入力してください。: ")
+                if folder_path_of_pdf_as_str_type == "":
                     return None
-                folder_as_path_type = Path(folder_path)
+                folder_as_path_type = Path(folder_path_of_pdf_as_str_type)
+                if TILDE in folder_path_of_pdf_as_str_type:
+                    folder_as_path_type = self.obj_of_pt.get_expanded_in_home_dir(folder_as_path_type)
+                    folder_path_of_pdf_as_str_type = str(folder_as_path_type)
                 if folder_as_path_type.exists():
                     # 存在する場合
                     if folder_as_path_type.is_dir():
                         # フォルダの場合
-                        return folder_path
-        except KeyboardInterrupt:
-            sys.exit(0)
+                        return folder_path_of_pdf_as_str_type
+            except Exception as e:
+                print(e)
+            except KeyboardInterrupt:
+                sys.exit(0)
 
     def input_bool_of_recursive(self) -> bool:
         """フォルダを再帰的に検索するかどうかを入力します"""
@@ -56,22 +62,24 @@ class GFL:
         except KeyboardInterrupt:
             sys.exit(0)
 
-    def main(self) -> bool:
-        """主要関数"""
-        folder_path = self.input_folder_path()
-        if folder_path is None:
-            return False
-        bool_of_r = self.input_bool_of_recursive()
-        obj_of_cls = GetFileList(folder_path, bool_of_r)
-        pattern = self.input_pattern()
-        obj_of_cls.extract_by_pattern(pattern)
-        print(*obj_of_cls.list_file_after, sep="\n")
-        file_of_exe_as_path_type = Path(__file__)
-        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-        obj_of_cls.write_log(file_of_log_as_path_type, obj_of_cls.list_file_after)
-        return True
+
+def main() -> bool:
+    """主要関数"""
+    obj_with_cui = GFL_With_Cui()
+    folder_path = obj_with_cui.input_folder_path()
+    if folder_path is None:
+        return False
+    bool_of_r = obj_with_cui.input_bool_of_recursive()
+    obj_of_cls = GetFileList(folder_path, bool_of_r)
+    pattern = obj_with_cui.input_pattern()
+    obj_of_cls.extract_by_pattern(pattern)
+    print(*obj_of_cls.list_file_after, sep="\n")
+    obj_of_pt = PathTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_cls.write_log(file_of_log_as_path_type, obj_of_cls.list_file_after)
+    return True
 
 
 if __name__ == "__main__":
-    obj_with_cui = GFL()
-    obj_with_cui.main()
+    main()
