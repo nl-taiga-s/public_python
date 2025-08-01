@@ -18,33 +18,17 @@ from PySide6.QtWidgets import (
 from source.common.common import GUITools, PathTools, PlatformTools
 
 
-def check_os() -> object:
-    try:
-        from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
-    except ImportError as e:
-        obj_of_gt = GUITools()
-        obj_of_gt.show_error(str(e))
-    else:
-        return ConvertOfficeToPDF
-
-
 class MainApp_Of_COTP(QWidget):
-    def __init__(self):
+    def __init__(self, obj_of_cls: object):
         """初期化します"""
-        try:
-            self.cotp = check_os()
-            if self.cotp is None:
-                raise EnvironmentError
-            super().__init__()
-            self.obj_of_pft = PlatformTools()
-            self.obj_of_pt = PathTools()
-            self.folder_path_from = ""
-            self.folder_path_to = ""
-            self.setup_ui()
-        except EnvironmentError:
-            pass
+        super().__init__()
+        self.obj_of_pft = PlatformTools()
+        self.obj_of_pt = PathTools()
+        self.folder_path_from = ""
+        self.folder_path_to = ""
+        self.setup_ui(obj_of_cls)
 
-    def setup_ui(self):
+    def setup_ui(self, obj_of_cls: object):
         """User Interfaceを設定します"""
         # タイトル
         self.setWindowTitle("Officeファイル → PDF 一括変換")
@@ -77,9 +61,9 @@ class MainApp_Of_COTP(QWidget):
         layout.addWidget(self.log_output)
         self.setLayout(layout)
         # シグナル接続
-        self.btn_select_from.clicked.connect(self.select_from_folder)
+        self.btn_select_from.clicked.connect(self.select_from_folder(obj_of_cls))
         self.btn_open_from.clicked.connect(lambda: self.open_explorer(self.folder_path_from))
-        self.btn_select_to.clicked.connect(self.select_to_folder)
+        self.btn_select_to.clicked.connect(self.select_to_folder(obj_of_cls))
         self.btn_open_to.clicked.connect(lambda: self.open_explorer(self.folder_path_to))
         self.btn_convert.clicked.connect(self.convert_file)
 
@@ -98,7 +82,7 @@ class MainApp_Of_COTP(QWidget):
         else:
             self.log("フォルダが未選択のため開けません。")
 
-    def select_from_folder(self):
+    def select_from_folder(self, obj_of_cls: object):
         """変換元のフォルダを選択します"""
         folder = QFileDialog.getExistingDirectory(self, "変換元のフォルダを選択")
         folder_as_path_type = Path(folder)
@@ -106,9 +90,9 @@ class MainApp_Of_COTP(QWidget):
         if folder:
             self.folder_path_from = folder
             self.label_from.setText(f"変換元フォルダ: {folder}")
-            self.try_load_files()
+            self.try_load_files(obj_of_cls)
 
-    def select_to_folder(self):
+    def select_to_folder(self, obj_of_cls: object):
         """変換先のフォルダを選択します"""
         folder = QFileDialog.getExistingDirectory(self, "変換先のフォルダを選択")
         folder_as_path_type = Path(folder)
@@ -116,14 +100,14 @@ class MainApp_Of_COTP(QWidget):
         if folder:
             self.folder_path_to = folder
             self.label_to.setText(f"変換先フォルダ: {folder}")
-            self.try_load_files()
+            self.try_load_files(obj_of_cls)
 
-    def try_load_files(self):
+    def try_load_files(self, obj_of_cls: object):
         """両フォルダ選択済みならファイル一覧を表示します"""
         if not self.folder_path_from or not self.folder_path_to:
             return
         try:
-            self.obj_of_cls = self.cotp(self.folder_path_from, self.folder_path_to)
+            self.obj_of_cls = obj_of_cls(self.folder_path_from, self.folder_path_to)
             self.file_list_widget.clear()
             for f in self.obj_of_cls.filtered_list_of_f:
                 file_as_path_type = Path(f)
@@ -169,14 +153,20 @@ class MainApp_Of_COTP(QWidget):
 
 def main() -> bool:
     """主要関数"""
-    app = QApplication(sys.argv)
-    window = MainApp_Of_COTP()
-    if window.cotp is None:
+    try:
+        app = QApplication(sys.argv)
+        from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+
+        window = MainApp_Of_COTP(ConvertOfficeToPDF)
+        window.resize(700, 600)
+        window.show()
+        sys.exit(app.exec())
+    except ImportError as e:
+        obj_of_gt = GUITools()
+        obj_of_gt.show_error(str(e))
         return False
-    window.resize(700, 600)
-    window.show()
-    sys.exit(app.exec())
-    return True
+    else:
+        return True
 
 
 if __name__ == "__main__":

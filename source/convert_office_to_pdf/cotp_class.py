@@ -1,5 +1,4 @@
 import glob
-import sys
 from pathlib import Path
 
 from comtypes.client import CreateObject
@@ -19,9 +18,6 @@ class ConvertOfficeToPDF:
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
         print(self.__class__.__doc__)
-        self.co = CreateObject
-        if self.co is None:
-            sys.exit(0)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
         self.folder_path_from = folder_path_from
@@ -101,7 +97,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_EXCEL = 0
         try:
-            obj = self.co("Excel.Application")
+            obj = CreateObject("Excel.Application")
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
         except Exception as e:
@@ -121,7 +117,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_WORD = 17
         try:
-            obj = self.co("Word.Application")
+            obj = CreateObject("Word.Application")
             f = obj.Documents.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 OutputFileName=self.current_of_file_path_to,
@@ -144,7 +140,7 @@ class ConvertOfficeToPDF:
         print(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_POWERPOINT = 2
         try:
-            obj = self.co("PowerPoint.Application")
+            obj = CreateObject("PowerPoint.Application")
             f = obj.Presentations.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(
                 Path=self.current_of_file_path_to,
