@@ -1,10 +1,9 @@
 import datetime
 import platform
-import sys
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 
 class PlatformTools:
@@ -123,15 +122,16 @@ class PathTools:
 
 
 class GUITools:
-    def __init__(self):
-        pass
+    def __init__(self, parent: QWidget = None):
+        self.parent = parent
 
     def show_error(self, msg: str):
         """エラーのウィンドウを表示します"""
-        app = QApplication(sys.argv)
-        window = QMessageBox.information(self, "エラー", msg)
-        window.show()
+        box = QMessageBox(self.parent)
+        box.setIcon(QMessageBox.Icon.Critical)
+        box.setWindowTitle("エラー")
+        box.setText(msg)
         # 一定時間後に自動終了する
         MILLI_SECONDS = 10000
-        QTimer.singleShot(MILLI_SECONDS, app.quit)
-        app.exec()
+        QTimer.singleShot(MILLI_SECONDS, box.accept)
+        box.exec()
