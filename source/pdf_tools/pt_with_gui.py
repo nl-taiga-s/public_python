@@ -24,7 +24,7 @@ class MainApp_Of_PT(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PDFツール")
-        self.resize(500, 600)
+        self.resize(700, 700)
 
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -55,16 +55,17 @@ class MainApp_Of_PT(QMainWindow):
         layout.addWidget(QLabel("パスワード"))
         layout.addWidget(self.password_input)
 
-        # 暗号化・復号化
+        # 暗号化
         encrypt_btn = QPushButton("暗号化")
         encrypt_btn.clicked.connect(self.encrypt_pdf)
         layout.addWidget(encrypt_btn)
 
+        # 復号化
         decrypt_btn = QPushButton("復号化")
         decrypt_btn.clicked.connect(self.decrypt_pdf)
         layout.addWidget(decrypt_btn)
 
-        # メタデータ
+        # メタデータの表示
         meta_btn = QPushButton("メタデータの表示")
         meta_btn.clicked.connect(self.show_metadata)
         layout.addWidget(meta_btn)
@@ -80,6 +81,7 @@ class MainApp_Of_PT(QMainWindow):
             layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
             layout.addWidget(self.line_edits_of_metadata[key])
 
+        # メタデータの書き込み
         write_meta_btn = QPushButton("メタデータの書き込み")
         write_meta_btn.clicked.connect(self.write_metadata)
         layout.addWidget(write_meta_btn)
@@ -89,23 +91,43 @@ class MainApp_Of_PT(QMainWindow):
         merge_btn.clicked.connect(self.merge_pdfs)
         layout.addWidget(merge_btn)
 
-        # ページ抽出
-        self.begin_spin = QSpinBox()
-        self.end_spin = QSpinBox()
-        page_layout = QHBoxLayout()
-        page_layout.addWidget(QLabel("抽出開始"))
-        page_layout.addWidget(self.begin_spin)
-        page_layout.addWidget(QLabel("抽出終了"))
-        page_layout.addWidget(self.end_spin)
-        layout.addLayout(page_layout)
+        # ページの抽出
+        self.begin_spin_of_ep = QSpinBox()
+        self.end_spin_of_ep = QSpinBox()
+        page_layout_of_ep = QHBoxLayout()
+        page_layout_of_ep.addWidget(QLabel("ページの抽出開始"))
+        page_layout_of_ep.addWidget(self.begin_spin_of_ep)
+        page_layout_of_ep.addWidget(QLabel("ページの抽出終了"))
+        page_layout_of_ep.addWidget(self.end_spin_of_ep)
+        layout.addLayout(page_layout_of_ep)
 
-        extract_btn = QPushButton("ページの抽出")
-        extract_btn.clicked.connect(self.extract_pages)
-        layout.addWidget(extract_btn)
+        extract_page_btn = QPushButton("ページの抽出")
+        extract_page_btn.clicked.connect(self.extract_pages)
+        layout.addWidget(extract_page_btn)
 
+        # テキストの抽出
+        self.begin_spin_of_et = QSpinBox()
+        self.end_spin_of_et = QSpinBox()
+        page_layout_of_et = QHBoxLayout()
+        page_layout_of_et.addWidget(QLabel("テキストの抽出開始"))
+        page_layout_of_et.addWidget(self.begin_spin_of_et)
+        page_layout_of_et.addWidget(QLabel("テキストの抽出終了"))
+        page_layout_of_et.addWidget(self.end_spin_of_et)
+        layout.addLayout(page_layout_of_et)
+
+        extract_text_btn = QPushButton("テキストの抽出")
+        extract_text_btn.clicked.connect(self.extract_text)
+        layout.addWidget(extract_text_btn)
+
+        # ページの回転
+        self.spin_of_rp = QSpinBox()
+        page_layout_of_rp = QHBoxLayout()
+        page_layout_of_rp.addWidget(QLabel("回転するページ"))
+        page_layout_of_rp.addWidget(self.spin_of_rp)
         rotate_btn = QPushButton("ページを時計回りに回転（90度）")
         rotate_btn.clicked.connect(self.rotate_page)
-        layout.addWidget(rotate_btn)
+        page_layout_of_rp.addWidget(rotate_btn)
+        layout.addLayout(page_layout_of_rp)
 
         # ログの出力
         self.output = QTextEdit()
@@ -142,13 +164,19 @@ class MainApp_Of_PT(QMainWindow):
         if not path.strip():
             self.show_error("PDFファイルパスを入力してください。")
             return None
-        self.obj_of_cls.read_metadata(path)
-        lines = []
-        for k, v in self.obj_of_cls.metadata_of_reader.items():
-            lines.append(f"{k}: {v}")
-        text = "\n".join(lines)
-        self.output_log()
-        self.output.setPlainText(text)
+        try:
+            self.obj_of_cls.read_metadata(path)
+            lines = []
+            for k, v in self.obj_of_cls.metadata_of_reader.items():
+                lines.append(f"{k}: {v}")
+            self.obj_of_cls.log += lines
+        except Exception:
+            b = False
+        else:
+            b = True
+        finally:
+            self.show_result("メタデータの表示", b)
+            self.output_log()
 
     def write_metadata(self):
         path = self.file_input.text()
@@ -164,7 +192,8 @@ class MainApp_Of_PT(QMainWindow):
                     self.widget_of_metadata[key] = time
                 case _:
                     self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
-        self.obj_of_cls.write_metadata(path, self.widget_of_metadata)
+        success = self.obj_of_cls.write_metadata(path, self.widget_of_metadata)
+        self.show_result("メタデータの書き込み", success)
         self.output_log()
 
     def merge_pdfs(self):
@@ -176,25 +205,39 @@ class MainApp_Of_PT(QMainWindow):
 
     def extract_pages(self):
         path = self.file_input.text()
-        begin, end = self.begin_spin.value(), self.end_spin.value()
+        begin, end = self.begin_spin_of_ep.value(), self.end_spin_of_ep.value()
         if begin == 0 or end == 0:
             self.show_error("ページ範囲を指定してください。")
             return None
         if not path.strip() or begin < 1 or end < begin:
             self.show_error("ページ範囲またはパスが不正です。")
             return None
-        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
-        self.obj_of_cls.extract_pages(path, begin, end)
+        success = self.obj_of_cls.extract_pages(path, begin, end)
+        self.show_result("ページの抽出", success)
+        self.output_log()
+
+    def extract_text(self):
+        path = self.file_input.text()
+        begin, end = self.begin_spin_of_et.value(), self.end_spin_of_et.value()
+        if begin == 0 or end == 0:
+            self.show_error("ページ範囲を指定してください。")
+            return None
+        if not path.strip() or begin < 1 or end < begin:
+            self.show_error("ページ範囲またはパスが不正です。")
+            return None
+        success = self.obj_of_cls.extract_text(path, begin, end)
+        self.obj_of_cls.log += self.obj_of_cls.lst_of_text_in_pages
+        self.show_result("テキストの抽出", success)
         self.output_log()
 
     def rotate_page(self):
         path = self.file_input.text()
-        page = self.begin_spin.value()
+        page = self.spin_of_rp.value()
         if not path.strip() or page < 1:
             self.show_error("ページ番号が不正です。")
             return None
-        self.obj_of_cls.num_of_pages = len(self.obj_of_cls.reader.pages)
-        self.obj_of_cls.rotate_page_clockwise(path, page, 90)
+        success = self.obj_of_cls.rotate_page_clockwise(path, page, 90)
+        self.show_result("ページの回転", success)
         self.output_log()
 
     def show_result(self, label: str, success: bool):

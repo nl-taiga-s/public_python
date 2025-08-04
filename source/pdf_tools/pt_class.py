@@ -33,6 +33,7 @@ class PdfTools:
         ]
         self.creation_date = None
         self.modification_date = None
+        self.lst_of_text_in_pages = []
         self.log = []
 
     def encrypt(self, file_path: str, password: str) -> bool:
@@ -85,6 +86,7 @@ class PdfTools:
             log_msg = None
             self.reader = PdfReader(file_path)
             self.metadata_of_reader = self.reader.metadata
+            self.num_of_pages = len(self.reader.pages)
             self.creation_date = self.metadata_of_reader.get("/CreationDate")
         except Exception as e:
             log_msg = f"メタデータの読み込みに失敗しました。: {e}"
@@ -211,8 +213,7 @@ class PdfTools:
             log_msg = None
             self.reader = PdfReader(file_path)
             for i in range(begin_page - 1, end_page):
-                print(f"{i + 1}ページ: ")
-                print(self.reader.pages[i].extract_text())
+                self.lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
         except Exception as e:
             log_msg = f"テキストの抽出に失敗しました。: {e}"
         else:
