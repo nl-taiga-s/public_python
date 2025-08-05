@@ -4,6 +4,7 @@
 build/
 dist/
 __log__/
+__images__/
 wheels/
 *cache*/
 samples/
