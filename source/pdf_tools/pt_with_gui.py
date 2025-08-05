@@ -188,7 +188,7 @@ class MainApp_Of_PT(QMainWindow):
 
     def get_image(self, file_path: str) -> list:
         file_as_path_type = Path(file_path)
-        file_name_as_str_type = self.obj_of_pt.get_file_name_without_extension(file_as_path_type)
+        file_name_as_str_type = file_as_path_type.stem
         self.output_dir = Path(__file__).parent / "__images__"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         pdf = pypdfium2.PdfDocument(file_path)

@@ -62,9 +62,9 @@ class PT_With_Cui:
                 file_path_of_pdf_as_str_type = input("対象のPDFファイルのパスを入力してください。: ")
                 file_of_pdf_as_path_type = Path(file_path_of_pdf_as_str_type)
                 if TILDE in file_path_of_pdf_as_str_type:
-                    file_of_pdf_as_path_type = self.obj_of_pt.get_expanded_in_home_dir(file_of_pdf_as_path_type)
+                    file_of_pdf_as_path_type = file_of_pdf_as_path_type.expanduser()
                     file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
-                if file_of_pdf_as_path_type.exists() and self.obj_of_pt.get_extension(file_of_pdf_as_path_type) == extension:
+                if file_of_pdf_as_path_type.exists() and file_of_pdf_as_path_type.suffix.lower() == extension:
                     return file_path_of_pdf_as_str_type
                 else:
                     print(f"PDFファイルが不正です。: {file_path_of_pdf_as_str_type}")
@@ -129,9 +129,9 @@ class PT_With_Cui:
                 file_as_str_type = input("マージ元のファイルのパスを順番に入力してください。: ")
                 file_as_path_type = Path(file_as_str_type)
                 if TILDE in file_as_str_type:
-                    file_as_path_type = self.obj_of_pt.get_expanded_in_home_dir(file_as_path_type)
+                    file_as_path_type = file_as_path_type.expanduser()
                     file_as_str_type = str(file_as_path_type)
-                if file_as_path_type.exists() and self.obj_of_pt.get_extension(file_as_path_type) == extension:
+                if file_as_path_type.exists() and file_as_path_type.suffix.lower() == extension:
                     pdfs.append(file_as_str_type)
                 else:
                     print("有効なマージ元のファイルのパスを入力してください。")

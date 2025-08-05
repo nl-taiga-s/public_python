@@ -149,7 +149,7 @@ class PdfTools:
             b = False
             log_msg = None
             first_file_of_pdf_as_path_type = Path(pdfs[0])
-            folder_of_pdf_as_path_type = self.obj_of_pt.get_dir_path(first_file_of_pdf_as_path_type)
+            folder_of_pdf_as_path_type = first_file_of_pdf_as_path_type.parent
             dt = self.obj_of_dt2.convert_for_file_name()
             file_name_of_pdf_as_str_type = f"merged_file_{dt}.pdf"
             file_of_pdf_as_path_type = folder_of_pdf_as_path_type / file_name_of_pdf_as_str_type
@@ -180,7 +180,7 @@ class PdfTools:
             for i in range(begin_page - 1, end_page):
                 self.writer.add_page(self.reader.pages[i])
             file_of_exe_as_path_type = Path(file_path)
-            folder_of_pdf_as_path_type = self.obj_of_pt.get_dir_path(file_of_exe_as_path_type)
+            folder_of_pdf_as_path_type = file_of_exe_as_path_type.parent
             dt = self.obj_of_dt2.convert_for_file_name()
             file_name_of_pdf_as_str_type = f"extracted_file_{dt}.pdf"
             file_of_pdf_as_path_type = folder_of_pdf_as_path_type / file_name_of_pdf_as_str_type

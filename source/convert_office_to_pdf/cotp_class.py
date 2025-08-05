@@ -43,7 +43,7 @@ class ConvertOfficeToPDF:
             valid_exts = sum(self.file_types.values(), [])
             for f in unfiltered_list_of_f:
                 file_as_path_type = Path(f)
-                if self.obj_of_pt.get_extension(file_as_path_type) in valid_exts:
+                if file_as_path_type.suffix.lower() in valid_exts:
                     self.filtered_list_of_f.append(f)
             # ファイルの数
             self.number_of_f = len(self.filtered_list_of_f)
@@ -58,7 +58,7 @@ class ConvertOfficeToPDF:
         # 対象の変換元のファイルパス
         self.current_of_file_path_from = self.filtered_list_of_f[self.p]
         file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
-        file_name_no_ext = self.obj_of_pt.get_file_name_without_extension(file_of_currentfrom_as_path_type)
+        file_name_no_ext = file_of_currentfrom_as_path_type.stem
         # 対象の変換先のファイルパス
         file_of_currentto_as_path_type = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
         self.current_of_file_path_to = str(file_of_currentto_as_path_type)
@@ -82,7 +82,7 @@ class ConvertOfficeToPDF:
     def handle_file(self):
         """ファイルの種類を判定して、各処理を実行します"""
         file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
-        ext = self.obj_of_pt.get_extension(file_of_currentfrom_as_path_type)
+        ext = file_of_currentfrom_as_path_type.suffix.lower()
         match ext:
             case var if var in self.file_types["excel"]:
                 self.convert_excel_to_pdf()

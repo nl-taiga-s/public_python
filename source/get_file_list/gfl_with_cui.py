@@ -25,7 +25,7 @@ class GFL_With_Cui:
                     return None
                 folder_as_path_type = Path(folder_path_of_pdf_as_str_type)
                 if TILDE in folder_path_of_pdf_as_str_type:
-                    folder_as_path_type = self.obj_of_pt.get_expanded_in_home_dir(folder_as_path_type)
+                    folder_as_path_type = folder_as_path_type.expanduser()
                     folder_path_of_pdf_as_str_type = str(folder_as_path_type)
                 if folder_as_path_type.exists():
                     # 存在する場合

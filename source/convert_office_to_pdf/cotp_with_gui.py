@@ -111,7 +111,7 @@ class MainApp_Of_COTP(QWidget):
             self.file_list_widget.clear()
             for f in self.obj_of_cls.filtered_list_of_f:
                 file_as_path_type = Path(f)
-                file_path = self.obj_of_pt.get_entire_file_name(file_as_path_type)
+                file_path = file_as_path_type.name
                 self.file_list_widget.addItem(file_path)
             self.progress_bar.setValue(0)
         except ValueError as e:
@@ -132,7 +132,7 @@ class MainApp_Of_COTP(QWidget):
         for i in range(total):
             try:
                 file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
-                file_name = self.obj_of_pt.get_entire_file_name(file_of_currentfrom_as_path_type)
+                file_name = file_of_currentfrom_as_path_type.name
                 self.obj_of_cls.handle_file()
             except Exception as e:
                 self.log(f"❌ {file_name} → エラー: {e}")
