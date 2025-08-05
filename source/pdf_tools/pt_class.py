@@ -167,7 +167,7 @@ class PdfTools:
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg}{time_stamp}")
+            self.log.append(f"{log_msg},{time_stamp}")
             return b
 
     def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
@@ -203,7 +203,7 @@ class PdfTools:
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg}{time_stamp}")
+            self.log.append(f"{log_msg},{time_stamp}")
             return b
 
     def extract_text(self, file_path: str, begin_page: int, end_page: int) -> bool:
@@ -222,7 +222,7 @@ class PdfTools:
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg}{time_stamp}")
+            self.log.append(f"{log_msg},{time_stamp}")
             return b
 
     def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> bool:
@@ -246,7 +246,7 @@ class PdfTools:
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg}{time_stamp}")
+            self.log.append(f"{log_msg},{time_stamp}")
             return b
 
     def write_log(self, file_of_log_as_path_type: Path):

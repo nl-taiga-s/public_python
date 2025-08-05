@@ -165,7 +165,6 @@ class MainApp_Of_PT(QMainWindow):
             self.show_error("PDFファイルパスを入力してください。")
             return None
         try:
-            self.obj_of_cls.read_metadata(path)
             lines = []
             for k, v in self.obj_of_cls.metadata_of_reader.items():
                 lines.append(f"{k}: {v}")
@@ -195,6 +194,7 @@ class MainApp_Of_PT(QMainWindow):
         success = self.obj_of_cls.write_metadata(path, self.widget_of_metadata)
         self.show_result("メタデータの書き込み", success)
         self.output_log()
+        self.obj_of_cls.read_metadata(path)
 
     def merge_pdfs(self):
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
