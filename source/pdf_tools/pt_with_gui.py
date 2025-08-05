@@ -1,6 +1,9 @@
 import sys
 from pathlib import Path
 
+import pypdfium2
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -11,6 +14,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QTextEdit,
     QVBoxLayout,
@@ -31,70 +35,78 @@ class MainApp_Of_PT(QMainWindow):
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_cls = PdfTools()
 
-        self.init_ui()
+        self.first_init_ui()
 
     def closeEvent(self, event):
         self.write_log()
         super().closeEvent(event)
 
-    def init_ui(self):
-        central = QWidget()
-        self.setCentralWidget(central)
-        main_layout = QHBoxLayout(central)
-        left_layout = QVBoxLayout()
-        right_layout = QGridLayout()
-        main_layout.addLayout(left_layout)
-        main_layout.addLayout(right_layout)
+    def first_init_ui(self):
+        self.central = QWidget()
+        self.setCentralWidget(self.central)
+        # 主要
+        self.main_layout = QHBoxLayout(self.central)
+        # 左側
+        self.left_layout = QVBoxLayout()
+        self.main_layout.addLayout(self.left_layout)
+        # 右側
+        self.right_scroll_area = QScrollArea()
+        self.right_scroll_area.setWidgetResizable(True)
+        self.main_layout.addWidget(self.right_scroll_area)
+        # 仮想コンテナのウィジェットとレイアウト
+        self.right_widget = QWidget()
+        self.right_layout = QGridLayout(self.right_widget)
+        self.right_scroll_area.setWidget(self.right_widget)
 
         # ファイル選択
         self.file_input = QLineEdit()
-        left_layout.addWidget(QLabel("PDFファイルパス"))
-        left_layout.addWidget(self.file_input)
+        self.left_layout.addWidget(QLabel("PDFファイルパス"))
+        self.left_layout.addWidget(self.file_input)
         browse_btn = QPushButton("参照")
         browse_btn.clicked.connect(self.select_pdf)
-        left_layout.addWidget(browse_btn)
+        self.left_layout.addWidget(browse_btn)
 
         # パスワード入力
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
-        left_layout.addWidget(QLabel("パスワード"))
-        left_layout.addWidget(self.password_input)
+        self.left_layout.addWidget(QLabel("パスワード"))
+        self.left_layout.addWidget(self.password_input)
 
         # 暗号化
         encrypt_btn = QPushButton("暗号化")
         encrypt_btn.clicked.connect(self.encrypt_pdf)
-        left_layout.addWidget(encrypt_btn)
+        self.left_layout.addWidget(encrypt_btn)
 
         # 復号化
         decrypt_btn = QPushButton("復号化")
         decrypt_btn.clicked.connect(self.decrypt_pdf)
-        left_layout.addWidget(decrypt_btn)
+        self.left_layout.addWidget(decrypt_btn)
 
         # メタデータの表示
         meta_btn = QPushButton("メタデータの表示")
         meta_btn.clicked.connect(self.show_metadata)
-        left_layout.addWidget(meta_btn)
+        self.left_layout.addWidget(meta_btn)
 
         # メタデータの入力
-        left_layout.addWidget(QLabel("メタデータの入力"))
+        self.left_layout.addWidget(QLabel("メタデータの入力"))
         self.widget_of_metadata = {}
         self.line_edits_of_metadata = {}
         for value, key in self.obj_of_cls.fields:
             if value in ["creation_date", "modification_date"]:
                 continue
             self.line_edits_of_metadata[key] = QLineEdit()
-            left_layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
-            left_layout.addWidget(self.line_edits_of_metadata[key])
+            self.left_layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
+            self.left_layout.addWidget(self.line_edits_of_metadata[key])
 
         # メタデータの書き込み
         write_meta_btn = QPushButton("メタデータの書き込み")
         write_meta_btn.clicked.connect(self.write_metadata)
-        left_layout.addWidget(write_meta_btn)
+        self.left_layout.addWidget(write_meta_btn)
 
         # マージ
         merge_btn = QPushButton("複数PDFをマージ")
         merge_btn.clicked.connect(self.merge_pdfs)
-        left_layout.addWidget(merge_btn)
+        self.left_layout.addWidget(merge_btn)
 
         # ページの抽出
         self.begin_spin_of_ep = QSpinBox()
@@ -104,11 +116,11 @@ class MainApp_Of_PT(QMainWindow):
         page_layout_of_ep.addWidget(self.begin_spin_of_ep)
         page_layout_of_ep.addWidget(QLabel("ページの抽出終了"))
         page_layout_of_ep.addWidget(self.end_spin_of_ep)
-        left_layout.addLayout(page_layout_of_ep)
+        self.left_layout.addLayout(page_layout_of_ep)
 
         extract_page_btn = QPushButton("ページの抽出")
         extract_page_btn.clicked.connect(self.extract_pages)
-        left_layout.addWidget(extract_page_btn)
+        self.left_layout.addWidget(extract_page_btn)
 
         # テキストの抽出
         self.begin_spin_of_et = QSpinBox()
@@ -118,11 +130,11 @@ class MainApp_Of_PT(QMainWindow):
         page_layout_of_et.addWidget(self.begin_spin_of_et)
         page_layout_of_et.addWidget(QLabel("テキストの抽出終了"))
         page_layout_of_et.addWidget(self.end_spin_of_et)
-        left_layout.addLayout(page_layout_of_et)
+        self.left_layout.addLayout(page_layout_of_et)
 
         extract_text_btn = QPushButton("テキストの抽出")
         extract_text_btn.clicked.connect(self.extract_text)
-        left_layout.addWidget(extract_text_btn)
+        self.left_layout.addWidget(extract_text_btn)
 
         # ページの回転
         self.spin_of_rp = QSpinBox()
@@ -132,19 +144,62 @@ class MainApp_Of_PT(QMainWindow):
         rotate_btn = QPushButton("ページを時計回りに回転（90度）")
         rotate_btn.clicked.connect(self.rotate_page)
         page_layout_of_rp.addWidget(rotate_btn)
-        left_layout.addLayout(page_layout_of_rp)
+        self.left_layout.addLayout(page_layout_of_rp)
 
         # ログの出力
         self.output = QTextEdit()
         self.output.setReadOnly(True)
-        left_layout.addWidget(QLabel("出力"))
-        left_layout.addWidget(self.output)
+        self.left_layout.addWidget(QLabel("出力"))
+        self.left_layout.addWidget(self.output)
+
+    def second_init_ui(self, images: list):
+        # 既存のレイアウトをクリア（再表示に対応）
+        for i in reversed(range(self.right_layout.count())):
+            widget = self.right_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+        # 各ページを表示する
+        for i, element in enumerate(images):
+            # 垂直レイアウトを用意する
+            page_layout = QVBoxLayout()
+            page_widget = QWidget()
+            page_widget.setLayout(page_layout)
+            # ページ番号のラベル
+            page_num_label = QLabel(f"page: {i + 1}")
+            page_num_label.setAlignment(Qt.AlignCenter)
+            page_layout.addWidget(page_num_label)
+            # 画像のラベル
+            image_label = QLabel()
+            pixmap = QPixmap(element).scaledToWidth(300, Qt.SmoothTransformation)
+            image_label.setPixmap(pixmap)
+            image_label.setScaledContents(True)
+            image_label.setFixedSize(pixmap.size())
+            page_layout.addWidget(image_label)
+            # グリッドにページごとに追加する
+            self.right_layout.addWidget(page_widget, i // 2, i % 2)
 
     def select_pdf(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if file_path.strip():
             self.file_input.setText(file_path)
             self.obj_of_cls.read_metadata(file_path)
+            images = self.get_image(file_path)
+            self.second_init_ui(images)
+
+    def get_image(self, file_path: str) -> list:
+        file_as_path_type = Path(file_path)
+        file_name_as_str_type = self.obj_of_pt.get_file_name_without_extension(file_as_path_type)
+        self.output_dir = Path(__file__).parent / "__images__"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        pdf = pypdfium2.PdfDocument(file_path)
+        output_files = []
+        for i, page in enumerate(pdf):
+            pil_image = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
+            output_file = self.output_dir / f"{file_name_as_str_type}_{i + 1}.png"
+            pil_image.save(output_file)
+            output_files.append(str(output_file))
+            page.close()
+        return output_files
 
     def encrypt_pdf(self):
         path, pw = self.file_input.text(), self.password_input.text()
