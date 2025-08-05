@@ -4,6 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -39,57 +40,61 @@ class MainApp_Of_PT(QMainWindow):
     def init_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
+        main_layout = QHBoxLayout(central)
+        left_layout = QVBoxLayout()
+        right_layout = QGridLayout()
+        main_layout.addLayout(left_layout)
+        main_layout.addLayout(right_layout)
 
         # ファイル選択
         self.file_input = QLineEdit()
-        layout.addWidget(QLabel("PDFファイルパス"))
-        layout.addWidget(self.file_input)
+        left_layout.addWidget(QLabel("PDFファイルパス"))
+        left_layout.addWidget(self.file_input)
         browse_btn = QPushButton("参照")
         browse_btn.clicked.connect(self.select_pdf)
-        layout.addWidget(browse_btn)
+        left_layout.addWidget(browse_btn)
 
         # パスワード入力
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
-        layout.addWidget(QLabel("パスワード"))
-        layout.addWidget(self.password_input)
+        left_layout.addWidget(QLabel("パスワード"))
+        left_layout.addWidget(self.password_input)
 
         # 暗号化
         encrypt_btn = QPushButton("暗号化")
         encrypt_btn.clicked.connect(self.encrypt_pdf)
-        layout.addWidget(encrypt_btn)
+        left_layout.addWidget(encrypt_btn)
 
         # 復号化
         decrypt_btn = QPushButton("復号化")
         decrypt_btn.clicked.connect(self.decrypt_pdf)
-        layout.addWidget(decrypt_btn)
+        left_layout.addWidget(decrypt_btn)
 
         # メタデータの表示
         meta_btn = QPushButton("メタデータの表示")
         meta_btn.clicked.connect(self.show_metadata)
-        layout.addWidget(meta_btn)
+        left_layout.addWidget(meta_btn)
 
         # メタデータの入力
-        layout.addWidget(QLabel("メタデータの入力"))
+        left_layout.addWidget(QLabel("メタデータの入力"))
         self.widget_of_metadata = {}
         self.line_edits_of_metadata = {}
         for value, key in self.obj_of_cls.fields:
             if value in ["creation_date", "modification_date"]:
                 continue
             self.line_edits_of_metadata[key] = QLineEdit()
-            layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
-            layout.addWidget(self.line_edits_of_metadata[key])
+            left_layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
+            left_layout.addWidget(self.line_edits_of_metadata[key])
 
         # メタデータの書き込み
         write_meta_btn = QPushButton("メタデータの書き込み")
         write_meta_btn.clicked.connect(self.write_metadata)
-        layout.addWidget(write_meta_btn)
+        left_layout.addWidget(write_meta_btn)
 
         # マージ
         merge_btn = QPushButton("複数PDFをマージ")
         merge_btn.clicked.connect(self.merge_pdfs)
-        layout.addWidget(merge_btn)
+        left_layout.addWidget(merge_btn)
 
         # ページの抽出
         self.begin_spin_of_ep = QSpinBox()
@@ -99,11 +104,11 @@ class MainApp_Of_PT(QMainWindow):
         page_layout_of_ep.addWidget(self.begin_spin_of_ep)
         page_layout_of_ep.addWidget(QLabel("ページの抽出終了"))
         page_layout_of_ep.addWidget(self.end_spin_of_ep)
-        layout.addLayout(page_layout_of_ep)
+        left_layout.addLayout(page_layout_of_ep)
 
         extract_page_btn = QPushButton("ページの抽出")
         extract_page_btn.clicked.connect(self.extract_pages)
-        layout.addWidget(extract_page_btn)
+        left_layout.addWidget(extract_page_btn)
 
         # テキストの抽出
         self.begin_spin_of_et = QSpinBox()
@@ -113,11 +118,11 @@ class MainApp_Of_PT(QMainWindow):
         page_layout_of_et.addWidget(self.begin_spin_of_et)
         page_layout_of_et.addWidget(QLabel("テキストの抽出終了"))
         page_layout_of_et.addWidget(self.end_spin_of_et)
-        layout.addLayout(page_layout_of_et)
+        left_layout.addLayout(page_layout_of_et)
 
         extract_text_btn = QPushButton("テキストの抽出")
         extract_text_btn.clicked.connect(self.extract_text)
-        layout.addWidget(extract_text_btn)
+        left_layout.addWidget(extract_text_btn)
 
         # ページの回転
         self.spin_of_rp = QSpinBox()
@@ -127,13 +132,13 @@ class MainApp_Of_PT(QMainWindow):
         rotate_btn = QPushButton("ページを時計回りに回転（90度）")
         rotate_btn.clicked.connect(self.rotate_page)
         page_layout_of_rp.addWidget(rotate_btn)
-        layout.addLayout(page_layout_of_rp)
+        left_layout.addLayout(page_layout_of_rp)
 
         # ログの出力
         self.output = QTextEdit()
         self.output.setReadOnly(True)
-        layout.addWidget(QLabel("出力"))
-        layout.addWidget(self.output)
+        left_layout.addWidget(QLabel("出力"))
+        left_layout.addWidget(self.output)
 
     def select_pdf(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
