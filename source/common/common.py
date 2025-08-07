@@ -1,5 +1,6 @@
 import datetime
 import platform
+import shutil
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
@@ -80,6 +81,7 @@ class PathTools:
 
 class GUITools:
     def __init__(self, parent: QWidget = None):
+        """初期化します"""
         self.parent = parent
 
     def show_error(self, msg: str):
@@ -92,3 +94,18 @@ class GUITools:
         MILLI_SECONDS = 10000
         QTimer.singleShot(MILLI_SECONDS, box.accept)
         box.exec()
+
+
+class FileSystemTools:
+    def __init__(self):
+        """初期化します"""
+        pass
+
+    def clear_folder(self, path: Path):
+        """フォルダを空にします"""
+        if path.exists():
+            for element in path.iterdir():
+                if element.is_dir():
+                    shutil.rmtree(element)
+                else:
+                    element.unlink()
