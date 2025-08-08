@@ -185,7 +185,6 @@ class MainApp_Of_PT(QMainWindow):
             image_label.setPixmap(pixmap)
             image_label.setScaledContents(True)
             image_label.setFixedSize(pixmap.size())
-            image_label.setAlignment(Qt.AlignCenter)
             page_layout.addWidget(image_label)
             # グリッドにページごとに追加する
             self.center_viewer.addWidget(page_widget)
@@ -193,6 +192,8 @@ class MainApp_Of_PT(QMainWindow):
     def select_pdf(self):
         self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if self.file_path.strip():
+            # 各OSに応じたパス区切りに変換する
+            self.file_path = str(Path(self.file_path))
             self.file_input.setText(self.file_path)
             self.obj_of_cls.read_metadata(self.file_path)
             images = self.get_images(self.file_path)
@@ -272,6 +273,9 @@ class MainApp_Of_PT(QMainWindow):
     def merge_pdfs(self):
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
         if files:
+            # 各OSに応じたパス区切りに変換する
+            for i, element in enumerate(files):
+                files[i] = str(Path(element))
             success = self.obj_of_cls.merge(files)
             self.show_result("マージ", success)
         self.output_log()
