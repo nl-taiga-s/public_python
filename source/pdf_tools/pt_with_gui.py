@@ -195,7 +195,7 @@ class MainApp_Of_PT(QMainWindow):
             # 各OSに応じたパス区切りに変換する
             self.file_path = str(Path(self.file_path))
             self.file_input.setText(self.file_path)
-            self.obj_of_cls.read_metadata(self.file_path)
+            self.obj_of_cls.read_file(self.file_path)
             images = self.get_images(self.file_path)
             self.second_init_ui(images)
             self.output_log()
@@ -239,6 +239,7 @@ class MainApp_Of_PT(QMainWindow):
             if not path.strip():
                 self.show_error("PDFファイルパスを入力してください。")
                 raise Exception
+            self.obj_of_cls.read_file(path)
             lines = []
             for k, v in self.obj_of_cls.metadata_of_reader.items():
                 lines.append(f"{k}: {v}")
@@ -261,14 +262,12 @@ class MainApp_Of_PT(QMainWindow):
                 case "creation_date":
                     self.widget_of_metadata[key] = self.obj_of_cls.creation_date
                 case "modification_date":
-                    time = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
-                    self.widget_of_metadata[key] = time
+                    self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
                 case _:
                     self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
         success = self.obj_of_cls.write_metadata(path, self.widget_of_metadata)
         self.show_result("メタデータの書き込み", success)
         self.output_log()
-        self.obj_of_cls.read_metadata(path)
 
     def merge_pdfs(self):
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")

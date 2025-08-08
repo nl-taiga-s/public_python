@@ -79,8 +79,8 @@ class PdfTools:
             self.log.append(f"{log_msg},{time_stamp}")
             return b
 
-    def read_metadata(self, file_path: str) -> bool:
-        """メタデータを読み込みます"""
+    def read_file(self, file_path: str) -> bool:
+        """ファイルを読み込みます"""
         try:
             b = False
             log_msg = None
@@ -89,10 +89,10 @@ class PdfTools:
             self.num_of_pages = len(self.reader.pages)
             self.creation_date = self.metadata_of_reader.get("/CreationDate")
         except Exception as e:
-            log_msg = f"メタデータの読み込みに失敗しました。: {e}"
+            log_msg = f"ファイルの読み込みに失敗しました。: {e}"
         else:
             b = True
-            log_msg = f"メタデータの読み込みに成功しました。: {file_path}"
+            log_msg = f"ファイルの読み込みに成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
@@ -104,9 +104,13 @@ class PdfTools:
         try:
             b = False
             log_msg = None
-            for key, _ in self.fields:
-                value = getattr(self.metadata_of_reader, key, None)
-                print(f"{key.capitalize().replace("_", " ")}: {value or None}")
+            if not self.metadata_of_reader:
+                print("ファイルを読み込んでください。")
+                raise Exception
+            else:
+                for key, _ in self.fields:
+                    value = getattr(self.metadata_of_reader, key, None)
+                    print(f"{key.capitalize().replace("_", " ")}: {value or None}")
         except Exception as e:
             log_msg = f"メタデータの出力に失敗しました。: {e}"
         else:
@@ -124,7 +128,8 @@ class PdfTools:
             b = False
             log_msg = None
             if not self.metadata_of_reader:
-                print("メタデータを読み込んでください。")
+                print("ファイルを読み込んでください。")
+                raise Exception
             else:
                 self.writer = PdfWriter()
                 for page in self.reader.pages:
@@ -159,6 +164,8 @@ class PdfTools:
                 self.writer.append(pdf)
             with open(file_path_of_pdf_as_str_type, "wb") as f:
                 self.writer.write(f)
+            self.read_file(file_path_of_pdf_as_str_type)
+            self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
         except Exception as e:
             log_msg = f"マージが失敗しました。: {e}"
         else:
@@ -187,6 +194,8 @@ class PdfTools:
             file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
             with open(file_path_of_pdf_as_str_type, "wb") as f:
                 self.writer.write(f)
+            self.read_file(file_path_of_pdf_as_str_type)
+            self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
         except Exception as e:
             log_msg = f"ページの抽出に失敗しました。: {e}"
         else:
@@ -248,6 +257,15 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
             return b
+
+    def add_creation_date_in_metadata(self, file_path: str):
+        """メタデータの作成日を追加します"""
+        self.metadata_of_writer = {}
+        for value, key in self.fields:
+            if value == "creation_date":
+                self.metadata_of_writer[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.UTC_OF_JP)
+                break
+        self.write_metadata(file_path, self.metadata_of_writer)
 
     def write_log(self, file_of_log_as_path_type: Path):
         """処理結果をログに書き出す"""

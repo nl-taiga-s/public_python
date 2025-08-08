@@ -23,7 +23,7 @@ class PT_With_Cui:
             [
                 "ファイルを暗号化します",
                 "ファイルを復号化します",
-                "メタデータを読み込みます",
+                "ファイルを読み込みます",
                 "メタデータを出力します",
                 "メタデータを書き込みます",
                 "ファイルをマージします",
@@ -242,29 +242,29 @@ def main() -> bool:
                 case var if var == obj_with_cui.MENU.ファイルを暗号化します:
                     # ファイルを暗号化します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     password = obj_with_cui.input_password_of_encrypt()
                     obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
                 case var if var == obj_with_cui.MENU.ファイルを復号化します:
                     # ファイルを復号化します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     password = obj_with_cui.input_password_of_decrypt()
                     obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
-                case var if var == obj_with_cui.MENU.メタデータを読み込みます:
-                    # メタデータを読み込みます
+                case var if var == obj_with_cui.MENU.ファイルを読み込みます:
+                    # ファイルを読み込みます
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                 case var if var == obj_with_cui.MENU.メタデータを出力します:
                     # メタデータを出力します
                     if obj_of_cls.reader is None:
-                        print("メタデータを読み込んでください。")
+                        print("ファイルを読み込んでください。")
                     else:
                         obj_of_cls.print_metadata()
                 case var if var == obj_with_cui.MENU.メタデータを書き込みます:
                     # メタデータを書き込みます
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(
                         obj_of_cls.metadata_of_writer, obj_of_cls.fields, obj_of_cls.creation_date, obj_of_cls.UTC_OF_JP
                     )
@@ -278,13 +278,13 @@ def main() -> bool:
                 case var if var == obj_with_cui.MENU.ページを抽出します:
                     # ページを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     begin_page, end_page = obj_with_cui.input_extracting_pages(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
                 case var if var == obj_with_cui.MENU.テキストを抽出します:
                     # テキストを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     begin_page, end_page = obj_with_cui.input_pages_to_extract_text(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
                     for i in range(begin_page - 1, end_page):
@@ -292,7 +292,7 @@ def main() -> bool:
                 case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
                     # ページを時計回りで回転します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_metadata(file_path_of_pdf_as_str_type)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     page = obj_with_cui.input_rotating_page(obj_of_cls.num_of_pages)
                     degrees = obj_with_cui.input_degrees()
                     obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
