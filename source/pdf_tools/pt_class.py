@@ -175,10 +175,10 @@ class PdfTools:
         try:
             b = False
             log_msg = None
-            self.reader = PdfReader(file_path)
             self.writer = PdfWriter()
-            for i in range(begin_page - 1, end_page):
-                self.writer.add_page(self.reader.pages[i])
+            for i in range(self.num_of_pages):
+                if begin_page < i and i < end_page:
+                    self.writer.add_page(self.reader.pages[i])
             file_of_exe_as_path_type = Path(file_path)
             folder_of_pdf_as_path_type = file_of_exe_as_path_type.parent
             dt = self.obj_of_dt2.convert_for_file_name()

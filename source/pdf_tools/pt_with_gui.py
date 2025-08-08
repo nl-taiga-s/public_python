@@ -234,11 +234,11 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def show_metadata(self):
-        path = self.file_input.text()
-        if not path.strip():
-            self.show_error("PDFファイルパスを入力してください。")
-            return None
         try:
+            path = self.file_input.text()
+            if not path.strip():
+                self.show_error("PDFファイルパスを入力してください。")
+                raise Exception
             lines = []
             for k, v in self.obj_of_cls.metadata_of_reader.items():
                 lines.append(f"{k}: {v}")
