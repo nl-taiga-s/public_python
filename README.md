@@ -11,7 +11,7 @@
         # https://docs.astral.sh/uv/configuration/environment/#uv_http_timeout
         export UV_HTTP_TIMEOUT=300
         # https://docs.astral.sh/uv/configuration/environment/#ssl_cert_file
-        export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+        export SSL_CERT_FILE="file_path_of_cert"
       ```
     * ***To do when you want to create venv***
       ```Shell
