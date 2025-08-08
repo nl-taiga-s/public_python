@@ -1,5 +1,6 @@
 import datetime
 import platform
+import shutil
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
@@ -61,54 +62,11 @@ class PathTools:
         """初期化します"""
         self.obj_of_dt2 = DatetimeTools()
 
-    def get_expanded_in_home_dir(self, p: Path) -> Path:
-        """ホームディレクトリに展開します。"""
-        p = p.expanduser()
-        if p.is_dir() or p.is_file():
-            return p
-        else:
-            return None
-
-    def get_absolute_path(self, p: Path) -> Path:
-        """絶対パスを取得します"""
-        if p.is_dir() or p.is_file():
-            return p.resolve(strict=False)
-        else:
-            return None
-
-    def get_dir_path(self, p: Path) -> Path:
-        """ディレクトリのパスを取得します"""
-        if p.is_file():
-            return p.parent
-        else:
-            return None
-
-    def get_entire_file_name(self, p: Path) -> str:
-        """ファイル名の全体を取得します"""
-        if p.is_file():
-            return p.name
-        else:
-            return None
-
-    def get_file_name_without_extension(self, p: Path) -> str:
-        """拡張子を除いたファイル名を取得します"""
-        if p.is_file():
-            return p.stem
-        else:
-            return None
-
-    def get_extension(self, p: Path) -> str:
-        """ファイルの拡張子を取得します"""
-        if p.is_file():
-            return p.suffix.lower()
-        else:
-            return None
-
     def get_file_path_of_log(self, file_of_exe_as_path_type: Path) -> Path:
         """ログファイルのパスを取得します"""
         try:
             # 実行するファイルのディレクトリ
-            folder_of_exe_as_path_type = self.get_dir_path(file_of_exe_as_path_type)
+            folder_of_exe_as_path_type = file_of_exe_as_path_type.parent
             # ログフォルダのパス
             folder_of_log_as_path_type = folder_of_exe_as_path_type / "__log__"
             # ログフォルダが存在しない場合は作成します
@@ -123,6 +81,7 @@ class PathTools:
 
 class GUITools:
     def __init__(self, parent: QWidget = None):
+        """初期化します"""
         self.parent = parent
 
     def show_error(self, msg: str):
@@ -135,3 +94,18 @@ class GUITools:
         MILLI_SECONDS = 10000
         QTimer.singleShot(MILLI_SECONDS, box.accept)
         box.exec()
+
+
+class FileSystemTools:
+    def __init__(self):
+        """初期化します"""
+        pass
+
+    def clear_folder(self, path: Path):
+        """フォルダを空にします"""
+        if path.exists():
+            for element in path.iterdir():
+                if element.is_dir():
+                    shutil.rmtree(element)
+                else:
+                    element.unlink()
