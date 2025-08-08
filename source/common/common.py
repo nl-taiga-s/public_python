@@ -31,23 +31,29 @@ class DatetimeTools:
 
     def __init__(self):
         """初期化します"""
-        self.dt = datetime.datetime.now()
+        self.dt = None
 
     def convert_dt_to_str(self, dt: datetime.datetime = None) -> str:
         """datetime型からstr型に変換します"""
-        dt = dt or self.dt
+        if dt is None:
+            self.dt = datetime.datetime.now()
+            dt = self.dt
         # datetime型 => str型
         return dt.strftime("%Y-%m-%d_%H:%M:%S")
 
     def convert_for_file_name(self, dt: datetime.datetime = None) -> str:
         """ファイル名用に変換します"""
-        dt = dt or self.dt
+        if dt is None:
+            self.dt = datetime.datetime.now()
+            dt = self.dt
         # datetime型 => str型
         return dt.strftime("%Y%m%d_%H%M%S")
 
     def convert_for_metadata_in_pdf(self, utc: str, dt: datetime.datetime = None) -> str:
         """pdfのメタデータ用に変換します"""
-        dt = dt or self.dt
+        if dt is None:
+            self.dt = datetime.datetime.now()
+            dt = self.dt
         # datetime型 => str型
         return dt.strftime(f"D\072%Y%m%d%H%M%S{utc}")
 
