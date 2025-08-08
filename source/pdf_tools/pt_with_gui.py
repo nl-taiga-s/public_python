@@ -244,11 +244,11 @@ class MainApp_Of_PT(QMainWindow):
                 lines.append(f"{k}: {v}")
             self.obj_of_cls.log += lines
         except Exception:
-            b = False
+            success = False
         else:
-            b = True
+            success = True
         finally:
-            self.show_result("メタデータの表示", b)
+            self.show_result("メタデータの表示", success)
             self.output_log()
 
     def write_metadata(self):
