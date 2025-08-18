@@ -138,6 +138,20 @@ class MainApp_Of_PT(QMainWindow):
         extract_page_btn.clicked.connect(self.extract_pages)
         self.left_func_area.addWidget(extract_page_btn)
 
+        # ページの削除
+        self.begin_spin_of_dp = QSpinBox()
+        self.end_spin_of_dp = QSpinBox()
+        page_layout_of_dp = QHBoxLayout()
+        page_layout_of_dp.addWidget(QLabel("ページの削除開始"))
+        page_layout_of_dp.addWidget(self.begin_spin_of_dp)
+        page_layout_of_dp.addWidget(QLabel("ページの削除終了"))
+        page_layout_of_dp.addWidget(self.end_spin_of_dp)
+        self.left_func_area.addLayout(page_layout_of_dp)
+
+        delete_page_btn = QPushButton("ページの削除")
+        delete_page_btn.clicked.connect(self.delete_pages)
+        self.left_func_area.addWidget(delete_page_btn)
+
         # テキストの抽出
         self.begin_spin_of_et = QSpinBox()
         self.end_spin_of_et = QSpinBox()
@@ -277,6 +291,8 @@ class MainApp_Of_PT(QMainWindow):
                 files[i] = str(Path(element))
             success = self.obj_of_cls.merge(files)
             self.show_result("マージ", success)
+            path = self.file_input.text()
+            self.obj_of_cls.read_file(path)
         self.output_log()
 
     def extract_pages(self):
@@ -290,6 +306,21 @@ class MainApp_Of_PT(QMainWindow):
             return None
         success = self.obj_of_cls.extract_pages(path, begin, end)
         self.show_result("ページの抽出", success)
+        self.obj_of_cls.read_file(path)
+        self.output_log()
+
+    def delete_pages(self):
+        path = self.file_input.text()
+        begin, end = self.begin_spin_of_dp.value(), self.end_spin_of_dp.value()
+        if begin == 0 or end == 0:
+            self.show_error("ページ範囲を指定してください。")
+            return None
+        if not path.strip() or begin < 1 or end < begin:
+            self.show_error("ページ範囲またはパスが不正です。")
+            return None
+        success = self.obj_of_cls.delete_pages(path, begin, end)
+        self.show_result("ページの削除", success)
+        self.obj_of_cls.read_file(path)
         self.output_log()
 
     def extract_text(self):

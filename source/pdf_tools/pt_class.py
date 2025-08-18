@@ -39,7 +39,7 @@ class PdfTools:
     def encrypt(self, file_path: str, password: str) -> bool:
         """暗号化します"""
         try:
-            b = False
+            result = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.writer = PdfWriter(clone_from=self.reader)
@@ -49,19 +49,19 @@ class PdfTools:
         except Exception as e:
             log_msg = f"暗号化に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"暗号化に成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
             self.log.append(f"password: {password}")
-            return b
+            return result
 
     def decrypt(self, file_path: str, password: str) -> bool:
         """復号化します"""
         try:
-            b = False
+            result = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.reader.decrypt(password)
@@ -71,18 +71,18 @@ class PdfTools:
         except Exception as e:
             log_msg = f"復号化に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"復号化に成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def read_file(self, file_path: str) -> bool:
         """ファイルを読み込みます"""
         try:
-            b = False
+            result = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.metadata_of_reader = self.reader.metadata
@@ -91,18 +91,18 @@ class PdfTools:
         except Exception as e:
             log_msg = f"ファイルの読み込みに失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"ファイルの読み込みに成功しました。: {file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def print_metadata(self) -> bool:
         """メタデータを出力します"""
         try:
-            b = False
+            result = False
             log_msg = None
             if not self.metadata_of_reader:
                 print("ファイルを読み込んでください。")
@@ -114,18 +114,18 @@ class PdfTools:
         except Exception as e:
             log_msg = f"メタデータの出力に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = "メタデータの出力に成功しました。"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def write_metadata(self, file_path: str, metadata_of_writer: dict) -> bool:
         """メタデータを書き込みます"""
         try:
-            b = False
+            result = False
             log_msg = None
             if not self.metadata_of_reader:
                 print("ファイルを読み込んでください。")
@@ -140,18 +140,18 @@ class PdfTools:
         except Exception as e:
             log_msg = f"メタデータの書き込みに失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"メタデータの書き込みに成功しました。{file_path}"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def merge(self, pdfs: list) -> bool:
         """マージします"""
         try:
-            b = False
+            result = False
             log_msg = None
             first_file_of_pdf_as_path_type = Path(pdfs[0])
             folder_of_pdf_as_path_type = first_file_of_pdf_as_path_type.parent
@@ -169,27 +169,29 @@ class PdfTools:
         except Exception as e:
             log_msg = f"マージが失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"マージが成功しました。\nfrom: \n{"\n".join(pdfs)}\nto: \n{file_path_of_pdf_as_str_type}\n"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """ページを抽出します"""
         try:
-            b = False
+            result = False
             log_msg = None
             self.writer = PdfWriter()
+            b = begin_page - 1
+            e = end_page - 1
             for i in range(self.num_of_pages):
-                if begin_page < i and i < end_page:
+                if b <= i and i <= e:
                     self.writer.add_page(self.reader.pages[i])
             file_of_exe_as_path_type = Path(file_path)
             folder_of_pdf_as_path_type = file_of_exe_as_path_type.parent
             dt = self.obj_of_dt2.convert_for_file_name()
-            file_name_of_pdf_as_str_type = f"extracted_file_{dt}.pdf"
+            file_name_of_pdf_as_str_type = f"edited_file_{dt}.pdf"
             file_of_pdf_as_path_type = folder_of_pdf_as_path_type / file_name_of_pdf_as_str_type
             file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
             with open(file_path_of_pdf_as_str_type, "wb") as f:
@@ -199,7 +201,7 @@ class PdfTools:
         except Exception as e:
             log_msg = f"ページの抽出に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = (
                 "ページの抽出に成功しました。\n"
                 "from: \n"
@@ -213,31 +215,79 @@ class PdfTools:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
+
+    def delete_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
+        """ページを削除します"""
+        try:
+            result = False
+            log_msg = None
+            p = end_page - begin_page + 1
+            if p == self.num_of_pages:
+                raise ValueError
+            self.writer = PdfWriter()
+            b = begin_page - 1
+            e = end_page - 1
+            for i in range(self.num_of_pages):
+                if b <= i and i <= e:
+                    continue
+                self.writer.add_page(self.reader.pages[i])
+            file_of_exe_as_path_type = Path(file_path)
+            folder_of_pdf_as_path_type = file_of_exe_as_path_type.parent
+            dt = self.obj_of_dt2.convert_for_file_name()
+            file_name_of_pdf_as_str_type = f"edited_file_{dt}.pdf"
+            file_of_pdf_as_path_type = folder_of_pdf_as_path_type / file_name_of_pdf_as_str_type
+            file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
+            with open(file_path_of_pdf_as_str_type, "wb") as f:
+                self.writer.write(f)
+            self.read_file(file_path_of_pdf_as_str_type)
+            self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
+        except ValueError:
+            log_msg = "全ページが指定されたため、処理は行われていません。"
+        except Exception as e:
+            log_msg = f"ページの削除に失敗しました。: {e}"
+        else:
+            result = True
+            log_msg = (
+                "ページの削除に成功しました。\n"
+                "from: \n"
+                f"{file_path}\n"
+                f"begin page: {begin_page}\n"
+                f"end page: {end_page}\n"
+                f"to: \n"
+                f"{file_path_of_pdf_as_str_type}\n"
+            )
+        finally:
+            print(log_msg)
+            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            self.log.append(f"{log_msg},{time_stamp}")
+            return result
 
     def extract_text(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """テキストを抽出します"""
         try:
-            b = False
+            result = False
             log_msg = None
-            self.reader = PdfReader(file_path)
-            for i in range(begin_page - 1, end_page):
-                self.lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
+            b = begin_page - 1
+            e = end_page - 1
+            for i in range(self.num_of_pages):
+                if b <= i and i <= e:
+                    self.lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
         except Exception as e:
             log_msg = f"テキストの抽出に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"テキストの抽出に成功しました。\n{file_path}\nbegin page: {begin_page}\nend page: {end_page}\n"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> bool:
         """ページを時計回りで回転します"""
         try:
-            b = False
+            result = False
             log_msg = None
             self.reader = PdfReader(file_path)
             self.writer = PdfWriter()
@@ -250,13 +300,13 @@ class PdfTools:
         except Exception as e:
             log_msg = f"ページの時計回りの回転に失敗しました。: {e}"
         else:
-            b = True
+            result = True
             log_msg = f"ページの時計回りの回転に成功しました。\n{file_path}\npage: {page}\ndegrees: {degrees}\n"
         finally:
             print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             self.log.append(f"{log_msg},{time_stamp}")
-            return b
+            return result
 
     def add_creation_date_in_metadata(self, file_path: str):
         """メタデータの作成日を追加します"""

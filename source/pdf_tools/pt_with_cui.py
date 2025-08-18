@@ -28,6 +28,7 @@ class PT_With_Cui:
                 "メタデータを書き込みます",
                 "ファイルをマージします",
                 "ページを抽出します",
+                "ページを削除します",
                 "テキストを抽出します",
                 "ページを時計回りで回転します",
                 "終了します",
@@ -149,29 +150,8 @@ class PT_With_Cui:
                 sys.exit(0)
         return pdfs
 
-    def input_extracting_pages(self, num_of_pages: int) -> list:
-        """抽出するページを入力します"""
-        while True:
-            try:
-                begin_page = input("始めのページを入力してください。: ")
-                end_page = input("終わりのページを入力してください。: ")
-                if not begin_page.isdecimal() and not end_page.isdecimal():
-                    print("数字を入力してください。")
-                    continue
-                begin_page = int(begin_page)
-                end_page = int(end_page)
-                if begin_page < 1 or end_page > num_of_pages or begin_page > end_page:
-                    print("指定のページ範囲が不正です。")
-                else:
-                    break
-            except Exception as e:
-                print(e)
-            except KeyboardInterrupt:
-                sys.exit(0)
-        return [begin_page, end_page]
-
-    def input_pages_to_extract_text(self, num_of_pages: int) -> list:
-        """テキストを抽出するページを入力します"""
+    def input_page_range(self, num_of_pages: int) -> list:
+        """ページ範囲を入力します"""
         while True:
             try:
                 begin_page = input("始めのページを入力してください。: ")
@@ -279,15 +259,21 @@ def main() -> bool:
                     # ページを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    begin_page, end_page = obj_with_cui.input_extracting_pages(obj_of_cls.num_of_pages)
+                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                case var if var == obj_with_cui.MENU.ページを削除します:
+                    # ページを削除します
+                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
+                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
+                    obj_of_cls.delete_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
                 case var if var == obj_with_cui.MENU.テキストを抽出します:
                     # テキストを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    begin_page, end_page = obj_with_cui.input_pages_to_extract_text(obj_of_cls.num_of_pages)
+                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    for i in range(begin_page - 1, end_page):
+                    for i in range(end_page - begin_page + 1):
                         print(obj_of_cls.lst_of_text_in_pages[i])
                 case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
                     # ページを時計回りで回転します
