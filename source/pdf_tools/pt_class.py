@@ -36,12 +36,14 @@ class PdfTools:
         self.modification_date = None
         self.lst_of_text_in_pages = []
         self.log = []
+        self.REPEAT_TIMES = 50
 
     def encrypt(self, file_path: str, password: str) -> bool:
         """暗号化します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             self.reader = PdfReader(self.file_path)
             self.writer = PdfWriter(clone_from=self.reader)
@@ -49,22 +51,25 @@ class PdfTools:
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            log_msg = f"暗号化に失敗しました。: {e}"
+            local_log.append(f"暗号化に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"暗号化に成功しました。: {self.file_path}"
+            local_log.append(f"暗号化に成功しました。: \n{self.file_path}")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
-            self.log.append(f"password: {password}")
+            local_log.append(time_stamp)
+            local_log.append(f"password: {password}")
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def decrypt(self, file_path: str, password: str) -> bool:
         """復号化します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             self.reader = PdfReader(self.file_path)
             self.reader.decrypt(password)
@@ -72,42 +77,48 @@ class PdfTools:
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            log_msg = f"復号化に失敗しました。: {e}"
+            local_log.append(f"復号化に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"復号化に成功しました。: {self.file_path}"
+            local_log.append(f"復号化に成功しました。: \n{self.file_path}")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def read_file(self, file_path: str) -> bool:
         """ファイルを読み込みます"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             self.reader = PdfReader(self.file_path)
             self.metadata_of_reader = self.reader.metadata
             self.num_of_pages = len(self.reader.pages)
             self.creation_date = self.metadata_of_reader.get("/CreationDate")
         except Exception as e:
-            log_msg = f"ファイルの読み込みに失敗しました。: {e}"
+            local_log.append(f"ファイルの読み込みに失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"ファイルの読み込みに成功しました。: {self.file_path}"
+            local_log.append(f"ファイルの読み込みに成功しました。: \n{self.file_path}")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def print_metadata(self) -> bool:
         """メタデータを出力します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             if not self.metadata_of_reader:
                 print("ファイルを読み込んでください。")
                 raise Exception
@@ -116,21 +127,24 @@ class PdfTools:
                     value = getattr(self.metadata_of_reader, key, None)
                     print(f"{key.capitalize().replace("_", " ")}: {value or None}")
         except Exception as e:
-            log_msg = f"メタデータの出力に失敗しました。: {e}"
+            local_log.append(f"メタデータの出力に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = "メタデータの出力に成功しました。"
+            local_log.append("メタデータの出力に成功しました。")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def write_metadata(self, file_path: str, metadata_of_writer: dict) -> bool:
         """メタデータを書き込みます"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             if not self.metadata_of_reader:
                 print("ファイルを読み込んでください。")
@@ -143,21 +157,24 @@ class PdfTools:
                 with open(self.file_path, "wb") as f:
                     self.writer.write(f)
         except Exception as e:
-            log_msg = f"メタデータの書き込みに失敗しました。: {e}"
+            local_log.append(f"メタデータの書き込みに失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"メタデータの書き込みに成功しました。{self.file_path}"
+            local_log.append(f"メタデータの書き込みに成功しました。: \n{self.file_path}")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def merge(self, pdfs: list) -> bool:
         """マージします"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             first_file_of_pdf_as_path_type = Path(pdfs[0])
             folder_of_pdf_as_path_type = first_file_of_pdf_as_path_type.parent
             dt = self.obj_of_dt2.convert_for_file_name()
@@ -172,23 +189,27 @@ class PdfTools:
             self.read_file(file_path_of_pdf_as_str_type)
             self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
         except Exception as e:
-            log_msg = f"マージが失敗しました。: {e}"
+            local_log.append(f"マージが失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"マージが成功しました。\nfrom: \n{"\n".join(pdfs)}\nto: \n{file_path_of_pdf_as_str_type}\n"
+            local_log.append(f"マージが成功しました。\nfrom: \n{"\n".join(pdfs)}\nto: \n{file_path_of_pdf_as_str_type}\n")
         finally:
             self.read_file(self.file_path)
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """ページを抽出します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
+            self.read_file(self.file_path)
             self.writer = PdfWriter()
             b = begin_page - 1
             e = end_page - 1
@@ -206,31 +227,26 @@ class PdfTools:
             self.read_file(file_path_of_pdf_as_str_type)
             self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
         except Exception as e:
-            log_msg = f"ページの抽出に失敗しました。: {e}"
+            local_log.append(f"ページの抽出に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = (
-                "ページの抽出に成功しました。\n"
-                "from: \n"
-                f"{self.file_path}\n"
-                f"begin page: {begin_page}\n"
-                f"end page: {end_page}\n"
-                f"to: \n"
-                f"{file_path_of_pdf_as_str_type}\n"
-            )
+            local_log.append(f"ページの抽出に成功しました。\nfrom: \n{self.file_path}\nbegin page: {begin_page}\nend page: {end_page}\nto: \n{file_path_of_pdf_as_str_type}\n")
         finally:
-            self.read_file(self.file_path)
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def delete_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """ページを削除します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
+            self.read_file(self.file_path)
             p = end_page - begin_page + 1
             if p == self.num_of_pages:
                 raise ValueError
@@ -252,32 +268,26 @@ class PdfTools:
             self.read_file(file_path_of_pdf_as_str_type)
             self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
         except ValueError:
-            log_msg = "全ページが指定されたため、処理は行われていません。"
+            local_log.append("全ページが指定されたため、処理は行われていません。")
         except Exception as e:
-            log_msg = f"ページの削除に失敗しました。: {e}"
+            local_log.append(f"ページの削除に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = (
-                "ページの削除に成功しました。\n"
-                "from: \n"
-                f"{self.file_path}\n"
-                f"begin page: {begin_page}\n"
-                f"end page: {end_page}\n"
-                f"to: \n"
-                f"{file_path_of_pdf_as_str_type}\n"
-            )
+            local_log.append(f"ページの削除に成功しました。\nfrom: \n{self.file_path}\nbegin page: {begin_page}\nend page: {end_page}\nto: \n{file_path_of_pdf_as_str_type}\n")
         finally:
-            self.read_file(self.file_path)
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def extract_text(self, file_path: str, begin_page: int, end_page: int) -> bool:
         """テキストを抽出します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             b = begin_page - 1
             e = end_page - 1
@@ -285,21 +295,24 @@ class PdfTools:
                 if b <= i and i <= e:
                     self.lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
         except Exception as e:
-            log_msg = f"テキストの抽出に失敗しました。: {e}"
+            local_log.append(f"テキストの抽出に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"テキストの抽出に成功しました。\n{self.file_path}\nbegin page: {begin_page}\nend page: {end_page}\n"
+            local_log.append(f"テキストの抽出に成功しました。\n{self.file_path}\nbegin page: {begin_page}\nend page: {end_page}\n")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> bool:
         """ページを時計回りで回転します"""
         try:
             result = False
-            log_msg = None
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
             self.file_path = file_path
             self.writer = PdfWriter()
             for p in range(self.num_of_pages):
@@ -309,14 +322,16 @@ class PdfTools:
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
         except Exception as e:
-            log_msg = f"ページの時計回りの回転に失敗しました。: {e}"
+            local_log.append(f"ページの時計回りの回転に失敗しました。: \n{e}")
         else:
             result = True
-            log_msg = f"ページの時計回りの回転に成功しました。\n{self.file_path}\npage: {page}\ndegrees: {degrees}\n"
+            local_log.append(f"ページの時計回りの回転に成功しました。\n{self.file_path}\npage: {page}\ndegrees: {degrees}\n")
         finally:
-            print(log_msg)
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
-            self.log.append(f"{log_msg},{time_stamp}")
+            local_log.append(time_stamp)
+            local_log.append("<" * self.REPEAT_TIMES)
+            print(local_log)
+            self.log.extend(local_log)
             return result
 
     def add_creation_date_in_metadata(self, file_path: str):
