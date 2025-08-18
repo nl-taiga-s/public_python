@@ -291,8 +291,6 @@ class MainApp_Of_PT(QMainWindow):
                 files[i] = str(Path(element))
             success = self.obj_of_cls.merge(files)
             self.show_result("マージ", success)
-            path = self.file_input.text()
-            self.obj_of_cls.read_file(path)
         self.output_log()
 
     def extract_pages(self):
@@ -306,7 +304,6 @@ class MainApp_Of_PT(QMainWindow):
             return None
         success = self.obj_of_cls.extract_pages(path, begin, end)
         self.show_result("ページの抽出", success)
-        self.obj_of_cls.read_file(path)
         self.output_log()
 
     def delete_pages(self):
@@ -320,7 +317,6 @@ class MainApp_Of_PT(QMainWindow):
             return None
         success = self.obj_of_cls.delete_pages(path, begin, end)
         self.show_result("ページの削除", success)
-        self.obj_of_cls.read_file(path)
         self.output_log()
 
     def extract_text(self):
