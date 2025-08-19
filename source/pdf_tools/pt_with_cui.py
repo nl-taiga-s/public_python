@@ -3,8 +3,6 @@ import sys
 from enum import Enum
 from pathlib import Path
 
-from pypdf import PdfReader
-
 from source.common.common import DatetimeTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
@@ -222,66 +220,81 @@ def main() -> bool:
                 case var if var == obj_with_cui.MENU.ファイルを暗号化します:
                     # ファイルを暗号化します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     password = obj_with_cui.input_password_of_encrypt()
-                    obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
+                    _, log = obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ファイルを復号化します:
                     # ファイルを復号化します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     password = obj_with_cui.input_password_of_decrypt()
-                    obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
+                    _, log = obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ファイルを読み込みます:
                     # ファイルを読み込みます
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.メタデータを出力します:
                     # メタデータを出力します
                     if obj_of_cls.reader is None:
                         print("ファイルを読み込んでください。")
                     else:
-                        obj_of_cls.print_metadata()
+                        _, log = obj_of_cls.print_metadata()
+                        print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.メタデータを書き込みます:
                     # メタデータを書き込みます
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(
                         obj_of_cls.metadata_of_writer, obj_of_cls.fields, obj_of_cls.creation_date, obj_of_cls.UTC_OF_JP
                     )
-                    obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, obj_of_cls.metadata_of_writer)
+                    _, log = obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, obj_of_cls.metadata_of_writer)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ファイルをマージします:
                     # ファイルをマージします
                     pdfs = obj_with_cui.input_list_of_merge(obj_of_cls.EXTENSION)
-                    for pdf in pdfs:
-                        obj_of_cls.reader = PdfReader(pdf)
-                    obj_of_cls.merge(pdfs)
+                    _, log = obj_of_cls.merge(pdfs)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ページを抽出します:
                     # ページを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                    _, log = obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ページを削除します:
                     # ページを削除します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    obj_of_cls.delete_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                    _, log = obj_of_cls.delete_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.テキストを抽出します:
                     # テキストを抽出します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
+                    _, log = obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
                     for i in range(end_page - begin_page + 1):
                         print(obj_of_cls.lst_of_text_in_pages[i])
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
                     # ページを時計回りで回転します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    _, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
                     page = obj_with_cui.input_rotating_page(obj_of_cls.num_of_pages)
                     degrees = obj_with_cui.input_degrees()
-                    obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
+                    _, log = obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
+                    print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.終了します:
                     # 終了します
                     break
@@ -293,7 +306,8 @@ def main() -> bool:
     obj_of_pt = PathTools()
     file_of_exe_as_path_type = Path(__file__)
     file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_cls.write_log(file_of_log_as_path_type)
+    result, s = obj_of_cls.write_log(file_of_log_as_path_type)
+    print(f"ログファイルの出力に{"成功" if result else "失敗"}しました。: {s}")
     return True
 
 

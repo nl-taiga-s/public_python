@@ -38,7 +38,7 @@ class PdfTools:
         self.log = []
         self.REPEAT_TIMES = 50
 
-    def encrypt(self, file_path: str, password: str) -> bool:
+    def encrypt(self, file_path: str, password: str) -> list:
         """暗号化します"""
         try:
             result = False
@@ -62,11 +62,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def decrypt(self, file_path: str, password: str) -> bool:
+    def decrypt(self, file_path: str, password: str) -> list:
         """復号化します"""
         try:
             result = False
@@ -89,11 +88,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def read_file(self, file_path: str) -> bool:
+    def read_file(self, file_path: str) -> list:
         """ファイルを読み込みます"""
         try:
             result = False
@@ -115,11 +113,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def print_metadata(self) -> bool:
+    def print_metadata(self) -> list:
         """メタデータを出力します"""
         try:
             result = False
@@ -139,11 +136,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def write_metadata(self, file_path: str, metadata_of_writer: dict) -> bool:
+    def write_metadata(self, file_path: str, metadata_of_writer: dict) -> list:
         """メタデータを書き込みます"""
         try:
             result = False
@@ -167,11 +163,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def merge(self, pdfs: list) -> bool:
+    def merge(self, pdfs: list) -> list:
         """マージします"""
         try:
             result = False
@@ -205,11 +200,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
+    def extract_pages(self, file_path: str, begin_page: int, end_page: int) -> list:
         """ページを抽出します"""
         try:
             result = False
@@ -249,11 +243,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def delete_pages(self, file_path: str, begin_page: int, end_page: int) -> bool:
+    def delete_pages(self, file_path: str, begin_page: int, end_page: int) -> list:
         """ページを削除します"""
         try:
             result = False
@@ -299,11 +292,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def extract_text(self, file_path: str, begin_page: int, end_page: int) -> bool:
+    def extract_text(self, file_path: str, begin_page: int, end_page: int) -> list:
         """テキストを抽出します"""
         try:
             result = False
@@ -328,11 +320,10 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
-    def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> bool:
+    def rotate_page_clockwise(self, file_path: str, page: int, degrees: int) -> list:
         """ページを時計回りで回転します"""
         try:
             result = False
@@ -359,9 +350,8 @@ class PdfTools:
             time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
-            print(*local_log, sep="\n")
             self.log.extend(local_log)
-            return result
+            return result, local_log
 
     def add_creation_date_in_metadata(self, file_path: str):
         """メタデータの作成日を追加します"""
@@ -373,13 +363,15 @@ class PdfTools:
         self.file_path = file_path
         self.write_metadata(self.file_path, self.metadata_of_writer)
 
-    def write_log(self, file_of_log_as_path_type: Path):
+    def write_log(self, file_of_log_as_path_type: Path) -> list:
         """処理結果をログに書き出す"""
         file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
+            result = False
             with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.log))
         except Exception as e:
-            print(f"ログファイルの出力に失敗しました。: \n{e}")
+            return result, str(e)
         else:
-            print(f"ログファイルの出力に成功しました。: \n{file_of_log_as_str_type}")
+            result = True
+            return result, file_of_log_as_str_type
