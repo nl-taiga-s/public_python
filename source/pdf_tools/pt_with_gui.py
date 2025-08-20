@@ -35,6 +35,8 @@ class MainApp_Of_PT(QMainWindow):
         self.obj_of_fst = FileSystemTools()
         self.obj_of_cls = PdfTools()
 
+        self.file_path = None
+
         self.first_init_ui()
 
     def closeEvent(self, event):
@@ -79,7 +81,7 @@ class MainApp_Of_PT(QMainWindow):
         left_func_area.addWidget(QLabel("PDFファイルパス"))
         left_func_area.addWidget(self.file_input)
         browse_btn = QPushButton("参照")
-        browse_btn.clicked.connect(lambda: self.select_pdf())
+        browse_btn.clicked.connect(self.select_pdf)
         left_func_area.addWidget(browse_btn)
 
         # パスワード入力
@@ -182,6 +184,8 @@ class MainApp_Of_PT(QMainWindow):
             widget = self.center_viewer.itemAt(i).widget()
             if widget is not None:
                 widget.setParent(None)
+        if images is None:
+            return None
         # 各ページを表示する
         for i, element in enumerate(images):
             # 垂直レイアウトを用意する
@@ -209,24 +213,29 @@ class MainApp_Of_PT(QMainWindow):
             # 各OSに応じたパス区切りに変換する
             self.file_path = str(Path(self.file_path))
             self.file_input.setText(self.file_path)
-            _, log = self.obj_of_cls.read_file(self.file_path)
-            images = self.get_images(self.file_path)
+            _, images = self.get_images(self.file_path)
             self.second_init_ui(images)
-            self.output_log(log)
+            self.output_log()
 
     def get_images(self, file_path: str) -> list:
-        file_as_path_type = Path(file_path)
-        file_name_as_str_type = file_as_path_type.stem
-        self.output_dir = Path(__file__).parent / "__images__"
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        pdf = pypdfium2.PdfDocument(file_path)
-        output_files = []
-        for i, page in enumerate(pdf):
-            pil_image = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
-            output_file = self.output_dir / f"{file_name_as_str_type}_{i + 1}.png"
-            pil_image.save(output_file)
-            output_files.append(str(output_file))
-        return output_files
+        try:
+            result = False
+            file_as_path_type = Path(file_path)
+            file_name_as_str_type = file_as_path_type.stem
+            self.output_dir = Path(__file__).parent / "__images__"
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            pdf = pypdfium2.PdfDocument(file_path)
+            output_files = []
+            for i, page in enumerate(pdf):
+                pil_image = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
+                output_file = self.output_dir / f"{file_name_as_str_type}_{i + 1}.png"
+                pil_image.save(output_file)
+                output_files.append(str(output_file))
+        except Exception:
+            return [result, None]
+        else:
+            result = True
+            return [result, output_files]
 
     def encrypt_pdf(self):
         self.file_path, pw = self.file_input.text(), self.password_input.text()
@@ -235,7 +244,7 @@ class MainApp_Of_PT(QMainWindow):
             return None
         result, log = self.obj_of_cls.encrypt(self.file_path, pw)
         self.show_result("暗号化", result)
-        self.output_log(log)
+        self.output_log()
 
     def decrypt_pdf(self):
         self.file_path, pw = self.file_input.text(), self.password_input.text()
@@ -244,19 +253,15 @@ class MainApp_Of_PT(QMainWindow):
             return None
         result, log = self.obj_of_cls.decrypt(self.file_path, pw)
         self.show_result("復号化", result)
-        self.output_log(log)
+        self.output_log()
 
     def show_metadata(self):
         self.file_path = self.file_input.text()
         if not self.file_path.strip():
             self.show_error("PDFファイルパスを入力してください。")
-        result, log = self.obj_of_cls.read_file(self.file_path)
-        lines = []
-        for k, v in self.obj_of_cls.metadata_of_reader.items():
-            lines.append(f"{k}: {v}")
-        self.obj_of_cls.log += lines
+        result, log = self.obj_of_cls.get_metadata(self.file_path)
         self.show_result("メタデータの表示", result)
-        self.output_log(log)
+        self.output_log()
 
     def write_metadata(self):
         self.file_path = self.file_input.text()
@@ -273,7 +278,7 @@ class MainApp_Of_PT(QMainWindow):
                     self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
         result, log = self.obj_of_cls.write_metadata(self.file_path, self.widget_of_metadata)
         self.show_result("メタデータの書き込み", result)
-        self.output_log(log)
+        self.output_log()
 
     def merge_pdfs(self):
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
@@ -283,7 +288,7 @@ class MainApp_Of_PT(QMainWindow):
                 files[i] = str(Path(element))
             result, log = self.obj_of_cls.merge(files)
             self.show_result("マージ", result)
-        self.output_log(log)
+        self.output_log()
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
         self.file_path = self.file_input.text()
@@ -296,7 +301,7 @@ class MainApp_Of_PT(QMainWindow):
             return None
         result, log = self.obj_of_cls.extract_pages(self.file_path, begin, end)
         self.show_result("ページの抽出", result)
-        self.output_log(log)
+        self.output_log()
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
         self.file_path = self.file_input.text()
@@ -309,7 +314,7 @@ class MainApp_Of_PT(QMainWindow):
             return None
         result, log = self.obj_of_cls.delete_pages(self.file_path, begin, end)
         self.show_result("ページの削除", result)
-        self.output_log(log)
+        self.output_log()
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox):
         self.file_path = self.file_input.text()
@@ -321,9 +326,8 @@ class MainApp_Of_PT(QMainWindow):
             self.show_error("ページ範囲またはパスが不正です。")
             return None
         result, log = self.obj_of_cls.extract_text(self.file_path, begin, end)
-        self.obj_of_cls.log += self.obj_of_cls.lst_of_text_in_pages
         self.show_result("テキストの抽出", result)
-        self.output_log(log)
+        self.output_log()
 
     def rotate_page(self, spin: QSpinBox):
         self.file_path = self.file_input.text()
@@ -333,8 +337,8 @@ class MainApp_Of_PT(QMainWindow):
             return None
         result, log = self.obj_of_cls.rotate_page_clockwise(self.file_path, page, 90)
         self.show_result("ページの回転", result)
-        self.output_log(log)
-        images = self.get_images(self.file_path)
+        self.output_log()
+        _, images = self.get_images(self.file_path)
         self.second_init_ui(images)
 
     def show_result(self, label: str, success: bool):
@@ -343,8 +347,8 @@ class MainApp_Of_PT(QMainWindow):
     def show_error(self, msg: str):
         QMessageBox.information(self, "エラー", msg)
 
-    def output_log(self, log: list):
-        formatted_log = "\n".join(log)
+    def output_log(self):
+        formatted_log = "\n".join(self.obj_of_cls.log)
         self.output.setPlainText(formatted_log)
 
     def write_log(self):
