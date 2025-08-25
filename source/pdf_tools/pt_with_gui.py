@@ -35,7 +35,7 @@ class MainApp_Of_PT(QMainWindow):
         self.obj_of_fst = FileSystemTools()
         self.obj_of_cls = PdfTools()
 
-        self.file_path = None
+        self.file_path = ""
 
         self.first_init_ui()
 
@@ -76,13 +76,18 @@ class MainApp_Of_PT(QMainWindow):
         self.output.setReadOnly(True)
         right_layout.addWidget(self.output)
 
-        # ファイル選択
+        # ファイル選択と再読み込み
         self.file_input = QLineEdit()
         left_func_area.addWidget(QLabel("PDFファイルパス"))
         left_func_area.addWidget(self.file_input)
+        select_and_reload_area = QHBoxLayout()
         browse_btn = QPushButton("参照")
-        browse_btn.clicked.connect(self.select_pdf)
-        left_func_area.addWidget(browse_btn)
+        select_and_reload_area.addWidget(browse_btn)
+        browse_btn.clicked.connect(lambda: self.select_pdf(False))
+        reload_btn = QPushButton("再読み込み")
+        select_and_reload_area.addWidget(reload_btn)
+        reload_btn.clicked.connect(lambda: self.select_pdf(True))
+        left_func_area.addLayout(select_and_reload_area)
 
         # パスワード入力
         self.password_input = QLineEdit()
@@ -90,15 +95,15 @@ class MainApp_Of_PT(QMainWindow):
         left_func_area.addWidget(QLabel("パスワード"))
         left_func_area.addWidget(self.password_input)
 
-        # 暗号化
+        # 暗号化と復号化
+        encrypt_and_decrypt_area = QHBoxLayout()
         encrypt_btn = QPushButton("暗号化")
+        encrypt_and_decrypt_area.addWidget(encrypt_btn)
         encrypt_btn.clicked.connect(self.encrypt_pdf)
-        left_func_area.addWidget(encrypt_btn)
-
-        # 復号化
         decrypt_btn = QPushButton("復号化")
+        encrypt_and_decrypt_area.addWidget(decrypt_btn)
         decrypt_btn.clicked.connect(self.decrypt_pdf)
-        left_func_area.addWidget(decrypt_btn)
+        left_func_area.addLayout(encrypt_and_decrypt_area)
 
         # メタデータの表示
         meta_btn = QPushButton("メタデータの表示")
@@ -207,15 +212,22 @@ class MainApp_Of_PT(QMainWindow):
             # グリッドにページごとに追加する
             self.center_viewer.addWidget(page_widget)
 
-    def select_pdf(self):
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
+    def select_pdf(self, reload: bool):
+        if not reload:
+            self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if self.file_path.strip():
             # 各OSに応じたパス区切りに変換する
             self.file_path = str(Path(self.file_path))
             self.file_input.setText(self.file_path)
-            _, images = self.get_images(self.file_path)
-            self.second_init_ui(images)
-            self.output_log()
+            self.obj_of_cls.read_file(self.file_path)
+            if self.obj_of_cls.reader.is_encrypted:
+                self.show_error("ファイルが暗号化されています。")
+            else:
+                _, images = self.get_images(self.file_path)
+                self.second_init_ui(images)
+        else:
+            self.show_error("ファイルを選択してください。")
+        self.output_log()
 
     def get_images(self, file_path: str) -> list:
         try:
