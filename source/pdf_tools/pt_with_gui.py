@@ -1,3 +1,5 @@
+import os
+import platform
 import sys
 from pathlib import Path
 
@@ -28,7 +30,8 @@ class MainApp_Of_PT(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PDFツール")
-        self.resize(1200, 800)
+        # サイズ
+        self.resize(1600, 800)
 
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -371,6 +374,9 @@ class MainApp_Of_PT(QMainWindow):
 
 
 def main():
+    if platform.system().lower() == "windows":
+        # アプリ全体のスケール
+        os.environ["QT_SCALE_FACTOR"] = "0.7"
     app = QApplication(sys.argv)
     main = MainApp_Of_PT()
     main.show()
