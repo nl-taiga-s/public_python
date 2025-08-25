@@ -24,9 +24,16 @@ class MainApp_Of_COTP(QWidget):
         super().__init__()
         self.obj_of_pft = PlatformTools()
         self.obj_of_pt = PathTools()
+        self.obj_of_cls = None
         self.folder_path_from = ""
         self.folder_path_to = ""
         self.setup_ui(obj_of_cls)
+
+    def closeEvent(self, event):
+        """終了します"""
+        if self.obj_of_cls is not None:
+            self.write_log()
+        super().closeEvent(event)
 
     def setup_ui(self, obj_of_cls: object):
         """User Interfaceを設定します"""
@@ -42,8 +49,8 @@ class MainApp_Of_COTP(QWidget):
         self.file_list_widget = QListWidget()
         self.progress_bar = QProgressBar()
         self.btn_convert = QPushButton("一括変換 実行")
-        self.log_output = QTextEdit()
-        self.log_output.setReadOnly(True)
+        self.log_area = QTextEdit()
+        self.log_area.setReadOnly(True)
         # レイアウト
         layout = QVBoxLayout()
         layout.addWidget(self.label_from)
@@ -58,7 +65,7 @@ class MainApp_Of_COTP(QWidget):
         layout.addWidget(self.progress_bar)
         layout.addWidget(self.btn_convert)
         layout.addWidget(QLabel("ログ:"))
-        layout.addWidget(self.log_output)
+        layout.addWidget(self.log_area)
         self.setLayout(layout)
         # シグナル接続
         self.btn_select_from.clicked.connect(lambda: self.select_from_folder(obj_of_cls))
@@ -67,9 +74,9 @@ class MainApp_Of_COTP(QWidget):
         self.btn_open_to.clicked.connect(lambda: self.open_explorer(self.folder_path_to))
         self.btn_convert.clicked.connect(self.convert_file)
 
-    def log(self, message: str):
+    def output_log(self, message: str):
         """メッセージを表示します"""
-        self.log_output.append(message)
+        self.log_area.append(message)
 
     def open_explorer(self, folder: str):
         """エクスプローラーを開きます"""
@@ -80,7 +87,7 @@ class MainApp_Of_COTP(QWidget):
             except Exception as e:
                 print(f"エクスプローラー起動エラー: {e}")
         else:
-            self.log("フォルダが未選択のため開けません。")
+            self.output_log("フォルダが未選択のため開けません。")
 
     def select_from_folder(self, obj_of_cls: object):
         """変換元のフォルダを選択します"""
@@ -116,44 +123,53 @@ class MainApp_Of_COTP(QWidget):
             self.progress_bar.setValue(0)
         except ValueError as e:
             self.file_list_widget.clear()
-            self.log(f"⚠️ {e}")
+            self.output_log(f"⚠️ {e}")
         else:
-            self.log(f"✅ {self.obj_of_cls.number_of_f} 件のファイルが見つかりました。")
+            self.output_log(f"✅ {self.obj_of_cls.number_of_f} 件のファイルが見つかりました。")
 
     def convert_file(self):
         """変換します"""
-        self.log_output.clear()
-        if not self.obj_of_cls:
-            self.log("⚠️ ファイルリストが初期化されていません。")
+        self.output_log_output.clear()
+        if self.obj_of_cls is None:
+            self.output_log("⚠️ ファイルリストが初期化されていません。")
             return
         total = self.obj_of_cls.number_of_f
         self.progress_bar.setRange(0, total)
-        self.log("📄 一括変換を開始します...")
+        self.output_log("📄 一括変換を開始します...")
         for i in range(total):
             try:
                 file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
                 file_name = file_of_currentfrom_as_path_type.name
                 self.obj_of_cls.handle_file()
             except Exception as e:
-                self.log(f"❌ {file_name} → エラー: {e}")
+                self.output_log(f"❌ {file_name} → エラー: {e}")
             else:
-                self.log(f"✅ {file_name} → 完了")
+                self.output_log(f"✅ {file_name} → 完了")
                 self.progress_bar.setValue(i + 1)
                 self.obj_of_cls.move_to_next_file()
-        self.log("🎉 すべてのファイルの変換が完了しました！")
+        self.output_log("🎉 すべてのファイルの変換が完了しました！")
+
+    def write_log(self):
+        """ログを書き出す"""
         try:
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+            # exe化されている場合とそれ以外を切り分ける
+            if getattr(sys, "frozen", False):
+                exe_path = Path(sys.executable)
+            else:
+                exe_path = Path(__file__)
+            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_cls.write_log(file_of_log_as_path_type)
         except Exception as e:
-            self.log(f"📄 ログファイルの出力に失敗しました。: \n{e}")
+            self.output_log(f"📄 ログファイルの出力に失敗しました。: \n{e}")
         else:
-            self.log(f"📄 ログファイルの出力に成功しました。: \n{str(file_of_log_as_path_type)}")
+            self.output_log(f"📄 ログファイルの出力に成功しました。: \n{str(file_of_log_as_path_type)}")
 
 
 def main() -> bool:
     """主要関数"""
     try:
+        # アプリ全体のスケール
+        os.environ["QT_SCALE_FACTOR"] = "0.7"
         app = QApplication(sys.argv)
         from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
 
