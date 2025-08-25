@@ -68,11 +68,11 @@ class PathTools:
         """初期化します"""
         self.obj_of_dt2 = DatetimeTools()
 
-    def get_file_path_of_log(self, file_of_exe_as_path_type: Path) -> Path:
+    def get_file_path_of_log(self, base_path: Path) -> Path:
         """ログファイルのパスを取得します"""
         try:
             # 実行するファイルのディレクトリ
-            folder_of_exe_as_path_type = file_of_exe_as_path_type.parent
+            folder_of_exe_as_path_type = base_path.parent
             # ログフォルダのパス
             folder_of_log_as_path_type = folder_of_exe_as_path_type / "__log__"
             # ログフォルダが存在しない場合は作成します
