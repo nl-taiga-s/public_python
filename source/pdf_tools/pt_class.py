@@ -73,7 +73,8 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            _, _ = self.read_file(file_path)
+            self.file_path = file_path
+            self.reader = PdfReader(self.file_path)
             self.writer = PdfWriter(clone_from=self.reader)
             self.writer.encrypt(password, algorithm="AES-256")
             with open(self.file_path, "wb") as f:
@@ -99,7 +100,8 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            _, _ = self.read_file(file_path)
+            self.file_path = file_path
+            self.reader = PdfReader(self.file_path)
             self.reader.decrypt(password)
             self.writer = PdfWriter(clone_from=self.reader)
             with open(self.file_path, "wb") as f:
@@ -124,9 +126,6 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             for key, _ in self.fields:
                 value = getattr(self.metadata_of_reader, key, None)
                 local_log.append(f"{key.capitalize().replace("_", " ")}: {value or None}")
@@ -150,9 +149,6 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             self.writer = PdfWriter()
             for page in self.reader.pages:
                 self.writer.add_page(page)
@@ -226,9 +222,6 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             self.writer = PdfWriter()
             b = begin_page - 1
             e = end_page - 1
@@ -270,9 +263,6 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             p = end_page - begin_page + 1
             if p == self.num_of_pages:
                 raise ValueError
@@ -321,9 +311,6 @@ class PdfTools:
             local_log = []
             lst_of_text_in_pages = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             b = begin_page - 1
             e = end_page - 1
             for i in range(self.num_of_pages):
@@ -352,9 +339,6 @@ class PdfTools:
             result = False
             local_log = []
             local_log.append(">" * self.REPEAT_TIMES)
-            result, _ = self.read_file(file_path)
-            if not result:
-                raise Exception
             self.writer = PdfWriter()
             for p in range(self.num_of_pages):
                 self.writer.add_page(self.reader.pages[p])

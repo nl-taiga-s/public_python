@@ -28,10 +28,9 @@ from source.pdf_tools.pt_class import PdfTools
 
 class MainApp_Of_PT(QMainWindow):
     def __init__(self):
+        """初期化します"""
         super().__init__()
         self.setWindowTitle("PDFツール")
-        # サイズ
-        self.resize(1600, 800)
 
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -43,12 +42,14 @@ class MainApp_Of_PT(QMainWindow):
         self.first_init_ui()
 
     def closeEvent(self, event):
+        """終了します"""
         image_dir = Path(__file__).parent / "__images__"
         self.obj_of_fst.clear_folder(image_dir)
         self.write_log()
         super().closeEvent(event)
 
     def first_init_ui(self):
+        """1回目のUser Interfaceを設定します"""
         central = QWidget()
         self.setCentralWidget(central)
         # 主要
@@ -187,6 +188,7 @@ class MainApp_Of_PT(QMainWindow):
         left_func_area.addLayout(page_layout_of_rp)
 
     def second_init_ui(self, images: list):
+        """2回目のUser Interfaceを設定します"""
         # 既存のレイアウトをクリア（再表示に対応）
         for i in reversed(range(self.center_viewer.count())):
             widget = self.center_viewer.itemAt(i).widget()
@@ -216,6 +218,7 @@ class MainApp_Of_PT(QMainWindow):
             self.center_viewer.addWidget(page_widget)
 
     def select_pdf(self, reload: bool):
+        """選択します"""
         if not reload:
             self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if self.file_path.strip():
@@ -233,6 +236,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def get_images(self, file_path: str) -> list:
+        """ビューワーに表示するファイルの各ページの画像を取得します"""
         try:
             result = False
             file_as_path_type = Path(file_path)
@@ -253,6 +257,7 @@ class MainApp_Of_PT(QMainWindow):
             return [result, output_files]
 
     def encrypt_pdf(self):
+        """暗号化します"""
         self.file_path, pw = self.file_input.text(), self.password_input.text()
         if not self.file_path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
@@ -262,6 +267,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def decrypt_pdf(self):
+        """復号化します"""
         self.file_path, pw = self.file_input.text(), self.password_input.text()
         if not self.file_path.strip() or not pw.strip():
             self.show_error("ファイルパスとパスワードを入力してください。")
@@ -271,6 +277,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def show_metadata(self):
+        """メタデータを表示します"""
         self.file_path = self.file_input.text()
         if not self.file_path.strip():
             self.show_error("PDFファイルパスを入力してください。")
@@ -279,6 +286,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def write_metadata(self):
+        """メタデータを書き込みます"""
         self.file_path = self.file_input.text()
         if not self.file_path.strip():
             self.show_error("PDFファイルパスを入力してください。")
@@ -296,6 +304,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def merge_pdfs(self):
+        """マージします"""
         files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
         if files:
             # 各OSに応じたパス区切りに変換する
@@ -306,6 +315,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
+        """ページを抽出します"""
         self.file_path = self.file_input.text()
         begin, end = b_spin.value(), e_spin.value()
         if begin == 0 or end == 0:
@@ -319,6 +329,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
+        """ページを削除します"""
         self.file_path = self.file_input.text()
         begin, end = b_spin.value(), e_spin.value()
         if begin == 0 or end == 0:
@@ -332,6 +343,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox):
+        """テキストを抽出します"""
         self.file_path = self.file_input.text()
         begin, end = b_spin.value(), e_spin.value()
         if begin == 0 or end == 0:
@@ -345,6 +357,7 @@ class MainApp_Of_PT(QMainWindow):
         self.output_log()
 
     def rotate_page(self, spin: QSpinBox):
+        """ページを回転します"""
         self.file_path = self.file_input.text()
         page = spin.value()
         if not self.file_path.strip() or page < 1:
@@ -357,29 +370,39 @@ class MainApp_Of_PT(QMainWindow):
         self.second_init_ui(images)
 
     def show_result(self, label: str, success: bool):
+        """結果を表示します"""
         QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
 
     def show_error(self, msg: str):
+        """エラーを表示します"""
         QMessageBox.information(self, "エラー", msg)
 
     def output_log(self):
+        """ログを表示します"""
         formatted_log = "\n".join(self.obj_of_cls.log)
         self.output.setPlainText(formatted_log)
 
     def write_log(self):
-        exe_path = Path(__file__)
+        """ログを書き出す"""
+        # exe化されている場合とそれ以外を切り分ける
+        if getattr(sys, "frozen", False):
+            exe_path = Path(sys.executable)
+        else:
+            exe_path = Path(__file__)
         log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
         result, _ = self.obj_of_cls.write_log(log_path)
         self.show_result("ログファイルの出力", result)
 
 
 def main():
+    """主要関数"""
     if platform.system().lower() == "windows":
         # アプリ全体のスケール
         os.environ["QT_SCALE_FACTOR"] = "0.7"
     app = QApplication(sys.argv)
-    main = MainApp_Of_PT()
-    main.show()
+    window = MainApp_Of_PT()
+    window.resize(1600, 800)
+    window.show()
     sys.exit(app.exec())
 
 

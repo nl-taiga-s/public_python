@@ -193,6 +193,7 @@ class PT_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
     obj_with_cui = PT_With_Cui()
     obj_of_cls = PdfTools()
     while True:
@@ -217,6 +218,10 @@ def main() -> bool:
                 case var if var == obj_with_cui.MENU.メタデータを出力します:
                     # メタデータを出力します
                     file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
+                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
+                    print(*log, sep="\n")
+                    if not result:
+                        raise Exception
                     _, log = obj_of_cls.get_metadata(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                 case var if var == obj_with_cui.MENU.メタデータを書き込みます:
@@ -225,7 +230,7 @@ def main() -> bool:
                     result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                     if not result:
-                        continue
+                        raise Exception
                     obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(
                         obj_of_cls.metadata_of_writer, obj_of_cls.fields, obj_of_cls.creation_date, obj_of_cls.UTC_OF_JP
                     )
@@ -242,7 +247,7 @@ def main() -> bool:
                     result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                     if not result:
-                        continue
+                        raise Exception
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
                     _, log = obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
                     print(*log, sep="\n")
@@ -252,7 +257,7 @@ def main() -> bool:
                     result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                     if not result:
-                        continue
+                        raise Exception
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
                     _, log = obj_of_cls.delete_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
                     print(*log, sep="\n")
@@ -262,7 +267,7 @@ def main() -> bool:
                     result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                     if not result:
-                        continue
+                        raise Exception
                     begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
                     _, log = obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
                     print(*log, sep="\n")
@@ -272,7 +277,7 @@ def main() -> bool:
                     result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
                     print(*log, sep="\n")
                     if not result:
-                        continue
+                        raise Exception
                     page = obj_with_cui.input_rotating_page(obj_of_cls.num_of_pages)
                     degrees = obj_with_cui.input_degrees()
                     _, log = obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
@@ -285,7 +290,6 @@ def main() -> bool:
         except Exception as e:
             print(f"エラー: {e}")
         print()
-    obj_of_pt = PathTools()
     file_of_exe_as_path_type = Path(__file__)
     file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
     result, s = obj_of_cls.write_log(file_of_log_as_path_type)
