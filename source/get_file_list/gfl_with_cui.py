@@ -17,16 +17,13 @@ class GFL_With_Cui:
 
     def input_folder_path(self) -> str:
         """フォルダのパスを入力します"""
-        TILDE = "~"
         while True:
             try:
                 folder_path_of_pdf_as_str_type = input("ファイルを検索したいフォルダを入力してください。: ")
                 if folder_path_of_pdf_as_str_type == "":
                     return None
-                folder_as_path_type = Path(folder_path_of_pdf_as_str_type)
-                if TILDE in folder_path_of_pdf_as_str_type:
-                    folder_as_path_type = folder_as_path_type.expanduser()
-                    folder_path_of_pdf_as_str_type = str(folder_as_path_type)
+                folder_as_path_type = Path(folder_path_of_pdf_as_str_type).expanduser()
+                folder_path_of_pdf_as_str_type = str(folder_as_path_type)
                 if folder_as_path_type.exists():
                     # 存在する場合
                     if folder_as_path_type.is_dir():
@@ -65,19 +62,20 @@ class GFL_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
     obj_with_cui = GFL_With_Cui()
     folder_path = obj_with_cui.input_folder_path()
     if folder_path is None:
         return False
     bool_of_r = obj_with_cui.input_bool_of_recursive()
     obj_of_cls = GetFileList(folder_path, bool_of_r)
+    print(*obj_of_cls.log, sep="\n")
     pattern = obj_with_cui.input_pattern()
-    obj_of_cls.extract_by_pattern(pattern)
-    print(*obj_of_cls.list_file_after, sep="\n")
-    obj_of_pt = PathTools()
+    _, log = obj_of_cls.extract_by_pattern(pattern)
+    print(*log, sep="\n")
     file_of_exe_as_path_type = Path(__file__)
     file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_cls.write_log(file_of_log_as_path_type, obj_of_cls.list_file_after)
+    obj_of_cls.write_log(file_of_log_as_path_type)
     return True
 
 
