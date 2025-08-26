@@ -1,4 +1,3 @@
-import datetime
 import glob
 from pathlib import Path
 
@@ -109,7 +108,7 @@ class ConvertOfficeToPDF:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             return [result, local_log]
@@ -139,7 +138,7 @@ class ConvertOfficeToPDF:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             return [result, local_log]
@@ -169,7 +168,7 @@ class ConvertOfficeToPDF:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             return [result, local_log]
@@ -202,10 +201,13 @@ class ConvertOfficeToPDF:
         file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
             result = False
+            fp = ""
             with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.log))
-        except Exception as e:
-            return [result, str(e)]
+        except Exception:
+            pass
         else:
             result = True
-            return [result, file_of_log_as_str_type]
+            fp = file_of_log_as_str_type
+        finally:
+            return [result, fp]

@@ -21,8 +21,7 @@ class MainApp_Of_COTP(QWidget):
 
     def closeEvent(self, event):
         """終了します"""
-        if self.obj_of_cls is not None:
-            self.write_log()
+        self.write_log()
         super().closeEvent(event)
 
     def setup_ui(self, obj_of_cls: object):
@@ -134,6 +133,17 @@ class MainApp_Of_COTP(QWidget):
                 self.obj_of_cls.move_to_next_file()
         self.output_log("🎉 すべてのファイルの変換が完了しました！")
 
+    def write_log(self):
+        """ログを書き出す"""
+        # exe化されている場合とそれ以外を切り分ける
+        if getattr(sys, "frozen", False):
+            exe_path = Path(sys.executable)
+        else:
+            exe_path = Path(__file__)
+        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
+        result, path = self.obj_of_cls.write_log(file_of_log_as_path_type)
+        self.show_result(f"ログファイル: \n{path}\nの出力", result)
+
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
@@ -145,17 +155,6 @@ class MainApp_Of_COTP(QWidget):
     def output_log(self, message: str):
         """メッセージを表示します"""
         self.log_area.append(message)
-
-    def write_log(self):
-        """ログを書き出す"""
-        # exe化されている場合とそれ以外を切り分ける
-        if getattr(sys, "frozen", False):
-            exe_path = Path(sys.executable)
-        else:
-            exe_path = Path(__file__)
-        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-        result, path = self.obj_of_cls.write_log(file_of_log_as_path_type)
-        self.show_result(f"ログファイル: \n{path}\nの出力", result)
 
 
 def main() -> bool:
