@@ -1,4 +1,3 @@
-import datetime
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
@@ -61,7 +60,7 @@ class PdfTools:
             local_log.append("***ファイルの読み込みに成功しました。***")
             local_log.append(self.file_path)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -88,7 +87,7 @@ class PdfTools:
             local_log.append(self.file_path)
             local_log.append(f"password: {password}")
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -114,7 +113,7 @@ class PdfTools:
             local_log.append("***復号化に成功しました。***")
             local_log.append(self.file_path)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -137,7 +136,7 @@ class PdfTools:
             local_log.append("***メタデータの取得に成功しました。***")
             local_log.append(self.file_path)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -163,7 +162,7 @@ class PdfTools:
             local_log.append("***メタデータの書き込みに成功しました。***")
             local_log.append(self.file_path)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -210,7 +209,7 @@ class PdfTools:
             local_log.append(file_path_of_pdf_as_str_type)
         finally:
             self.read_file(self.file_path)
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -251,7 +250,7 @@ class PdfTools:
             local_log.append("to: ")
             local_log.append(file_path_of_pdf_as_str_type)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -298,7 +297,7 @@ class PdfTools:
             local_log.append("to: ")
             local_log.append(file_path_of_pdf_as_str_type)
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -327,7 +326,7 @@ class PdfTools:
             local_log.append(f"begin page: {begin_page}")
             local_log.append(f"end page: {end_page}")
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -356,7 +355,7 @@ class PdfTools:
             local_log.append(f"page: {page}")
             local_log.append(f"degrees: {degrees}")
         finally:
-            time_stamp = self.obj_of_dt2.convert_dt_to_str(datetime.datetime.now())
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
             local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
@@ -377,10 +376,13 @@ class PdfTools:
         file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
             result = False
+            fp = ""
             with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.log))
-        except Exception as e:
-            return [result, str(e)]
+        except Exception:
+            pass
         else:
             result = True
-            return [result, file_of_log_as_str_type]
+            fp = file_of_log_as_str_type
+        finally:
+            return [result, fp]

@@ -370,6 +370,17 @@ class MainApp_Of_PT(QMainWindow):
         _, images = self.get_images(self.file_path)
         self.second_init_ui(images)
 
+    def write_log(self):
+        """ログを書き出す"""
+        # exe化されている場合とそれ以外を切り分ける
+        if getattr(sys, "frozen", False):
+            exe_path = Path(sys.executable)
+        else:
+            exe_path = Path(__file__)
+        log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
+        result, path = self.obj_of_cls.write_log(log_path)
+        self.show_result(f"ログファイル({path})の出力", result)
+
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
@@ -382,17 +393,6 @@ class MainApp_Of_PT(QMainWindow):
         """ログを表示します"""
         formatted_log = "\n".join(self.obj_of_cls.log)
         self.output.setPlainText(formatted_log)
-
-    def write_log(self):
-        """ログを書き出す"""
-        # exe化されている場合とそれ以外を切り分ける
-        if getattr(sys, "frozen", False):
-            exe_path = Path(sys.executable)
-        else:
-            exe_path = Path(__file__)
-        log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
-        result, path = self.obj_of_cls.write_log(log_path)
-        self.show_result(f"ログファイル({path})の出力", result)
 
 
 def main():
