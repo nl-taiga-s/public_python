@@ -1,10 +1,10 @@
+import os
 import platform
 import subprocess
 import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -32,15 +32,13 @@ class MainApp_Of_GN2(QWidget):
         self.obj_of_cls = GetNHKNews()
         self.setup_ui()
 
+    def closeEvent(self, event):
+        """終了します"""
+        self.write_log()
+        super().closeEvent(event)
+
     def setup_ui(self):
         """User Interfaceを設定します"""
-        # WSL-Ubuntuでフォント設定
-        if self.obj_of_pft.is_wsl():
-            font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
-            font_id = QFontDatabase.addApplicationFont(font_path)
-            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-            font = QFont(font_family)
-            self.setFont(font)
         # タイトル
         self.setWindowTitle("NHKニュース取得アプリ")
         # ウィジェット
@@ -49,7 +47,6 @@ class MainApp_Of_GN2(QWidget):
         genre_label = QLabel("ジャンル:")
         self.genre_combo = QComboBox()
         self.fetch_button = QPushButton("ニュース取得")
-        self.save_button = QPushButton("テキストに保存")
         self.news_list = QListWidget()
         # レイアウト
         self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
@@ -57,16 +54,14 @@ class MainApp_Of_GN2(QWidget):
         genre_layout.addWidget(self.genre_combo)
         layout.addLayout(genre_layout)
         layout.addWidget(self.fetch_button)
-        layout.addWidget(self.save_button)
         layout.addWidget(self.news_list)
         self.setLayout(layout)
         # シグナル接続
         self.fetch_button.clicked.connect(self.fetch_news)
-        self.save_button.clicked.connect(self.save_news_to_file)
         self.news_list.itemClicked.connect(self.open_news_link)
 
     def fetch_news(self):
-        """ニュースを取りに行きます"""
+        """ニュースを取りに行く"""
         self.news_list.clear()
         genre_key = self.genre_combo.currentText()
         try:
@@ -74,9 +69,6 @@ class MainApp_Of_GN2(QWidget):
             self.obj_of_cls.parse_rss(genre_index, genre_key)
             self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN)
             self.obj_of_cls.extract_news_of_today_from_standard_time()
-            if not self.obj_of_cls.today_news:
-                QMessageBox.information(self, "情報", "今日のニュースはまだありません。")
-                return
             for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
                 title = news.title
                 summary = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
@@ -88,33 +80,44 @@ class MainApp_Of_GN2(QWidget):
                 item.setSizeHint(widget.sizeHint())
                 self.news_list.addItem(item)
                 self.news_list.setItemWidget(item, widget)
+            _, _ = self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW)
+            if not self.obj_of_cls.today_news:
+                raise ValueError
+        except ValueError:
+            self.show_error("今日のニュースはまだありません。")
         except Exception as e:
-            QMessageBox.critical(self, "エラー", f"ニュースの取得に失敗しました。: \n{e}")
-
-    def save_news_to_file(self):
-        """ニュースを保存します"""
-        if not self.obj_of_cls.today_news:
-            QMessageBox.information(self, "情報", "保存するニュースがありません。")
-            return
-        try:
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            self.obj_of_cls.write_log(file_of_log_as_path_type)
-        except Exception as e:
-            QMessageBox.critical(self, "エラー", f"ニュースの保存に失敗しました。: \n{e}")
-        else:
-            QMessageBox.information(self, "成功", f"ニュースの保存に成功しました。: \n{str(file_of_log_as_path_type)}")
+            self.show_error(str(e))
 
     def open_news_link(self, item: QListWidgetItem):
         """ニュースのリンクを開きます"""
+        POWERSHELL = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         url = item.data(Qt.UserRole)
         if not url:
             return
         try:
             if platform.system().lower() == "windows" or self.obj_of_pft.is_wsl():
-                subprocess.run(['powershell.exe', 'Start-Process', url], check=True)
+                subprocess.run([POWERSHELL, "Start-Process", url], check=True)
         except Exception as e:
-            QMessageBox.warning(self, "警告", f"ブラウザを開くのに失敗しました。: \n{e}")
+            self.show_error(str(e))
+
+    def write_log(self):
+        """ログを書き出す"""
+        # exe化されている場合とそれ以外を切り分ける
+        if getattr(sys, "frozen", False):
+            exe_path = Path(sys.executable)
+        else:
+            exe_path = Path(__file__)
+        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
+        result, path = self.obj_of_cls.write_log(file_of_log_as_path_type)
+        self.show_result(f"ログファイル: \n{path}\nの出力", result)
+
+    def show_result(self, label: str, success: bool):
+        """結果を表示します"""
+        QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
+
+    def show_error(self, msg: str):
+        """エラーを表示します"""
+        QMessageBox.information(self, "エラー", msg)
 
 
 class NewsItem_Of_GN2(QWidget):
@@ -141,6 +144,9 @@ class NewsItem_Of_GN2(QWidget):
 
 def main():
     """主要関数"""
+    if platform.system().lower() == "windows":
+        # アプリ全体のスケール
+        os.environ["QT_SCALE_FACTOR"] = "0.7"
     app = QApplication(sys.argv)
     window = MainApp_Of_GN2()
     window.resize(600, 400)

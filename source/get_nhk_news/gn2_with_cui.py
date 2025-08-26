@@ -33,17 +33,19 @@ class GN2_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
     obj_of_cls = GetNHKNews()
     obj_of_cui = GN2_With_Cui()
     # ジャンルを選択します
     num_of_genre, key_of_genre = obj_of_cui.select_genre(obj_of_cls.rss_feeds)
     if num_of_genre is None and key_of_genre is None:
         return False
+    print(*obj_of_cls.log, sep="\n")
     obj_of_cls.parse_rss(num_of_genre, key_of_genre)
     obj_of_cls.get_standard_time_and_today(obj_of_cls.TIMEZONE_OF_JAPAN)
     obj_of_cls.extract_news_of_today_from_standard_time()
-    obj_of_cls.print_specified_number_of_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW)
-    obj_of_pt = PathTools()
+    _, log = obj_of_cls.get_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW)
+    print(*log, sep="\n")
     file_of_exe_as_path_type = Path(__file__)
     file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
     obj_of_cls.write_log(file_of_log_as_path_type)

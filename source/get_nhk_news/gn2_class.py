@@ -5,11 +5,13 @@ import feedparser
 
 
 class GetNHKNews:
-    """NHKニュースを取得します。"""
+    """NHKニュースを取得します"""
 
     def __init__(self):
         """初期化します"""
-        print(self.__class__.__doc__)
+        self.log = []
+        self.REPEAT_TIMES = 50
+        self.log.append(self.__class__.__doc__)
         # NHKニュースのジャンルごとのRSS URL
         self.rss_feeds = {
             "主要": "https://www.nhk.or.jp/rss/news/cat0.xml",
@@ -51,31 +53,44 @@ class GetNHKNews:
                 if pub_date == self.today:
                     self.today_news.append(entry)
 
-    def print_specified_number_of_news(self, num_of_news: int):
-        """上位指定の件数のニュースを出力します"""
-        print(f"<<<日付: {self.today}>>>")
-        print(f"<<<ジャンル: {self.key_of_genre}>>>")
-        if not self.today_news:
-            print("***ニュースは、まだありません。***")
+    def get_news(self, num_of_news: int) -> list:
+        """ニュースを取得します"""
+        try:
+            result = False
+            local_log = []
+            local_log.append(">" * self.REPEAT_TIMES)
+            local_log.append(f"日付: {self.today}")
+            local_log.append(f"ジャンル: {self.key_of_genre}")
+            if not self.today_news:
+                raise ValueError
+            else:
+                for i, news in enumerate(self.today_news[:num_of_news], start=1):
+                    local_log.append(f"{i}. {news.title}: ")
+                    local_log.append(f"\t{news.link}")
+        except ValueError:
+            local_log.append("***ニュースは、まだありません。***")
+        except Exception:
+            local_log.append("***ニュースの出力に失敗しました。***")
         else:
-            for i, news in enumerate(self.today_news[:num_of_news], start=1):
-                print(f"{i}. {news.title}: ")
-                print(f"\t{news.link}")
+            result = True
+            local_log.append("***ニュースの出力に成功しました。***")
+        finally:
+            local_log.append("<" * self.REPEAT_TIMES)
+            self.log.extend(local_log)
+            return [result, local_log]
 
-    def write_log(self, file_of_log_as_path_type: Path):
+    def write_log(self, file_of_log_as_path_type: Path) -> list:
         """処理結果をログに書き出す"""
         file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
+            result = False
+            fp = ""
             with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
-                f.write(f"<<<日付: {self.today}>>>\n")
-                f.write(f"<<<ジャンル: {self.key_of_genre}>>>\n\n")
-                for i, news in enumerate(
-                    self.today_news[: self.NUM_OF_NEWS_TO_SHOW],
-                    start=1,
-                ):
-                    f.write(f"{i}. {news.title}\n")
-                    f.write(f"{news.link}\n\n")
-        except Exception as e:
-            print(f"ログファイルの出力に失敗しました。: \n{e}")
+                f.write("\n".join(self.log))
+        except Exception:
+            pass
         else:
-            print(f"ログファイルの出力に成功しました。: \n{file_of_log_as_str_type}")
+            result = True
+            fp = file_of_log_as_str_type
+        finally:
+            return [result, fp]
