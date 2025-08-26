@@ -30,13 +30,6 @@ class MainApp_Of_GFL(QWidget):
 
     def setup_ui(self):
         """User Interfaceを設定します"""
-        # WSL-Ubuntuでフォント設定
-        # if self.obj_of_pft.is_wsl():
-        #     font_path = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
-        #     font_id = QFontDatabase.addApplicationFont(font_path)
-        #     font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        #     font = QFont(font_family)
-        #     self.setFont(font)
         # タイトル
         self.setWindowTitle("ファイル検索ツール")
         # ウィジェット

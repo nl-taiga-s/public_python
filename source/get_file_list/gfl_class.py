@@ -54,10 +54,13 @@ class GetFileList:
         file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
             result = False
+            fp = ""
             with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
                 f.write("\n".join(self.log))
         except Exception:
-            return [result, ""]
+            pass
         else:
             result = True
-            return [result, file_of_log_as_str_type]
+            fp = file_of_log_as_str_type
+        finally:
+            return [result, fp]
