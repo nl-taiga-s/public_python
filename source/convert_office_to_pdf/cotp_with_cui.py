@@ -17,8 +17,10 @@ class COTP_With_Cui:
                 folder_path_to = input("一括変換したファイルを格納するフォルダを指定してください。: ")
                 if folder_path_from == "" and folder_path_to == "":
                     return [None, None]
-                folder_of_from_as_path_type = Path(folder_path_from)
-                folder_of_to_as_path_type = Path(folder_path_to)
+                folder_of_from_as_path_type = Path(folder_path_from).expanduser()
+                folder_of_to_as_path_type = Path(folder_path_to).expanduser()
+                folder_path_from = str(folder_of_from_as_path_type)
+                folder_path_to = str(folder_of_to_as_path_type)
                 if folder_of_from_as_path_type.exists() and folder_of_to_as_path_type.exists():
                     # 存在する場合
                     if folder_of_from_as_path_type.is_dir() and folder_of_to_as_path_type.is_dir():
@@ -42,6 +44,7 @@ def main() -> bool:
         if folder_path_from is None and folder_path_to is None:
             return False
         obj_of_cls = ConvertOfficeToPDF(folder_path_from, folder_path_to)
+        print(*obj_of_cls.log, sep="\n")
         for _ in range(obj_of_cls.number_of_f):
             _, log = obj_of_cls.handle_file()
             print(*log, sep="\n")

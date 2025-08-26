@@ -18,7 +18,9 @@ class ConvertOfficeToPDF:
 
     def __init__(self, folder_path_from: str, folder_path_to: str):
         """初期化します"""
-        print(self.__class__.__doc__)
+        self.log = []
+        self.REPEAT_TIMES = 50
+        self.log.append(self.__class__.__doc__)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
         self.folder_path_from = folder_path_from
@@ -29,15 +31,12 @@ class ConvertOfficeToPDF:
             "word": [".doc", ".docx"],
             "powerpoint": [".ppt", ".pptx"],
         }
+        # ファイルリストのポインタ
+        self.p = 0
         # 処理したファイルの数
         self.count = 0
         # 処理が成功したファイルの数
         self.success = 0
-        # ファイルリストのポインタ
-        self.p = 0
-        # ログファイルのリスト
-        self.log = []
-        self.REPEAT_TIMES = 50
         # すべてのファイルを変換できたかどうか
         self.complete = False
         try:
@@ -58,6 +57,7 @@ class ConvertOfficeToPDF:
             if self.number_of_f == 0:
                 raise ValueError("変換元のファイルがありません。")
             self.set_file_path()
+            self.log.append(f"{self.number_of_f}件のファイルを一括変換します。")
         except ValueError as e:
             print(e)
 
@@ -190,6 +190,7 @@ class ConvertOfficeToPDF:
             self.success += 1
         if self.count == self.number_of_f:
             if self.success == self.number_of_f:
+                self.complete = True
                 log.append("全てのファイルの変換が完了しました。")
             else:
                 log.append("一部のファイルの変換が失敗しました。")
