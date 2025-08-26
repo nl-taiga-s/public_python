@@ -54,14 +54,13 @@ class PT_With_Cui:
 
     def input_target_of_pdf(self, extension: str) -> str:
         """対象のPDFファイルのパスを入力します。"""
-        TILDE = "~"
         while True:
             try:
                 file_path_of_pdf_as_str_type = input("対象のPDFファイルのパスを入力してください。: ")
                 file_of_pdf_as_path_type = Path(file_path_of_pdf_as_str_type)
-                if TILDE in file_path_of_pdf_as_str_type:
-                    file_of_pdf_as_path_type = file_of_pdf_as_path_type.expanduser()
-                    file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
+                # ホームディレクトリを展開する
+                file_of_pdf_as_path_type = file_of_pdf_as_path_type.expanduser()
+                file_path_of_pdf_as_str_type = str(file_of_pdf_as_path_type)
                 if file_of_pdf_as_path_type.exists() and file_of_pdf_as_path_type.suffix.lower() == extension:
                     return file_path_of_pdf_as_str_type
                 else:
@@ -122,7 +121,7 @@ class PT_With_Cui:
                 str_of_bool = input("対象のファイルは、まだありますか？: ")
                 match str_of_bool:
                     case var if var in self.d_of_bool["yes"]:
-                        pass
+                        continue
                     case var if var in self.d_of_bool["no"]:
                         break
                     case _:
@@ -196,6 +195,7 @@ def main() -> bool:
     obj_of_pt = PathTools()
     obj_with_cui = PT_With_Cui()
     obj_of_cls = PdfTools()
+    print(*obj_of_cls.log, sep="\n")
     while True:
         try:
             # メニューを選択します

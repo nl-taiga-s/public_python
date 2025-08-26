@@ -11,7 +11,8 @@ class PdfTools:
 
     def __init__(self):
         """初期化します"""
-        print(self.__class__.__doc__)
+        self.log = []
+        self.log.append(self.__class__.__doc__)
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
         self.file_path = None
@@ -35,7 +36,6 @@ class PdfTools:
         self.creation_date = None
         self.modification_date = None
         self.lst_of_text_in_pages = []
-        self.log = []
         self.REPEAT_TIMES = 50
 
     def read_file(self, file_path: str) -> list:

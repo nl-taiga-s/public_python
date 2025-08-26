@@ -223,7 +223,8 @@ class MainApp_Of_PT(QMainWindow):
             self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
         if self.file_path.strip():
             # 各OSに応じたパス区切りに変換する
-            self.file_path = str(Path(self.file_path))
+            file_as_path_type = Path(self.file_path).expanduser()
+            self.file_path = str(file_as_path_type)
             self.file_input.setText(self.file_path)
             self.obj_of_cls.read_file(self.file_path)
             if self.obj_of_cls.reader.is_encrypted:
@@ -390,8 +391,8 @@ class MainApp_Of_PT(QMainWindow):
         else:
             exe_path = Path(__file__)
         log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
-        result, _ = self.obj_of_cls.write_log(log_path)
-        self.show_result("ログファイルの出力", result)
+        result, path = self.obj_of_cls.write_log(log_path)
+        self.show_result(f"ログファイル({path})の出力", result)
 
 
 def main():
