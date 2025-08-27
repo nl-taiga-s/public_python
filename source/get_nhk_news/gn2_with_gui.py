@@ -60,11 +60,12 @@ class MainApp_Of_GN2(QWidget):
         self.fetch_button.clicked.connect(self.fetch_news)
         self.news_list.itemClicked.connect(self.open_news_link)
 
-    def fetch_news(self):
+    def fetch_news(self) -> bool:
         """ニュースを取りに行く"""
         self.news_list.clear()
         genre_key = self.genre_combo.currentText()
         try:
+            result = False
             genre_index = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
             self.obj_of_cls.parse_rss(genre_index, genre_key)
             self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN)
@@ -82,26 +83,33 @@ class MainApp_Of_GN2(QWidget):
                 self.news_list.setItemWidget(item, widget)
             _, _ = self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW)
             if not self.obj_of_cls.today_news:
-                raise ValueError
-        except ValueError:
-            self.show_error("今日のニュースはまだありません。")
+                raise Exception("今日のニュースはまだありません。")
         except Exception as e:
             self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
-    def open_news_link(self, item: QListWidgetItem):
+    def open_news_link(self, item: QListWidgetItem) -> bool:
         """ニュースのリンクを開きます"""
         POWERSHELL_OF_WSL = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         POWERSHELL_OF_WINDOWS = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-        url = item.data(Qt.UserRole)
-        if not url:
-            return
         try:
+            result = False
+            url = item.data(Qt.UserRole)
+            if not url:
+                raise Exception
             if platform.system().lower() == "windows":
                 subprocess.run([POWERSHELL_OF_WINDOWS, "Start-Process", url], check=True)
-            if self.obj_of_pft.is_wsl():
+            elif self.obj_of_pft.is_wsl():
                 subprocess.run([POWERSHELL_OF_WSL, "Start-Process", url], check=True)
         except Exception as e:
             self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
     def write_log(self):
         """ログを書き出す"""
