@@ -45,9 +45,7 @@ class GFL_With_Cui:
                     case var if var in self.d_of_bool["no"]:
                         return False
                     case _:
-                        raise ValueError
-        except ValueError:
-            print(f"無効な入力です。: {str_of_bool}")
+                        raise Exception(f"無効な入力です。: {str_of_bool}")
         except Exception as e:
             print(str(e))
         except KeyboardInterrupt:

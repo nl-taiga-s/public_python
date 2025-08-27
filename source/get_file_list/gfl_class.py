@@ -38,16 +38,15 @@ class GetFileList:
             local_log.append(f"再帰的に検索: {"する" if self.bool_of_r else "しない"}")
             local_log.append(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.list_file_after = [f for f in self.list_file_before if self.pattern in f]
+            if not self.list_file_after:
+                raise ValueError("***検索パターンによる抽出結果がありませんでした。***")
             # ファイルの数
             self.number_of_f = len(self.list_file_after)
-            if self.list_file_after:
-                local_log.append(f"{self.number_of_f}件のファイルが抽出されました。")
-                for element in self.list_file_after:
-                    local_log.append(element)
-            else:
-                raise ValueError
-        except ValueError:
-            local_log.append("***検索パターンによる抽出結果がありませんでした。***")
+            local_log.append(f"{self.number_of_f}件のファイルが抽出されました。")
+            for element in self.list_file_after:
+                local_log.append(element)
+        except ValueError as e:
+            local_log.append(str(e))
         except Exception:
             local_log.append("***検索パターンによる抽出が失敗しました。***")
         else:
