@@ -106,20 +106,20 @@ class MainApp_Of_COTP(QWidget):
                 file_path = file_as_path_type.name
                 self.file_list_widget.addItem(file_path)
             self.progress_bar.setValue(0)
-        except ValueError as e:
+        except Exception as e:
             self.file_list_widget.clear()
-            self.output_log(f"⚠️ {e}")
+            self.output_log(f"<NG> {str(e)}")
         else:
-            self.output_log(f"✅ {self.obj_of_cls.number_of_f}件のファイルが見つかりました。")
+            self.output_log(f"{self.obj_of_cls.number_of_f}件のファイルが見つかりました。")
 
     def convert_file(self):
         """変換します"""
         if self.obj_of_cls is None:
-            self.output_log("⚠️ ファイルリストが初期化されていません。")
+            self.output_log("<NG> ファイルリストが初期化されていません。")
             return
         total = self.obj_of_cls.number_of_f
         self.progress_bar.setRange(0, total)
-        self.output_log(f"📄 {total}件のファイルを一括変換します...")
+        self.output_log(f"<OK> {total}件のファイルを一括変換します...")
         try:
             for i in range(total):
                 try:
@@ -127,15 +127,15 @@ class MainApp_Of_COTP(QWidget):
                     file_name = file_of_currentfrom_as_path_type.name
                     self.obj_of_cls.handle_file()
                 except Exception as e:
-                    self.output_log(f"❌ [ {i + 1} / {total} ] {file_name} => エラー: {e}")
+                    self.output_log(f"<NG> [ {i + 1} / {total} ] {file_name} => エラー: {str(e)}")
                 else:
-                    self.output_log(f"✅ [ {i + 1} / {total} ] {file_name} => 完了")
+                    self.output_log(f"<OK> [ {i + 1} / {total} ] {file_name} => 完了")
                     self.progress_bar.setValue(i + 1)
                     self.obj_of_cls.move_to_next_file()
         except Exception as e:
-            self.output_log(str(e))
+            self.output_log(f"<NG> {str(e)}")
         else:
-            self.output_log("🎉 すべてのファイルの変換が完了しました！")
+            self.output_log("<OK> 全てのファイルの変換が完了しました！")
 
     def write_log(self):
         """ログを書き出す"""

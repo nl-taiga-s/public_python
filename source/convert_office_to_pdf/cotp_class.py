@@ -55,10 +55,11 @@ class ConvertOfficeToPDF:
             self.number_of_f = len(self.filtered_list_of_f)
             if self.number_of_f == 0:
                 raise ValueError("変換元のファイルがありません。")
+        except ValueError as e:
+            print(str(e))
+        else:
             self.set_file_path()
             self.log.append(f"{self.number_of_f}件のファイルを一括変換します。")
-        except ValueError as e:
-            print(e)
 
     def set_file_path(self):
         """ファイルパスを設定します"""
@@ -99,7 +100,7 @@ class ConvertOfficeToPDF:
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
         except Exception as e:
-            local_log.append(f"Convert Error from Excel to PDF: {e}")
+            local_log.append(f"Convert Error from Excel to PDF: {str(e)}")
         else:
             result = True
             local_log.append("It was Successful!")
@@ -129,7 +130,7 @@ class ConvertOfficeToPDF:
                 ExportFormat=PDF_NUMBER_OF_WORD,
             )
         except Exception as e:
-            local_log.append(f"Convert Error from Word to PDF: {e}")
+            local_log.append(f"Convert Error from Word to PDF: {str(e)}")
         else:
             result = True
             local_log.append("It was Successful!")
@@ -159,7 +160,7 @@ class ConvertOfficeToPDF:
                 FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
             )
         except Exception as e:
-            local_log.append(f"Convert Error from PowerPoint to PDF: {e}")
+            local_log.append(f"Convert Error from PowerPoint to PDF: {str(e)}")
         else:
             result = True
             local_log.append("It was Successful!")
