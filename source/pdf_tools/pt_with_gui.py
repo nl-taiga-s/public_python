@@ -218,25 +218,6 @@ class MainApp_Of_PT(QMainWindow):
             # グリッドにページごとに追加する
             self.center_viewer.addWidget(page_widget)
 
-    def select_pdf(self, reload: bool):
-        """選択します"""
-        if not reload:
-            self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
-        if self.file_path.strip():
-            # 各OSに応じたパス区切りに変換する
-            file_as_path_type = Path(self.file_path).expanduser()
-            self.file_path = str(file_as_path_type)
-            self.file_input.setText(self.file_path)
-            self.obj_of_cls.read_file(self.file_path)
-            if self.obj_of_cls.reader.is_encrypted:
-                self.show_error("ファイルが暗号化されています。")
-            else:
-                _, images = self.get_images(self.file_path)
-                self.second_init_ui(images)
-        else:
-            self.show_error("ファイルを選択してください。")
-        self.output_log()
-
     def get_images(self, file_path: str) -> list:
         """ビューワーに表示するファイルの各ページの画像を取得します"""
         try:
@@ -259,118 +240,224 @@ class MainApp_Of_PT(QMainWindow):
         finally:
             return [result, output_files]
 
-    def encrypt_pdf(self):
+    def select_pdf(self, reload: bool) -> bool:
+        """選択します"""
+        try:
+            result = False
+            if reload:
+                if not self.file_path.strip():
+                    raise Exception("PDFファイルを選択してください。")
+            else:
+                self.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
+            # 各OSに応じたパス区切りに変換する
+            file_as_path_type = Path(self.file_path).expanduser()
+            self.file_path = str(file_as_path_type)
+            self.file_input.setText(self.file_path)
+            self.obj_of_cls.read_file(self.file_path)
+            if self.obj_of_cls.reader.is_encrypted:
+                raise Exception("PDFファイルが暗号化されています。")
+            else:
+                _, images = self.get_images(self.file_path)
+                self.second_init_ui(images)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
+
+    def encrypt_pdf(self) -> bool:
         """暗号化します"""
-        self.file_path, pw = self.file_input.text(), self.password_input.text()
-        if not self.file_path.strip() or not pw.strip():
-            self.show_error("ファイルパスとパスワードを入力してください。")
-            return None
-        result, log = self.obj_of_cls.encrypt(self.file_path, pw)
-        self.show_result("暗号化", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path, pw = self.file_input.text(), self.password_input.text()
+            if not self.file_path.strip() or not pw.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択し、パスワードを入力してください。")
+            result, log = self.obj_of_cls.encrypt(self.file_path, pw)
+            self.show_result("暗号化", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def decrypt_pdf(self):
+    def decrypt_pdf(self) -> bool:
         """復号化します"""
-        self.file_path, pw = self.file_input.text(), self.password_input.text()
-        if not self.file_path.strip() or not pw.strip():
-            self.show_error("ファイルパスとパスワードを入力してください。")
-            return None
-        result, log = self.obj_of_cls.decrypt(self.file_path, pw)
-        self.show_result("復号化", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path, pw = self.file_input.text(), self.password_input.text()
+            if not self.file_path.strip() or not pw.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択し、パスワードを入力してください。")
+            result, log = self.obj_of_cls.decrypt(self.file_path, pw)
+            self.show_result("復号化", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def show_metadata(self):
+    def show_metadata(self) -> bool:
         """メタデータを表示します"""
-        self.file_path = self.file_input.text()
-        if not self.file_path.strip():
-            self.show_error("PDFファイルパスを入力してください。")
-        result, log = self.obj_of_cls.get_metadata(self.file_path)
-        self.show_result("メタデータの表示", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            result, log = self.obj_of_cls.get_metadata(self.file_path)
+            self.show_result("メタデータの表示", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def write_metadata(self):
+    def write_metadata(self) -> bool:
         """メタデータを書き込みます"""
-        self.file_path = self.file_input.text()
-        if not self.file_path.strip():
-            self.show_error("PDFファイルパスを入力してください。")
-            return None
-        for value, key in self.obj_of_cls.fields:
-            match value:
-                case "creation_date":
-                    self.widget_of_metadata[key] = self.obj_of_cls.creation_date
-                case "modification_date":
-                    self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
-                case _:
-                    self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
-        result, log = self.obj_of_cls.write_metadata(self.file_path, self.widget_of_metadata)
-        self.show_result("メタデータの書き込み", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            for value, key in self.obj_of_cls.fields:
+                match value:
+                    case "creation_date":
+                        self.widget_of_metadata[key] = self.obj_of_cls.creation_date
+                    case "modification_date":
+                        self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
+                    case _:
+                        self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
+            result, log = self.obj_of_cls.write_metadata(self.file_path, self.widget_of_metadata)
+            self.show_result("メタデータの書き込み", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def merge_pdfs(self):
+    def merge_pdfs(self) -> bool:
         """マージします"""
-        files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
-        if files:
+        try:
+            result = False
+            files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
+            if not files:
+                raise Exception("PDFファイルを選択してください。")
             # 各OSに応じたパス区切りに変換する
             for i, element in enumerate(files):
                 files[i] = str(Path(element))
             result, log = self.obj_of_cls.merge(files)
             self.show_result("マージ", result)
-        self.output_log()
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
+    def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """ページを抽出します"""
-        self.file_path = self.file_input.text()
-        begin, end = b_spin.value(), e_spin.value()
-        if begin == 0 or end == 0:
-            self.show_error("ページ範囲を指定してください。")
-            return None
-        if not self.file_path.strip() or begin < 1 or end < begin:
-            self.show_error("ページ範囲またはパスが不正です。")
-            return None
-        result, log = self.obj_of_cls.extract_pages(self.file_path, begin, end)
-        self.show_result("ページの抽出", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            begin, end = b_spin.value(), e_spin.value()
+            if begin == 0 or end == 0:
+                raise Exception("ページ範囲を指定してください。")
+            if begin < 1 or end < begin:
+                raise Exception("ページ範囲またはパスが不正です。")
+            result, log = self.obj_of_cls.extract_pages(self.file_path, begin, end)
+            self.show_result("ページの抽出", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox):
+    def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """ページを削除します"""
-        self.file_path = self.file_input.text()
-        begin, end = b_spin.value(), e_spin.value()
-        if begin == 0 or end == 0:
-            self.show_error("ページ範囲を指定してください。")
-            return None
-        if not self.file_path.strip() or begin < 1 or end < begin:
-            self.show_error("ページ範囲またはパスが不正です。")
-            return None
-        result, log = self.obj_of_cls.delete_pages(self.file_path, begin, end)
-        self.show_result("ページの削除", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            begin, end = b_spin.value(), e_spin.value()
+            if begin == 0 or end == 0:
+                raise Exception("ページ範囲を指定してください。")
+            if begin < 1 or end < begin:
+                raise Exception("ページ範囲またはパスが不正です。")
+            result, log = self.obj_of_cls.delete_pages(self.file_path, begin, end)
+            self.show_result("ページの削除", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox):
+    def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """テキストを抽出します"""
-        self.file_path = self.file_input.text()
-        begin, end = b_spin.value(), e_spin.value()
-        if begin == 0 or end == 0:
-            self.show_error("ページ範囲を指定してください。")
-            return None
-        if not self.file_path.strip() or begin < 1 or end < begin:
-            self.show_error("ページ範囲またはパスが不正です。")
-            return None
-        result, log = self.obj_of_cls.extract_text(self.file_path, begin, end)
-        self.show_result("テキストの抽出", result)
-        self.output_log()
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            begin, end = b_spin.value(), e_spin.value()
+            if begin == 0 or end == 0:
+                raise Exception("ページ範囲を指定してください。")
+            if begin < 1 or end < begin:
+                raise Exception("ページ範囲またはパスが不正です。")
+            result, log = self.obj_of_cls.extract_text(self.file_path, begin, end)
+            self.show_result("テキストの抽出", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            self.output_log()
+            return result
 
-    def rotate_page(self, spin: QSpinBox):
+    def rotate_page(self, spin: QSpinBox) -> bool:
         """ページを回転します"""
-        self.file_path = self.file_input.text()
-        page = spin.value()
-        if not self.file_path.strip() or page < 1:
-            self.show_error("ページ番号が不正です。")
-            return None
-        result, log = self.obj_of_cls.rotate_page_clockwise(self.file_path, page, 90)
-        self.show_result("ページの回転", result)
-        self.output_log()
-        _, images = self.get_images(self.file_path)
-        self.second_init_ui(images)
+        try:
+            result = False
+            self.file_path = self.file_input.text()
+            if not self.file_path.strip():
+                # 未入力の場合
+                raise Exception("PDFファイルを選択してください。")
+            page = spin.value()
+            if page < 1:
+                raise Exception("ページ番号が不正です。")
+            result, log = self.obj_of_cls.rotate_page_clockwise(self.file_path, page, 90)
+            self.show_result("ページの回転", result)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+            _, images = self.get_images(self.file_path)
+            self.second_init_ui(images)
+        finally:
+            self.output_log()
+            return result
 
     def write_log(self):
         """ログを書き出す"""
@@ -381,7 +468,7 @@ class MainApp_Of_PT(QMainWindow):
             exe_path = Path(__file__)
         log_path = self.obj_of_pt.get_file_path_of_log(exe_path)
         result, path = self.obj_of_cls.write_log(log_path)
-        self.show_result(f"ログファイル({path})の出力", result)
+        self.show_result(f"ログファイル: \n{path}\nの出力", result)
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
