@@ -27,7 +27,7 @@ class MainApp_Of_COTP(QWidget):
     def setup_ui(self, obj_of_cls: object):
         """User Interfaceを設定します"""
         # タイトル
-        self.setWindowTitle("Officeファイル → PDF 一括変換")
+        self.setWindowTitle("Officeファイル => PDF 一括変換アプリ")
         # ウィジェット
         self.label_from = QLabel("変換元フォルダ: 未選択")
         btn_select_from = QPushButton("変換元フォルダを選択")
@@ -37,7 +37,7 @@ class MainApp_Of_COTP(QWidget):
         btn_open_to = QPushButton("変換先フォルダを開く")
         self.file_list_widget = QListWidget()
         self.progress_bar = QProgressBar()
-        btn_convert = QPushButton("一括変換 実行")
+        btn_convert = QPushButton("一括変換を実行します")
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
         # レイアウト
@@ -48,12 +48,12 @@ class MainApp_Of_COTP(QWidget):
         layout.addWidget(self.label_to)
         layout.addWidget(btn_select_to)
         layout.addWidget(btn_open_to)
-        layout.addWidget(QLabel("変換対象ファイル一覧:"))
+        layout.addWidget(QLabel("変換対象ファイル一覧: "))
         layout.addWidget(self.file_list_widget)
-        layout.addWidget(QLabel("進行状況:"))
+        layout.addWidget(QLabel("進行状況: "))
         layout.addWidget(self.progress_bar)
         layout.addWidget(btn_convert)
-        layout.addWidget(QLabel("ログ:"))
+        layout.addWidget(QLabel("ログ: "))
         layout.addWidget(self.log_area)
         self.setLayout(layout)
         # シグナル接続
@@ -90,7 +90,7 @@ class MainApp_Of_COTP(QWidget):
                 if platform.system().lower() == "windows":
                     os.startfile(folder)
             except Exception as e:
-                print(f"エクスプローラー起動エラー: {e}")
+                self.show_error(str(e))
         else:
             self.output_log("フォルダが未選択のため開けません。")
 
@@ -120,18 +120,22 @@ class MainApp_Of_COTP(QWidget):
         total = self.obj_of_cls.number_of_f
         self.progress_bar.setRange(0, total)
         self.output_log(f"📄 {total}件のファイルを一括変換します...")
-        for i in range(total):
-            try:
-                file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
-                file_name = file_of_currentfrom_as_path_type.name
-                self.obj_of_cls.handle_file()
-            except Exception as e:
-                self.output_log(f"❌ [ {i + 1} / {total} ] {file_name} → エラー: {e}")
-            else:
-                self.output_log(f"✅ [ {i + 1} / {total} ] {file_name} → 完了")
-                self.progress_bar.setValue(i + 1)
-                self.obj_of_cls.move_to_next_file()
-        self.output_log("🎉 すべてのファイルの変換が完了しました！")
+        try:
+            for i in range(total):
+                try:
+                    file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
+                    file_name = file_of_currentfrom_as_path_type.name
+                    self.obj_of_cls.handle_file()
+                except Exception as e:
+                    self.output_log(f"❌ [ {i + 1} / {total} ] {file_name} => エラー: {e}")
+                else:
+                    self.output_log(f"✅ [ {i + 1} / {total} ] {file_name} => 完了")
+                    self.progress_bar.setValue(i + 1)
+                    self.obj_of_cls.move_to_next_file()
+        except Exception as e:
+            self.output_log(str(e))
+        else:
+            self.output_log("🎉 すべてのファイルの変換が完了しました！")
 
     def write_log(self):
         """ログを書き出す"""
