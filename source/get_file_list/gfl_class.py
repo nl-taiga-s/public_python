@@ -38,12 +38,12 @@ class GetFileList:
             else:
                 raise ValueError
         except ValueError:
-            local_log.append("***検索結果がありませんでした。***")
+            local_log.append("***検索パターンによる抽出結果がありませんでした。***")
         except Exception:
-            local_log.append("***検索が失敗しました。***")
+            local_log.append("***検索パターンによる抽出が失敗しました。***")
         else:
             result = True
-            local_log.append("***検索が成功しました。***")
+            local_log.append("***検索パターンによる抽出が成功しました。***")
         finally:
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
