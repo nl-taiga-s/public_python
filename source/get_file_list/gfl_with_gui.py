@@ -21,6 +21,9 @@ class MainApp_Of_GFL(QWidget):
         self.obj_of_pft = PlatformTools()
         self.obj_of_dt2 = DatetimeTools()
         self.obj_of_pt = PathTools()
+
+        self.folder_path = ""
+
         self.setup_ui()
 
     def closeEvent(self, event):
@@ -55,45 +58,64 @@ class MainApp_Of_GFL(QWidget):
         self.setLayout(layout)
         # シグナル接続
         select_folder_btn.clicked.connect(self.select_folder)
-        open_folder_btn.clicked.connect(lambda: self.open_explorer(self.folder))
+        open_folder_btn.clicked.connect(lambda: self.open_explorer(self.folder_path))
         search_btn.clicked.connect(self.search_files)
 
-    def select_folder(self):
+    def select_folder(self) -> bool:
         """フォルダを選択します"""
-        self.folder = QFileDialog.getExistingDirectory(self, "フォルダを選択")
-        folder_as_path_type = Path(self.folder).expanduser()
-        self.folder = str(folder_as_path_type)
-        if self.folder:
-            self.folder_label.setText(self.folder)
-            recursive = self.recursive_checkbox.isChecked()
-            self.obj_of_cls = GetFileList(self.folder, recursive)
+        try:
+            result = False
+            self.folder_path = QFileDialog.getExistingDirectory(self, "フォルダを選択")
+            folder_as_path_type = Path(self.folder_path).expanduser()
+            self.folder_path = str(folder_as_path_type)
+            if self.folder_path:
+                self.folder_label.setText(self.folder_path)
+                recursive = self.recursive_checkbox.isChecked()
+                self.obj_of_cls = GetFileList(self.folder_path, recursive)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
-    def open_explorer(self, folder: str):
+    def open_explorer(self, folder: str) -> bool:
         """エクスプローラーを開きます"""
         EXPLORER = "/mnt/c/Windows/explorer.exe"
-        if folder:
-            try:
-                if platform.system().lower() == "windows":
-                    os.startfile(folder)
-                elif self.obj_of_pft.is_wsl():
-                    # Windowsのパスに変換（/mnt/c/... 形式）
-                    wsl_path = subprocess.check_output(["wslpath", "-w", folder]).decode("utf-8").strip()
-                    subprocess.run([EXPLORER, wsl_path])
-            except Exception as e:
-                self.show_error(str(e))
+        try:
+            result = False
+            if not folder:
+                raise Exception("フォルダを選択してください。")
+            if platform.system().lower() == "windows":
+                os.startfile(folder)
+            elif self.obj_of_pft.is_wsl():
+                # Windowsのパスに変換（/mnt/c/... 形式）
+                wsl_path = subprocess.check_output(["wslpath", "-w", folder]).decode("utf-8").strip()
+                subprocess.run([EXPLORER, wsl_path])
+        except Exception as e:
+            self.show_error(str(e))
         else:
-            self.output_log("フォルダが未選択のため開けません。")
+            result = True
+        finally:
+            return result
 
-    def search_files(self):
+    def search_files(self) -> bool:
         """ファイルを検索します"""
-        if not self.obj_of_cls:
-            self.output_log("フォルダが未選択です。")
-            return
-        pattern = self.pattern_input.text().strip()
-        recursive = self.recursive_checkbox.isChecked()
-        self.obj_of_cls = GetFileList(self.folder, recursive)
-        self.obj_of_cls.extract_by_pattern(pattern)
-        self.output_log("\n".join(self.obj_of_cls.log))
+        try:
+            result = False
+            if not self.obj_of_cls:
+                raise Exception("フォルダを選択してください。")
+            pattern = self.pattern_input.text().strip()
+            recursive = self.recursive_checkbox.isChecked()
+            self.obj_of_cls = GetFileList(self.folder_path, recursive)
+            self.obj_of_cls.extract_by_pattern(pattern)
+            self.output_log("\n".join(self.obj_of_cls.log))
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
     def write_log(self):
         """ログを書き出す"""
