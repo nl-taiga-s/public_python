@@ -30,7 +30,7 @@ class GFL_With_Cui:
                         # フォルダの場合
                         return folder_path_of_pdf_as_str_type
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
 
@@ -45,9 +45,11 @@ class GFL_With_Cui:
                     case var if var in self.d_of_bool["no"]:
                         return False
                     case _:
-                        raise ValueError(f"無効な入力です。: {str_of_bool}")
-        except ValueError as e:
-            print(e)
+                        raise ValueError
+        except ValueError:
+            print(f"無効な入力です。: {str_of_bool}")
+        except Exception as e:
+            print(str(e))
         except KeyboardInterrupt:
             sys.exit(0)
 
@@ -56,27 +58,55 @@ class GFL_With_Cui:
         try:
             pattern = input("ファイルの検索パターンを入力してください。: ")
             return pattern
+        except Exception as e:
+            print(str(e))
+        except KeyboardInterrupt:
+            sys.exit(0)
+
+    def input_continue(self) -> bool:
+        """続けるかどうかを入力します"""
+        try:
+            str_of_bool = input("再度、行いますか？: ")
+            match str_of_bool:
+                case var if var in self.d_of_bool["yes"]:
+                    return True
+                case var if var in self.d_of_bool["no"]:
+                    return False
+        except Exception as e:
+            print(str(e))
         except KeyboardInterrupt:
             sys.exit(0)
 
 
 def main() -> bool:
     """主要関数"""
-    obj_of_pt = PathTools()
-    obj_with_cui = GFL_With_Cui()
-    folder_path = obj_with_cui.input_folder_path()
-    if folder_path is None:
-        return False
-    bool_of_r = obj_with_cui.input_bool_of_recursive()
-    obj_of_cls = GetFileList(folder_path, bool_of_r)
-    print(*obj_of_cls.log, sep="\n")
-    pattern = obj_with_cui.input_pattern()
-    _, log = obj_of_cls.extract_by_pattern(pattern)
-    print(*log, sep="\n")
-    file_of_exe_as_path_type = Path(__file__)
-    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_cls.write_log(file_of_log_as_path_type)
-    return True
+    try:
+        while True:
+            result = False
+            obj_of_pt = PathTools()
+            obj_with_cui = GFL_With_Cui()
+            folder_path = obj_with_cui.input_folder_path()
+            if folder_path is None:
+                return result
+            bool_of_r = obj_with_cui.input_bool_of_recursive()
+            obj_of_cls = GetFileList(folder_path, bool_of_r)
+            print(*obj_of_cls.log, sep="\n")
+            pattern = obj_with_cui.input_pattern()
+            _, log = obj_of_cls.extract_by_pattern(pattern)
+            print(*log, sep="\n")
+            if obj_with_cui.input_continue():
+                continue
+            else:
+                break
+    except Exception as e:
+        print(str(e))
+    else:
+        result = True
+    finally:
+        file_of_exe_as_path_type = Path(__file__)
+        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+        obj_of_cls.write_log(file_of_log_as_path_type)
+        return result
 
 
 if __name__ == "__main__":
