@@ -63,42 +63,63 @@ class MainApp_Of_COTP(QWidget):
         btn_open_to.clicked.connect(lambda: self.open_explorer(self.folder_path_to))
         btn_convert.clicked.connect(self.convert_file)
 
-    def select_from_folder(self, obj_of_cls: object):
+    def select_from_folder(self, obj_of_cls: object) -> bool:
         """変換元のフォルダを選択します"""
-        folder = QFileDialog.getExistingDirectory(self, "変換元のフォルダを選択")
-        folder_as_path_type = Path(folder).expanduser()
-        folder = str(folder_as_path_type)
-        if folder:
-            self.folder_path_from = folder
-            self.label_from.setText(f"変換元フォルダ: {folder}")
-            self.try_load_files(obj_of_cls)
-
-    def select_to_folder(self, obj_of_cls: object):
-        """変換先のフォルダを選択します"""
-        folder = QFileDialog.getExistingDirectory(self, "変換先のフォルダを選択")
-        folder_as_path_type = Path(folder).expanduser()
-        folder = str(folder_as_path_type)
-        if folder:
-            self.folder_path_to = folder
-            self.label_to.setText(f"変換先フォルダ: {folder}")
-            self.try_load_files(obj_of_cls)
-
-    def open_explorer(self, folder: str):
-        """エクスプローラーを開きます"""
-        if folder:
-            try:
-                if platform.system().lower() == "windows":
-                    os.startfile(folder)
-            except Exception as e:
-                self.show_error(str(e))
-        else:
-            self.output_log("フォルダが未選択のため開けません。")
-
-    def try_load_files(self, obj_of_cls: object):
-        """両フォルダ選択済みならファイル一覧を表示します"""
-        if not self.folder_path_from or not self.folder_path_to:
-            return
         try:
+            result = False
+            folder = QFileDialog.getExistingDirectory(self, "変換元のフォルダを選択")
+            folder_as_path_type = Path(folder).expanduser()
+            folder = str(folder_as_path_type)
+            if folder:
+                self.folder_path_from = folder
+                self.label_from.setText(f"変換元フォルダ: {folder}")
+                self.show_file_list(obj_of_cls)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
+
+    def select_to_folder(self, obj_of_cls: object) -> bool:
+        """変換先のフォルダを選択します"""
+        try:
+            result = False
+            folder = QFileDialog.getExistingDirectory(self, "変換先のフォルダを選択")
+            folder_as_path_type = Path(folder).expanduser()
+            folder = str(folder_as_path_type)
+            if folder:
+                self.folder_path_to = folder
+                self.label_to.setText(f"変換先フォルダ: {folder}")
+                self.show_file_list(obj_of_cls)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
+
+    def open_explorer(self, folder: str) -> bool:
+        """エクスプローラーを開きます"""
+        try:
+            result = False
+            if not folder:
+                raise Exception("フォルダを選択してください。")
+            if platform.system().lower() == "windows":
+                os.startfile(folder)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
+
+    def show_file_list(self, obj_of_cls: object) -> bool:
+        """ファイル一覧を表示します"""
+        try:
+            result = False
+            if not self.folder_path_from or not self.folder_path_to:
+                raise Exception("変換元と変換先のフォルダを選択してください。")
             self.obj_of_cls = obj_of_cls(self.folder_path_from, self.folder_path_to)
             self.file_list_widget.clear()
             for f in self.obj_of_cls.filtered_list_of_f:
@@ -110,17 +131,20 @@ class MainApp_Of_COTP(QWidget):
             self.file_list_widget.clear()
             self.output_log(f"<NG> {str(e)}")
         else:
+            result = True
             self.output_log(f"{self.obj_of_cls.number_of_f}件のファイルが見つかりました。")
+        finally:
+            return result
 
-    def convert_file(self):
+    def convert_file(self) -> bool:
         """変換します"""
-        if self.obj_of_cls is None:
-            self.output_log("<NG> ファイルリストが初期化されていません。")
-            return
-        total = self.obj_of_cls.number_of_f
-        self.progress_bar.setRange(0, total)
-        self.output_log(f"<OK> {total}件のファイルを一括変換します...")
         try:
+            result = False
+            if self.obj_of_cls is None:
+                raise Exception("ファイルリストが初期化されていません。")
+            total = self.obj_of_cls.number_of_f
+            self.progress_bar.setRange(0, total)
+            self.output_log(f"<OK> {total}件のファイルを一括変換します...")
             for i in range(total):
                 try:
                     file_of_currentfrom_as_path_type = Path(self.obj_of_cls.current_of_file_path_from)
@@ -130,12 +154,16 @@ class MainApp_Of_COTP(QWidget):
                     self.output_log(f"<NG> [ {i + 1} / {total} ] {file_name} => エラー: {str(e)}")
                 else:
                     self.output_log(f"<OK> [ {i + 1} / {total} ] {file_name} => 完了")
+                finally:
                     self.progress_bar.setValue(i + 1)
                     self.obj_of_cls.move_to_next_file()
         except Exception as e:
             self.output_log(f"<NG> {str(e)}")
         else:
+            result = True
             self.output_log("<OK> 全てのファイルの変換が完了しました！")
+        finally:
+            return result
 
     def write_log(self):
         """ログを書き出す"""
