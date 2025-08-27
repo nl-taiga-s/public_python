@@ -14,13 +14,13 @@ class GetFileList:
         self.log.append(self.__class__.__doc__)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
-        self.log.append(f"起点のフォルダパス: {folder_path}")
-        pattern = "**" if bool_of_r else "*"
-        self.log.append(f"再帰的に検索: {"する" if bool_of_r else "しない"}")
-        folder_of_search_as_path_type = Path(folder_path) / pattern
+        self.folder_path = folder_path
+        self.bool_of_r = bool_of_r
+        pattern = "**" if self.bool_of_r else "*"
+        folder_of_search_as_path_type = Path(self.folder_path) / pattern
         search_folder = str(folder_of_search_as_path_type)
         self.list_file_before = []
-        for f in glob.glob(search_folder, recursive=bool_of_r):
+        for f in glob.glob(search_folder, recursive=self.bool_of_r):
             if Path(f).is_file():
                 self.list_file_before.append(f)
 
@@ -29,9 +29,12 @@ class GetFileList:
         try:
             result = False
             local_log = []
+            self.pattern = pattern
             local_log.append(">" * self.REPEAT_TIMES)
-            local_log.append(f"検索パターン: {pattern if pattern else "なし"}")
-            self.list_file_after = [f for f in self.list_file_before if pattern in f]
+            local_log.append(f"起点のフォルダパス: {self.folder_path}")
+            local_log.append(f"再帰的に検索: {"する" if self.bool_of_r else "しない"}")
+            local_log.append(f"検索パターン: {self.pattern if self.pattern else "なし"}")
+            self.list_file_after = [f for f in self.list_file_before if self.pattern in f]
             if self.list_file_after:
                 for element in self.list_file_after:
                     local_log.append(f"{element}, {self.obj_of_dt2.convert_dt_to_str()}")
