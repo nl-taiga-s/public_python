@@ -48,7 +48,7 @@ class PT_With_Cui:
                         return self.MENU(num)
                 print()
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
 
@@ -66,7 +66,7 @@ class PT_With_Cui:
                 else:
                     print(f"PDFファイルが不正です。: {file_path_of_pdf_as_str_type}")
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
 
@@ -80,7 +80,7 @@ class PT_With_Cui:
                 else:
                     print("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
 
@@ -99,7 +99,7 @@ class PT_With_Cui:
                         metadata_of_writer[key_of_w] = value
             return metadata_of_writer
         except Exception as e:
-            print(e)
+            print(str(e))
         except KeyboardInterrupt:
             sys.exit(0)
 
@@ -127,7 +127,7 @@ class PT_With_Cui:
                     case _:
                         print(f"無効な入力です。: {str_of_bool}")
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
         return pdfs
@@ -148,7 +148,7 @@ class PT_With_Cui:
                 else:
                     break
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
         return [begin_page, end_page]
@@ -167,7 +167,7 @@ class PT_With_Cui:
                 else:
                     break
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
         return page
@@ -185,7 +185,7 @@ class PT_With_Cui:
                         return int(self.DEGREES(num).name)
                 print()
             except Exception as e:
-                print(e)
+                print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
 
@@ -288,7 +288,7 @@ def main() -> bool:
                 case _:
                     pass
         except Exception as e:
-            print(f"エラー: {e}")
+            print(str(e))
         print()
     file_of_exe_as_path_type = Path(__file__)
     file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
