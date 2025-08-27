@@ -28,7 +28,6 @@ class PT_With_Cui:
                 "ページを削除します",
                 "テキストを抽出します",
                 "ページを時計回りで回転します",
-                "終了します",
             ],
         )
         self.DEGREES = Enum("DEGREES", ["90", "180", "270"])
@@ -189,19 +188,34 @@ class PT_With_Cui:
             except KeyboardInterrupt:
                 sys.exit(0)
 
+    def input_finish(self) -> bool:
+        """終了するかどうかを入力します"""
+        try:
+            str_of_bool = input("終了しますか？(Yes => y or No => n): ")
+            match str_of_bool:
+                case var if var in self.d_of_bool["yes"]:
+                    return True
+                case var if var in self.d_of_bool["no"]:
+                    return False
+        except Exception as e:
+            print(str(e))
+        except KeyboardInterrupt:
+            sys.exit(0)
+
 
 def main() -> bool:
     """主要関数"""
-    obj_of_pt = PathTools()
-    obj_with_cui = PT_With_Cui()
-    obj_of_cls = PdfTools()
-    print(*obj_of_cls.log, sep="\n")
     while True:
         try:
+            result = False
+            obj_of_pt = PathTools()
+            obj_with_cui = PT_With_Cui()
+            obj_of_cls = PdfTools()
+            print(*obj_of_cls.log, sep="\n")
             # メニューを選択します
             option = obj_with_cui.select_menu()
             if option is None:
-                return False
+                return result
             match option:
                 case var if var == obj_with_cui.MENU.ファイルを暗号化します:
                     # ファイルを暗号化します
@@ -282,19 +296,21 @@ def main() -> bool:
                     degrees = obj_with_cui.input_degrees()
                     _, log = obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
                     print(*log, sep="\n")
-                case var if var == obj_with_cui.MENU.終了します:
-                    # 終了します
-                    break
                 case _:
                     pass
         except Exception as e:
             print(str(e))
-        print()
-    file_of_exe_as_path_type = Path(__file__)
-    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    result, s = obj_of_cls.write_log(file_of_log_as_path_type)
-    print(f"ログファイルの出力に{"成功" if result else "失敗"}しました。: {s}")
-    return True
+        else:
+            result = True
+        finally:
+            file_of_exe_as_path_type = Path(__file__)
+            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
+            if obj_with_cui.input_finish():
+                break
+            else:
+                continue
+    return result
 
 
 if __name__ == "__main__":
