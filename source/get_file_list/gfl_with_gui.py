@@ -31,7 +31,7 @@ class MainApp_Of_GFL(QWidget):
     def setup_ui(self):
         """User Interfaceを設定します"""
         # タイトル
-        self.setWindowTitle("ファイル検索ツール")
+        self.setWindowTitle("ファイル検索アプリ")
         # ウィジェット
         self.folder_label = QLabel("フォルダ未選択")
         select_folder_btn = QPushButton("フォルダを選択")
