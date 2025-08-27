@@ -62,13 +62,13 @@ class GetNHKNews:
             local_log.append(f"日付: {self.today}")
             local_log.append(f"ジャンル: {self.key_of_genre}")
             if not self.today_news:
-                raise ValueError
+                raise ValueError("***ニュースは、まだありません。***")
             else:
                 for i, news in enumerate(self.today_news[:num_of_news], start=1):
                     local_log.append(f"{i}. {news.title}: ")
                     local_log.append(f"\t{news.link}")
-        except ValueError:
-            local_log.append("***ニュースは、まだありません。***")
+        except ValueError as e:
+            local_log.append(str(e))
         except Exception:
             local_log.append("***ニュースの取得に失敗しました。***")
         else:
