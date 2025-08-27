@@ -30,7 +30,6 @@ class MainApp_Of_PT(QMainWindow):
     def __init__(self):
         """初期化します"""
         super().__init__()
-        self.setWindowTitle("PDFツール")
 
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
@@ -50,6 +49,8 @@ class MainApp_Of_PT(QMainWindow):
 
     def first_init_ui(self):
         """1回目のUser Interfaceを設定します"""
+        # タイトル
+        self.setWindowTitle("PDF編集アプリ")
         central = QWidget()
         self.setCentralWidget(central)
         # 主要
@@ -251,10 +252,11 @@ class MainApp_Of_PT(QMainWindow):
                 output_file = self.output_dir / f"{file_name_as_str_type}_{i + 1}.png"
                 pil_image.save(output_file)
                 output_files.append(str(output_file))
-        except Exception:
-            return [result, None]
+        except Exception as e:
+            self.show_error(str(e))
         else:
             result = True
+        finally:
             return [result, output_files]
 
     def encrypt_pdf(self):
