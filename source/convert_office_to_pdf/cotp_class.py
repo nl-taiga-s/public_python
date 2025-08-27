@@ -91,7 +91,7 @@ class ConvertOfficeToPDF:
         result = False
         local_log = []
         local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* {self.__class__.convert_excel_to_pdf.__doc__}: ")
+        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_excel_to_pdf.__doc__}: ")
         local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_EXCEL = 0
         try:
@@ -118,7 +118,7 @@ class ConvertOfficeToPDF:
         result = False
         local_log = []
         local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* {self.__class__.convert_word_to_pdf.__doc__}: ")
+        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_word_to_pdf.__doc__}: ")
         local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_WORD = 17
         try:
@@ -148,7 +148,7 @@ class ConvertOfficeToPDF:
         result = False
         local_log = []
         local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* {self.__class__.convert_powerpoint_to_pdf.__doc__}: ")
+        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_powerpoint_to_pdf.__doc__}: ")
         local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_POWERPOINT = 2
         try:

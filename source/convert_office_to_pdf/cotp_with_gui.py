@@ -126,9 +126,9 @@ class MainApp_Of_COTP(QWidget):
                 file_name = file_of_currentfrom_as_path_type.name
                 self.obj_of_cls.handle_file()
             except Exception as e:
-                self.output_log(f"❌ {file_name} → エラー: {e}")
+                self.output_log(f"❌ [ {i + 1} / {total} ] {file_name} → エラー: {e}")
             else:
-                self.output_log(f"✅ {file_name} → 完了")
+                self.output_log(f"✅ [ {i + 1} / {total} ] {file_name} → 完了")
                 self.progress_bar.setValue(i + 1)
                 self.obj_of_cls.move_to_next_file()
         self.output_log("🎉 すべてのファイルの変換が完了しました！")
@@ -146,7 +146,7 @@ class MainApp_Of_COTP(QWidget):
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
-        QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
 
     def show_error(self, msg: str):
         """エラーを表示します"""
