@@ -56,10 +56,14 @@ class ConvertOfficeToPDF:
             if self.number_of_f == 0:
                 raise ValueError("変換元のファイルがありません。")
         except ValueError as e:
-            print(str(e))
+            self.log.append(str(e))
+        except Exception as e:
+            self.log.append(str(e))
         else:
             self.set_file_path()
             self.log.append(f"{self.number_of_f}件のファイルを一括変換します。")
+        finally:
+            pass
 
     def set_file_path(self):
         """ファイルパスを設定します"""
