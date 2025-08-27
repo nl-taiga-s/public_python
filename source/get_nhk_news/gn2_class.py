@@ -70,10 +70,10 @@ class GetNHKNews:
         except ValueError:
             local_log.append("***ニュースは、まだありません。***")
         except Exception:
-            local_log.append("***ニュースの出力に失敗しました。***")
+            local_log.append("***ニュースの取得に失敗しました。***")
         else:
             result = True
-            local_log.append("***ニュースの出力に成功しました。***")
+            local_log.append("***ニュースの取得に成功しました。***")
         finally:
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
