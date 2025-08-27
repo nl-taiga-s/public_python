@@ -33,10 +33,10 @@ class GN2_With_Cui:
         except KeyboardInterrupt:
             sys.exit(0)
 
-    def input_continue(self) -> bool:
-        """続けるかどうかを入力します"""
+    def input_finish(self) -> bool:
+        """終了するかどうかを入力します"""
         try:
-            str_of_bool = input("再度、行いますか？: ")
+            str_of_bool = input("終了しますか？(Yes => y or No => n): ")
             match str_of_bool:
                 case var if var in self.d_of_bool["yes"]:
                     return True
@@ -50,8 +50,8 @@ class GN2_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    try:
-        while True:
+    while True:
+        try:
             result = False
             obj_of_pt = PathTools()
             obj_of_cls = GetNHKNews()
@@ -66,19 +66,19 @@ def main() -> bool:
             obj_of_cls.extract_news_of_today_from_standard_time()
             _, log = obj_of_cls.get_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW)
             print(*log, sep="\n")
-            if obj_with_cui.input_continue():
-                continue
-            else:
+        except Exception as e:
+            print(str(e))
+        else:
+            result = True
+        finally:
+            file_of_exe_as_path_type = Path(__file__)
+            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
+            if obj_with_cui.input_finish():
                 break
-    except Exception as e:
-        print(str(e))
-    else:
-        result = True
-    finally:
-        file_of_exe_as_path_type = Path(__file__)
-        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-        obj_of_cls.write_log(file_of_log_as_path_type)
-        return result
+            else:
+                continue
+    return result
 
 
 if __name__ == "__main__":
