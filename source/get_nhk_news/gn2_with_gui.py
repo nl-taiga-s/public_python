@@ -40,7 +40,7 @@ class MainApp_Of_GN2(QWidget):
     def setup_ui(self):
         """User Interfaceを設定します"""
         # タイトル
-        self.setWindowTitle("NHKニュース取得アプリ")
+        self.setWindowTitle("NHKニュース表示アプリ")
         # ウィジェット
         layout = QVBoxLayout()
         genre_layout = QHBoxLayout()
@@ -90,13 +90,16 @@ class MainApp_Of_GN2(QWidget):
 
     def open_news_link(self, item: QListWidgetItem):
         """ニュースのリンクを開きます"""
-        POWERSHELL = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+        POWERSHELL_OF_WSL = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+        POWERSHELL_OF_WINDOWS = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         url = item.data(Qt.UserRole)
         if not url:
             return
         try:
-            if platform.system().lower() == "windows" or self.obj_of_pft.is_wsl():
-                subprocess.run([POWERSHELL, "Start-Process", url], check=True)
+            if platform.system().lower() == "windows":
+                subprocess.run([POWERSHELL_OF_WINDOWS, "Start-Process", url], check=True)
+            if self.obj_of_pft.is_wsl():
+                subprocess.run([POWERSHELL_OF_WSL, "Start-Process", url], check=True)
         except Exception as e:
             self.show_error(str(e))
 
