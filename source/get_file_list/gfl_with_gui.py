@@ -93,10 +93,7 @@ class MainApp_Of_GFL(QWidget):
         recursive = self.recursive_checkbox.isChecked()
         self.obj_of_cls = GetFileList(self.folder, recursive)
         self.obj_of_cls.extract_by_pattern(pattern)
-        if self.obj_of_cls.list_file_after:
-            self.output_log("\n".join(self.obj_of_cls.list_file_after))
-        else:
-            self.output_log("一致するファイルが見つかりませんでした。")
+        self.output_log("\n".join(self.obj_of_cls.log))
 
     def write_log(self):
         """ログを書き出す"""

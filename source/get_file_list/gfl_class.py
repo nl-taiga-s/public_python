@@ -14,7 +14,9 @@ class GetFileList:
         self.log.append(self.__class__.__doc__)
         self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
+        # フォルダパス
         self.folder_path = folder_path
+        # 再帰的に検索するかどうか
         self.bool_of_r = bool_of_r
         pattern = "**" if self.bool_of_r else "*"
         folder_of_search_as_path_type = Path(self.folder_path) / pattern
@@ -29,15 +31,19 @@ class GetFileList:
         try:
             result = False
             local_log = []
+            # 検索パターン
             self.pattern = pattern
             local_log.append(">" * self.REPEAT_TIMES)
             local_log.append(f"起点のフォルダパス: {self.folder_path}")
             local_log.append(f"再帰的に検索: {"する" if self.bool_of_r else "しない"}")
             local_log.append(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.list_file_after = [f for f in self.list_file_before if self.pattern in f]
+            # ファイルの数
+            self.number_of_f = len(self.list_file_after)
             if self.list_file_after:
+                local_log.append(f"{self.number_of_f}件のファイルが抽出されました。")
                 for element in self.list_file_after:
-                    local_log.append(f"{element}, {self.obj_of_dt2.convert_dt_to_str()}")
+                    local_log.append(element)
             else:
                 raise ValueError
         except ValueError:
@@ -48,6 +54,8 @@ class GetFileList:
             result = True
             local_log.append("***検索パターンによる抽出が成功しました。***")
         finally:
+            time_stamp = self.obj_of_dt2.convert_dt_to_str()
+            local_log.append(time_stamp)
             local_log.append("<" * self.REPEAT_TIMES)
             self.log.extend(local_log)
             return [result, local_log]
