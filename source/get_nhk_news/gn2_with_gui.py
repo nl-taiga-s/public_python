@@ -113,7 +113,7 @@ class MainApp_Of_GN2(QWidget):
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
-        QMessageBox.information(self, f"{label}の結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
 
     def show_error(self, msg: str):
         """エラーを表示します"""
