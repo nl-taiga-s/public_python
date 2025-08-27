@@ -264,7 +264,7 @@ class PdfTools:
             local_log.append(">" * self.REPEAT_TIMES)
             p = end_page - begin_page + 1
             if p == self.num_of_pages:
-                raise ValueError
+                raise ValueError("***全ページが指定されたため、処理は行われていません。***")
             self.writer = PdfWriter()
             b = begin_page - 1
             e = end_page - 1
@@ -282,8 +282,8 @@ class PdfTools:
                 self.writer.write(f)
             self.read_file(file_path_of_pdf_as_str_type)
             self.add_creation_date_in_metadata(file_path_of_pdf_as_str_type)
-        except ValueError:
-            local_log.append("***全ページが指定されたため、処理は行われていません。***")
+        except ValueError as e:
+            local_log.append(str(e))
         except Exception as e:
             local_log.append("***ページの削除に失敗しました。***")
             local_log.append(str(e))
