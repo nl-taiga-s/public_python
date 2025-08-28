@@ -14,39 +14,57 @@ class COTP_With_Cui:
 
     def input_folder_path(self) -> list:
         """フォルダのパスを入力します"""
-        try:
-            while True:
-                folder_path_from = input("ファイルを一括変換するフォルダを指定してください。: ")
-                folder_path_to = input("一括変換したファイルを格納するフォルダを指定してください。: ")
-                if folder_path_from == "" and folder_path_to == "":
-                    return [None, None]
+        while True:
+            try:
+                result = False
+                folder_path_from = input("ファイルを一括変換するフォルダを指定してください。: ").strip()
+                folder_path_to = input("一括変換したファイルを格納するフォルダを指定してください。: ").strip()
+                if folder_path_from == "" or folder_path_to == "":
+                    raise Exception("未入力です。")
                 folder_of_from_as_path_type = Path(folder_path_from).expanduser()
                 folder_of_to_as_path_type = Path(folder_path_to).expanduser()
                 folder_path_from = str(folder_of_from_as_path_type)
                 folder_path_to = str(folder_of_to_as_path_type)
-                if folder_of_from_as_path_type.exists() and folder_of_to_as_path_type.exists():
-                    # 存在する場合
-                    if folder_of_from_as_path_type.is_dir() and folder_of_to_as_path_type.is_dir():
-                        # フォルダの場合
-                        return [folder_path_from, folder_path_to]
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
+                if not folder_of_from_as_path_type.exists() or not folder_of_to_as_path_type.exists():
+                    raise Exception("存在しません。")
+                if not folder_of_from_as_path_type.is_dir() or not folder_of_to_as_path_type.is_dir():
+                    raise Exception("フォルダではありません。")
+            except Exception as e:
+                print(str(e))
+            except KeyboardInterrupt:
+                sys.exit(0)
+            else:
+                result = True
+            finally:
+                if result:
+                    break
+        return [folder_path_from, folder_path_to]
 
-    def input_finish(self) -> bool:
-        """終了するかどうかを入力します"""
-        try:
-            str_of_bool = input("終了しますか？(Yes => y or No => n): ")
-            match str_of_bool:
-                case var if var in self.d_of_bool["yes"]:
-                    return True
-                case var if var in self.d_of_bool["no"]:
-                    return False
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
+    def input_bool(self, msg: str) -> bool:
+        """はいかいいえをを入力します"""
+        while True:
+            try:
+                result = False
+                error = False
+                str_of_bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
+                match str_of_bool:
+                    case var if var in self.d_of_bool["yes"]:
+                        result = True
+                    case var if var in self.d_of_bool["no"]:
+                        pass
+                    case _:
+                        raise Exception("無効な入力です。")
+            except Exception as e:
+                error = True
+                print(str(e))
+            except KeyboardInterrupt:
+                sys.exit(0)
+            else:
+                pass
+            finally:
+                if not error:
+                    break
+        return result
 
 
 def main() -> bool:
@@ -54,13 +72,15 @@ def main() -> bool:
     while True:
         try:
             result = False
-            from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
-
+            # pytest
+            test_var = input("test_input\n(Yes => y or No => n): ").strip()
+            if test_var == "y":
+                raise Exception("test_input")
             obj_of_pt = PathTools()
             obj_with_cui = COTP_With_Cui()
+            from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+
             folder_path_from, folder_path_to = obj_with_cui.input_folder_path()
-            if folder_path_from is None and folder_path_to is None:
-                return result
             obj_of_cls = ConvertOfficeToPDF(folder_path_from, folder_path_to)
             print(*obj_of_cls.log, sep="\n")
             for _ in range(obj_of_cls.number_of_f):
@@ -70,14 +90,18 @@ def main() -> bool:
         except ImportError as e:
             print(str(e))
         except Exception as e:
-            print(str(e))
+            print(f"処理が失敗しました。: {str(e)}")
         else:
             result = True
-        finally:
+            print("処理が成功しました。")
             file_of_exe_as_path_type = Path(__file__)
             file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
             _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
-            if obj_with_cui.input_finish():
+        finally:
+            # pytest
+            if test_var == "y":
+                break
+            if obj_with_cui.input_bool("終了しますか？"):
                 break
             else:
                 continue
