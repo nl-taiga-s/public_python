@@ -8,8 +8,6 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 
 class PlatformTools:
-    """プラットフォームのツール"""
-
     def __init__(self):
         """初期化します"""
         pass
@@ -27,8 +25,6 @@ class PlatformTools:
 
 
 class DatetimeTools:
-    """日付と時間のツール"""
-
     def __init__(self):
         """初期化します"""
         self.dt = None
@@ -60,7 +56,6 @@ class DatetimeTools:
 
 class PathTools:
     """
-    パスのツール
     * `Path()`は、引数に相対パスもしくは絶対パスの文字列を指定して、その環境に合わせた`Path`オブジェクトを作成します。
     """
 
