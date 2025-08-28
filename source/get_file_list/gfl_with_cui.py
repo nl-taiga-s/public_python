@@ -19,61 +19,66 @@ class GFL_With_Cui:
         """フォルダのパスを入力します"""
         while True:
             try:
-                folder_path_of_pdf_as_str_type = input("ファイルを検索したいフォルダを入力してください。: ")
+                result = False
+                folder_path_of_pdf_as_str_type = input("ファイルを検索したいフォルダを入力してください。: ").strip()
                 if folder_path_of_pdf_as_str_type == "":
-                    return None
+                    raise Exception("フォルダが未入力です。")
                 folder_as_path_type = Path(folder_path_of_pdf_as_str_type).expanduser()
                 folder_path_of_pdf_as_str_type = str(folder_as_path_type)
-                if folder_as_path_type.exists():
-                    # 存在する場合
-                    if folder_as_path_type.is_dir():
-                        # フォルダの場合
-                        return folder_path_of_pdf_as_str_type
+                if not folder_as_path_type.exists():
+                    raise Exception("フォルダが存在しません。")
+                if not folder_as_path_type.is_dir():
+                    raise Exception("フォルダではありません。")
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
                 sys.exit(0)
+            else:
+                result = True
+            finally:
+                if result:
+                    break
+        return folder_path_of_pdf_as_str_type
 
-    def input_bool_of_recursive(self) -> bool:
-        """フォルダを再帰的に検索するかどうかを入力します"""
-        try:
-            while True:
-                str_of_bool = input("フォルダを再帰的に検索するかどうかを入力してください。\n(Yes => y or No => n): ")
+    def input_bool(self, msg: str) -> bool:
+        """はいかいいえをを入力します"""
+        while True:
+            try:
+                result = False
+                error = False
+                str_of_bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match str_of_bool:
                     case var if var in self.d_of_bool["yes"]:
-                        return True
+                        result = True
                     case var if var in self.d_of_bool["no"]:
-                        return False
+                        pass
                     case _:
-                        raise Exception(f"無効な入力です。: {str_of_bool}")
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
+                        raise Exception("無効な入力です。")
+            except Exception as e:
+                error = True
+                print(str(e))
+            except KeyboardInterrupt:
+                sys.exit(0)
+            else:
+                pass
+            finally:
+                if not error:
+                    break
+        return result
 
     def input_pattern(self) -> str:
         """検索パターンを入力します"""
+        pattern = ""
         try:
-            pattern = input("ファイルの検索パターンを入力してください。: ")
+            pattern = input("ファイルの検索パターンを入力してください。: ").strip()
+        except Exception as e:
+            print(str(e))
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            pass
+        finally:
             return pattern
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
-
-    def input_finish(self) -> bool:
-        """終了するかどうかを入力します"""
-        try:
-            str_of_bool = input("終了しますか？(Yes => y or No => n): ")
-            match str_of_bool:
-                case var if var in self.d_of_bool["yes"]:
-                    return True
-                case var if var in self.d_of_bool["no"]:
-                    return False
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
 
 
 def main() -> bool:
@@ -81,26 +86,32 @@ def main() -> bool:
     while True:
         try:
             result = False
+            # pytest
+            test_var = input("test_input\n(Yes => y or No => n): ").strip()
+            if test_var == "y":
+                raise Exception("test_input")
             obj_of_pt = PathTools()
             obj_with_cui = GFL_With_Cui()
             folder_path = obj_with_cui.input_folder_path()
-            if folder_path is None:
-                return result
-            bool_of_r = obj_with_cui.input_bool_of_recursive()
+            bool_of_r = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
             obj_of_cls = GetFileList(folder_path, bool_of_r)
             print(*obj_of_cls.log, sep="\n")
             pattern = obj_with_cui.input_pattern()
             _, log = obj_of_cls.extract_by_pattern(pattern)
             print(*log, sep="\n")
         except Exception as e:
-            print(str(e))
+            print(f"処理が失敗しました。: {str(e)}")
         else:
             result = True
-        finally:
+            print("処理が成功しました。")
             file_of_exe_as_path_type = Path(__file__)
             file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
             _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
-            if obj_with_cui.input_finish():
+        finally:
+            # pytest
+            if test_var == "y":
+                break
+            if obj_with_cui.input_bool("終了しますか？"):
                 break
             else:
                 continue
