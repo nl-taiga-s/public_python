@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 from source.common.common import PathTools
@@ -17,6 +16,7 @@ class COTP_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 folder_path_from = input("ファイルを一括変換するフォルダを指定してください。: ").strip()
                 folder_path_to = input("一括変換したファイルを格納するフォルダを指定してください。: ").strip()
                 if folder_path_from == "" or folder_path_to == "":
@@ -32,12 +32,14 @@ class COTP_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return [folder_path_from, folder_path_to]
 
     def input_bool(self, msg: str) -> bool:
@@ -45,6 +47,7 @@ class COTP_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 error = False
                 str_of_bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match str_of_bool:
@@ -58,12 +61,14 @@ class COTP_With_Cui:
                 error = True
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 pass
             finally:
                 if not error:
                     break
+        if cancel:
+            raise
         return result
 
 
@@ -72,10 +77,7 @@ def main() -> bool:
     while True:
         try:
             result = False
-            # pytest
-            test_var = input("test_input\n(Yes => y or No => n): ").strip()
-            if test_var == "y":
-                raise Exception("test_input")
+            cancel = False
             obj_of_pt = PathTools()
             obj_with_cui = COTP_With_Cui()
             from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
@@ -88,9 +90,12 @@ def main() -> bool:
                 print(*log, sep="\n")
                 obj_of_cls.move_to_next_file()
         except ImportError as e:
+            cancel = True
             print(str(e))
         except Exception as e:
             print(f"処理が失敗しました。: {str(e)}")
+        except KeyboardInterrupt:
+            cancel = True
         else:
             result = True
             print("処理が成功しました。")
@@ -98,8 +103,7 @@ def main() -> bool:
             file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
             _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
-            # pytest
-            if test_var == "y":
+            if cancel:
                 break
             if obj_with_cui.input_bool("終了しますか？"):
                 break
