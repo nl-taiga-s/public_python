@@ -1,5 +1,4 @@
 import re
-import sys
 from enum import Enum
 from pathlib import Path
 
@@ -38,6 +37,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 print(*str_of_menu, sep="\n")
                 n = input("メニューの番号を入力してください。: ").strip()
                 if n == "":
@@ -50,12 +50,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return self.MENU(num)
 
     def input_target_of_pdf(self, extension: str) -> str:
@@ -63,6 +65,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 file_path_of_pdf_as_str_type = input("対象のPDFファイルパスを入力してください。: ").strip()
                 if file_path_of_pdf_as_str_type == "":
                     raise Exception("未入力です。")
@@ -77,12 +80,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return file_path_of_pdf_as_str_type
 
     def input_password(self, keyword: str) -> str:
@@ -90,6 +95,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 password = input(f"{keyword}のパスワードを入力してください。: ").strip()
                 if password == "":
                     raise Exception("パスワードが未入力です。")
@@ -100,12 +106,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 pass
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return password
 
     def input_writing_metadata(self, metadata_of_writer: dict, fields: list, creation_date: str, utc: str) -> dict:
@@ -113,6 +121,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 for key_of_r, key_of_w in fields:
                     match key_of_r:
                         case "creation_date":
@@ -126,12 +135,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return metadata_of_writer
 
     def input_list_of_merge(self, extension: str) -> list:
@@ -139,6 +150,7 @@ class PT_With_Cui:
         pdfs = []
         try:
             while True:
+                cancel = False
                 print("マージ元のPDFファイルパスを順番に入力してください。")
                 file_as_str_type = self.input_target_of_pdf(extension)
                 pdfs.append(file_as_str_type)
@@ -151,10 +163,12 @@ class PT_With_Cui:
         except Exception as e:
             print(str(e))
         except KeyboardInterrupt:
-            sys.exit(0)
+            cancel = True
         else:
             pass
         finally:
+            if cancel:
+                raise
             return pdfs
 
     def input_page_range(self, num_of_pages: int) -> list:
@@ -162,6 +176,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 begin_page = input("始めのページを入力してください。: ").strip()
                 end_page = input("終わりのページを入力してください。: ").strip()
                 if begin_page == "" or end_page == "":
@@ -175,12 +190,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return [begin_page, end_page]
 
     def input_rotating_page(self, num_of_pages: int) -> int:
@@ -188,6 +205,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 page = input("ページを入力してください。: ").strip()
                 if page == "":
                     raise Exception("未入力です。")
@@ -199,12 +217,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return page
 
     def input_degrees(self) -> int:
@@ -213,6 +233,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 print(*str_of_degrees, sep="\n")
                 n = input("度数の番号を入力してください。: ").strip()
                 if n == "":
@@ -225,12 +246,14 @@ class PT_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return int(self.DEGREES(num).name)
 
     def input_bool(self, msg: str) -> bool:
@@ -238,6 +261,7 @@ class PT_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 error = False
                 str_of_bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match str_of_bool:
@@ -251,12 +275,14 @@ class PT_With_Cui:
                 error = True
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 pass
             finally:
                 if not error:
                     break
+        if cancel:
+            raise
         return result
 
 
@@ -265,10 +291,7 @@ def main() -> bool:
     while True:
         try:
             result = False
-            # pytest
-            test_var = input("test_input\n(Yes => y or No => n): ").strip()
-            if test_var == "y":
-                raise Exception("test_input")
+            cancel = False
             obj_of_pt = PathTools()
             obj_with_cui = PT_With_Cui()
             obj_of_cls = PdfTools()
@@ -359,6 +382,8 @@ def main() -> bool:
                     pass
         except Exception as e:
             print(f"処理が失敗しました。: {str(e)}")
+        except KeyboardInterrupt:
+            cancel = True
         else:
             result = True
             print("処理が成功しました。")
@@ -366,8 +391,7 @@ def main() -> bool:
             file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
             _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
-            # pytest
-            if test_var == "y":
+            if cancel:
                 break
             if obj_with_cui.input_bool("終了しますか？"):
                 break
