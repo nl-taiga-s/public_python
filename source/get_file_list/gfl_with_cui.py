@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 from source.common.common import DatetimeTools, PathTools
@@ -20,6 +19,7 @@ class GFL_With_Cui:
         while True:
             try:
                 result = False
+                cancel = False
                 folder_path_of_pdf_as_str_type = input("ファイルを検索したいフォルダを入力してください。: ").strip()
                 if folder_path_of_pdf_as_str_type == "":
                     raise Exception("フォルダが未入力です。")
@@ -32,19 +32,39 @@ class GFL_With_Cui:
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 result = True
             finally:
-                if result:
+                if cancel or result:
                     break
+        if cancel:
+            raise
         return folder_path_of_pdf_as_str_type
+
+    def input_pattern(self) -> str:
+        """検索パターンを入力します"""
+        pattern = ""
+        try:
+            cancel = False
+            pattern = input("ファイルの検索パターンを入力してください。: ").strip()
+        except Exception as e:
+            print(str(e))
+        except KeyboardInterrupt:
+            cancel = True
+        else:
+            pass
+        finally:
+            if cancel:
+                raise
+            return pattern
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         while True:
             try:
                 result = False
+                cancel = False
                 error = False
                 str_of_bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match str_of_bool:
@@ -58,27 +78,15 @@ class GFL_With_Cui:
                 error = True
                 print(str(e))
             except KeyboardInterrupt:
-                sys.exit(0)
+                cancel = True
             else:
                 pass
             finally:
                 if not error:
                     break
+        if cancel:
+            raise
         return result
-
-    def input_pattern(self) -> str:
-        """検索パターンを入力します"""
-        pattern = ""
-        try:
-            pattern = input("ファイルの検索パターンを入力してください。: ").strip()
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            sys.exit(0)
-        else:
-            pass
-        finally:
-            return pattern
 
 
 def main() -> bool:
@@ -86,10 +94,7 @@ def main() -> bool:
     while True:
         try:
             result = False
-            # pytest
-            test_var = input("test_input\n(Yes => y or No => n): ").strip()
-            if test_var == "y":
-                raise Exception("test_input")
+            cancel = False
             obj_of_pt = PathTools()
             obj_with_cui = GFL_With_Cui()
             folder_path = obj_with_cui.input_folder_path()
@@ -101,6 +106,8 @@ def main() -> bool:
             print(*log, sep="\n")
         except Exception as e:
             print(f"処理が失敗しました。: {str(e)}")
+        except KeyboardInterrupt:
+            cancel = True
         else:
             result = True
             print("処理が成功しました。")
@@ -108,8 +115,7 @@ def main() -> bool:
             file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
             _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
-            # pytest
-            if test_var == "y":
+            if cancel:
                 break
             if obj_with_cui.input_bool("終了しますか？"):
                 break
