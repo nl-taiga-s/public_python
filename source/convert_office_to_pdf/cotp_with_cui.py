@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from source.common.common import PathTools
+from source.common.common import LogTools, PathTools
 
 
 class COTP_With_Cui:
@@ -74,34 +74,37 @@ class COTP_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
+    obj_of_lt = LogTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+    obj_of_lt.setup_stream_handler()
     while True:
         try:
             result = False
             cancel = False
-            obj_of_pt = PathTools()
-            obj_with_cui = COTP_With_Cui()
             from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
 
-            folder_path_from, folder_path_to = obj_with_cui.input_folder_path()
-            obj_of_cls = ConvertOfficeToPDF(folder_path_from, folder_path_to)
-            print(*obj_of_cls.log, sep="\n")
+            obj_with_cui = COTP_With_Cui()
+            obj_of_cls = ConvertOfficeToPDF(obj_of_lt.logger)
+            obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui.input_folder_path()
+            if not obj_of_cls.create_file_list():
+                raise
             for _ in range(obj_of_cls.number_of_f):
-                _, log = obj_of_cls.handle_file()
-                print(*log, sep="\n")
+                obj_of_cls.handle_file()
                 obj_of_cls.move_to_next_file()
         except ImportError as e:
             cancel = True
             print(str(e))
-        except Exception as e:
-            print(f"処理が失敗しました。: {str(e)}")
+        except Exception:
+            print("処理が失敗しました。")
         except KeyboardInterrupt:
             cancel = True
         else:
             result = True
             print("処理が成功しました。")
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
             if cancel:
                 break

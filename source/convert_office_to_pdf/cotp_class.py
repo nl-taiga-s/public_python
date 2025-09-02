@@ -1,9 +1,8 @@
 import glob
+from logging import Logger
 from pathlib import Path
 
 from comtypes.client import CreateObject
-
-from source.common.common import DatetimeTools, PathTools
 
 
 class ConvertOfficeToPDF:
@@ -15,15 +14,18 @@ class ConvertOfficeToPDF:
     Windows + Microsoft Office(デスクトップ版)が必要です
     """
 
-    def __init__(self, folder_path_from: str, folder_path_to: str):
+    def __init__(self, logger: Logger):
         """初期化します"""
-        self.log = []
-        self.REPEAT_TIMES = 50
-        self.log.append(self.__class__.__doc__)
-        self.obj_of_pt = PathTools()
-        self.obj_of_dt2 = DatetimeTools()
-        self.folder_path_from = folder_path_from
-        self.folder_path_to = folder_path_to
+        self.log = logger
+        self.log.info(self.__class__.__doc__)
+        # 変換元のフォルダパス
+        self.folder_path_from = ""
+        # 変換先のフォルダパス
+        self.folder_path_to = ""
+        # 対象の変換元のファイルパス
+        self.current_of_file_path_from = ""
+        # 対象の変換先のファイルパス
+        self.current_of_file_path_to = ""
         # 拡張子を指定する
         self.file_types = {
             "excel": [".xls", ".xlsx"],
@@ -38,7 +40,11 @@ class ConvertOfficeToPDF:
         self.success = 0
         # すべてのファイルを変換できたかどうか
         self.complete = False
+
+    def create_file_list(self) -> bool:
+        """ファイルリストを作成します"""
         try:
+            result = False
             folder_of_search_as_path_type = Path(self.folder_path_from) / "*"
             search_folder = str(folder_of_search_as_path_type)
             # フィルター前のファイルのリスト
@@ -56,75 +62,95 @@ class ConvertOfficeToPDF:
             if self.number_of_f == 0:
                 raise ValueError("変換元のファイルがありません。")
         except ValueError as e:
-            self.log.append(str(e))
-        except Exception as e:
-            self.log.append(str(e))
+            self.log.error(str(e))
+        except Exception:
+            self.log.error(f"***{self.create_file_list.__doc__} => 失敗しました。***")
         else:
+            result = True
             self.set_file_path()
-            self.log.append(f"{self.number_of_f}件のファイルを一括変換します。")
+            self.log.info(f"{self.create_file_list.__doc__} => 成功しました。")
+            self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
         finally:
-            pass
+            return result
 
-    def set_file_path(self):
+    def set_file_path(self) -> bool:
         """ファイルパスを設定します"""
-        # 対象の変換元のファイルパス
-        self.current_of_file_path_from = self.filtered_list_of_f[self.p]
-        file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
-        file_name_no_ext = file_of_currentfrom_as_path_type.stem
-        # 対象の変換先のファイルパス
-        file_of_currentto_as_path_type = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
-        self.current_of_file_path_to = str(file_of_currentto_as_path_type)
+        try:
+            result = False
+            self.current_of_file_path_from = self.filtered_list_of_f[self.p]
+            file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
+            file_name_no_ext = file_of_currentfrom_as_path_type.stem
+            file_of_currentto_as_path_type = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
+            self.current_of_file_path_to = str(file_of_currentto_as_path_type)
+        except Exception:
+            self.log.error(f"***{self.set_file_path.__doc__} => 失敗しました。***")
+        else:
+            result = True
+            self.log.info(f"***{self.set_file_path.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def move_to_previous_file(self):
+    def move_to_previous_file(self) -> bool:
         """前のファイルへ"""
-        if self.p == 0:
-            self.p = self.number_of_f - 1
+        try:
+            result = False
+            if self.p == 0:
+                self.p = self.number_of_f - 1
+            else:
+                self.p -= 1
+            self.set_file_path()
+        except Exception:
+            self.log.error(f"***{self.move_to_previous_file.__doc__} => 失敗しました。***")
         else:
-            self.p -= 1
-        self.set_file_path()
+            result = True
+            self.log.info(f"***{self.move_to_previous_file.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def move_to_next_file(self):
+    def move_to_next_file(self) -> bool:
         """次のファイルへ"""
-        if self.p == self.number_of_f - 1:
-            self.p = 0
+        try:
+            result = False
+            if self.p == self.number_of_f - 1:
+                self.p = 0
+            else:
+                self.p += 1
+            self.set_file_path()
+        except Exception:
+            self.log.error(f"***{self.move_to_next_file.__doc__} => 失敗しました。***")
         else:
-            self.p += 1
-        self.set_file_path()
+            result = True
+            self.log.info(f"***{self.move_to_next_file.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def convert_excel_to_pdf(self) -> list:
+    def convert_excel_to_pdf(self) -> bool:
         """ExcelをPDFに変換します"""
         result = False
-        local_log = []
-        local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_excel_to_pdf.__doc__}: ")
-        local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_excel_to_pdf.__doc__}: ")
+        self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_EXCEL = 0
         try:
             obj = CreateObject("Excel.Application")
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
-        except Exception as e:
-            local_log.append(f"Convert Error from Excel to PDF: {str(e)}")
+        except Exception:
+            self.log.error(f"***{self.convert_excel_to_pdf.__doc__} => 失敗しました。***")
         else:
             result = True
-            local_log.append("It was Successful!")
+            self.log.info(f"***{self.convert_excel_to_pdf.__doc__} => 成功しました。***")
         finally:
             if f:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str()
-            local_log.append(time_stamp)
-            local_log.append("<" * self.REPEAT_TIMES)
-            return [result, local_log]
+            return result
 
-    def convert_word_to_pdf(self) -> list:
+    def convert_word_to_pdf(self) -> bool:
         """WordをPDFに変換します"""
         result = False
-        local_log = []
-        local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_word_to_pdf.__doc__}: ")
-        local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_word_to_pdf.__doc__}: ")
+        self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_WORD = 17
         try:
             obj = CreateObject("Word.Application")
@@ -133,28 +159,23 @@ class ConvertOfficeToPDF:
                 OutputFileName=self.current_of_file_path_to,
                 ExportFormat=PDF_NUMBER_OF_WORD,
             )
-        except Exception as e:
-            local_log.append(f"Convert Error from Word to PDF: {str(e)}")
+        except Exception:
+            self.log.error(f"***{self.convert_word_to_pdf.__doc__} => 失敗しました。***")
         else:
             result = True
-            local_log.append("It was Successful!")
+            self.log.info(f"***{self.convert_word_to_pdf.__doc__} => 成功しました。***")
         finally:
             if f:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str()
-            local_log.append(time_stamp)
-            local_log.append("<" * self.REPEAT_TIMES)
-            return [result, local_log]
+            return result
 
-    def convert_powerpoint_to_pdf(self) -> list:
+    def convert_powerpoint_to_pdf(self) -> bool:
         """PowerPointをPDFに変換します"""
         result = False
-        local_log = []
-        local_log.append(">" * self.REPEAT_TIMES)
-        local_log.append(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_powerpoint_to_pdf.__doc__}: ")
-        local_log.append(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_powerpoint_to_pdf.__doc__}: ")
+        self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_POWERPOINT = 2
         try:
             obj = CreateObject("PowerPoint.Application")
@@ -163,56 +184,42 @@ class ConvertOfficeToPDF:
                 Path=self.current_of_file_path_to,
                 FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
             )
-        except Exception as e:
-            local_log.append(f"Convert Error from PowerPoint to PDF: {str(e)}")
+        except Exception:
+            self.log.error(f"***{self.convert_powerpoint_to_pdf.__doc__} => 失敗しました。***")
         else:
             result = True
-            local_log.append("It was Successful!")
+            self.log.info(f"***{self.convert_powerpoint_to_pdf.__doc__} => 成功しました。***")
         finally:
             if f:
                 f.Close()
             if obj:
                 obj.Quit()
-            time_stamp = self.obj_of_dt2.convert_dt_to_str()
-            local_log.append(time_stamp)
-            local_log.append("<" * self.REPEAT_TIMES)
-            return [result, local_log]
+            return result
 
-    def handle_file(self) -> list:
+    def handle_file(self) -> bool:
         """ファイルの種類を判定して、各処理を実行します"""
-        file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
-        ext = file_of_currentfrom_as_path_type.suffix.lower()
-        match ext:
-            case var if var in self.file_types["excel"]:
-                result, log = self.convert_excel_to_pdf()
-            case var if var in self.file_types["word"]:
-                result, log = self.convert_word_to_pdf()
-            case var if var in self.file_types["powerpoint"]:
-                result, log = self.convert_powerpoint_to_pdf()
-        self.count += 1
-        if result:
-            self.success += 1
-        if self.count == self.number_of_f:
-            if self.success == self.number_of_f:
-                self.complete = True
-                log.append("全てのファイルの変換が完了しました。")
-            else:
-                log.append("一部のファイルの変換が失敗しました。")
-        self.log.extend(log)
-        return [result, log]
-
-    def write_log(self, file_of_log_as_path_type: Path) -> list:
-        """処理結果をログに書き出す"""
-        file_of_log_as_str_type = str(file_of_log_as_path_type)
         try:
-            result = False
-            fp = ""
-            with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
-                f.write("\n".join(self.log))
-        except Exception:
-            pass
+            file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
+            ext = file_of_currentfrom_as_path_type.suffix.lower()
+            match ext:
+                case var if var in self.file_types["excel"]:
+                    result = self.convert_excel_to_pdf()
+                case var if var in self.file_types["word"]:
+                    result = self.convert_word_to_pdf()
+                case var if var in self.file_types["powerpoint"]:
+                    result = self.convert_powerpoint_to_pdf()
+            self.count += 1
+            if result:
+                self.success += 1
+            if self.count == self.number_of_f:
+                if self.success == self.number_of_f:
+                    self.complete = True
+                    self.log.info("***全てのファイルの変換が完了しました。***")
+                else:
+                    raise Exception("***一部のファイルの変換が失敗しました。***")
+        except Exception as e:
+            self.log.error(str(e))
         else:
-            result = True
-            fp = file_of_log_as_str_type
+            pass
         finally:
-            return [result, fp]
+            return result
