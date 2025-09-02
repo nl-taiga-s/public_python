@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from source.common.common import PathTools
+from source.common.common import LogTools, PathTools
 from source.get_nhk_news.gn2_class import GetNHKNews
 
 
@@ -75,30 +75,35 @@ class GN2_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
+    obj_of_lt = LogTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+    obj_of_lt.setup_stream_handler()
     while True:
         try:
             result = False
             cancel = False
-            obj_of_pt = PathTools()
             obj_with_cui = GN2_With_Cui()
-            obj_of_cls = GetNHKNews()
-            print(*obj_of_cls.log, sep="\n")
+            obj_of_cls = GetNHKNews(obj_of_lt.logger)
             num_of_genre, key_of_genre = obj_with_cui.select_genre(obj_of_cls.rss_feeds)
-            obj_of_cls.parse_rss(num_of_genre, key_of_genre)
-            obj_of_cls.get_standard_time_and_today(obj_of_cls.TIMEZONE_OF_JAPAN)
-            obj_of_cls.extract_news_of_today_from_standard_time()
-            _, log = obj_of_cls.get_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW)
-            print(*log, sep="\n")
-        except Exception as e:
-            print(f"処理が失敗しました。: {str(e)}")
+            if not obj_of_cls.parse_rss(num_of_genre, key_of_genre):
+                raise
+            if not obj_of_cls.get_standard_time_and_today(obj_of_cls.TIMEZONE_OF_JAPAN):
+                raise
+            if not obj_of_cls.extract_news_of_today_from_standard_time():
+                raise
+            if not obj_of_cls.get_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW):
+                raise
+        except Exception:
+            print("処理が失敗しました。")
         except KeyboardInterrupt:
             cancel = True
         else:
             result = True
             print("処理が成功しました。")
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
             if cancel:
                 break

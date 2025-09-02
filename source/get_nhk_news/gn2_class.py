@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from logging import Logger
 
 import feedparser
 
@@ -7,11 +7,10 @@ import feedparser
 class GetNHKNews:
     """NHKニュースを取得します"""
 
-    def __init__(self):
+    def __init__(self, logger: Logger):
         """初期化します"""
-        self.log = []
-        self.REPEAT_TIMES = 50
-        self.log.append(self.__class__.__doc__)
+        self.log = logger
+        self.log.info(self.__class__.__doc__)
         # NHKニュースのジャンルごとのRSS URL
         self.rss_feeds = {
             "主要": "https://www.nhk.or.jp/rss/news/cat0.xml",
@@ -29,68 +28,75 @@ class GetNHKNews:
         # 表示するニュースの数
         self.NUM_OF_NEWS_TO_SHOW = 10
 
-    def parse_rss(self, num_of_genre: int, key_of_genre: str):
+    def parse_rss(self, num_of_genre: int, key_of_genre: str) -> bool:
         """RSSを解析します"""
-        self.num_of_genre = num_of_genre
-        self.key_of_genre = key_of_genre
-        self.genre = list(self.rss_feeds.keys())[self.num_of_genre]
-        self.url_of_rss = self.rss_feeds[self.key_of_genre]
-        self.feed = feedparser.parse(self.url_of_rss)
+        try:
+            result = False
+            self.num_of_genre = num_of_genre
+            self.key_of_genre = key_of_genre
+            self.genre = list(self.rss_feeds.keys())[self.num_of_genre]
+            self.url_of_rss = self.rss_feeds[self.key_of_genre]
+            self.feed = feedparser.parse(self.url_of_rss)
+        except Exception:
+            self.log.error(f"***{self.parse_rss.__doc__} => 失敗しました。***")
+        else:
+            result = True
+            self.log.info(f"***{self.parse_rss.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def get_standard_time_and_today(self, time_difference: float):
+    def get_standard_time_and_today(self, time_difference: float) -> bool:
         """指定の標準時と今日の日付を取得します"""
-        # 指定の標準時
-        self.standard_time = timezone(timedelta(hours=time_difference))
-        # 今日の日付
-        self.today = datetime.now(self.standard_time).date()
+        try:
+            result = False
+            # 指定の標準時
+            self.standard_time = timezone(timedelta(hours=time_difference))
+            # 今日の日付
+            self.today = datetime.now(self.standard_time).date()
+        except Exception:
+            self.log.error(f"***{self.get_standard_time_and_today.__doc__} => 失敗しました。***")
+        else:
+            result = True
+            self.log.info(f"***{self.get_standard_time_and_today.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def extract_news_of_today_from_standard_time(self):
+    def extract_news_of_today_from_standard_time(self) -> bool:
         """指定の標準時の今日のニュースを抽出します"""
-        self.today_news = []
-        for entry in self.feed.entries:
-            if hasattr(entry, "published_parsed"):
-                pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).astimezone(self.standard_time).date()
-                if pub_date == self.today:
-                    self.today_news.append(entry)
+        try:
+            result = False
+            self.today_news = []
+            for entry in self.feed.entries:
+                if hasattr(entry, "published_parsed"):
+                    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).astimezone(self.standard_time).date()
+                    if pub_date == self.today:
+                        self.today_news.append(entry)
+        except Exception:
+            self.log.error(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 失敗しました。***")
+        else:
+            result = True
+            self.log.info(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 成功しました。***")
+        finally:
+            return result
 
-    def get_news(self, num_of_news: int) -> list:
+    def get_news(self, num_of_news: int) -> bool:
         """ニュースを取得します"""
         try:
             result = False
-            local_log = []
-            local_log.append(">" * self.REPEAT_TIMES)
-            local_log.append(f"日付: {self.today}")
-            local_log.append(f"ジャンル: {self.key_of_genre}")
+            self.log.info(f"日付: {self.today}")
+            self.log.info(f"ジャンル: {self.key_of_genre}")
             if not self.today_news:
-                raise ValueError("***ニュースは、まだありません。***")
+                raise ValueError("ニュースは、まだありません。")
             else:
                 for i, news in enumerate(self.today_news[:num_of_news], start=1):
-                    local_log.append(f"{i}. {news.title}: ")
-                    local_log.append(f"\t{news.link}")
+                    self.log.info(f"{i}. {news.title}: ")
+                    self.log.info(f"\t{news.link}")
         except ValueError as e:
-            local_log.append(str(e))
+            self.log.error(f"***{str(e)}***")
         except Exception:
-            local_log.append("***ニュースの取得に失敗しました。***")
+            self.log.error(f"***{self.get_news.__doc__} => 失敗しました。***")
         else:
             result = True
-            local_log.append("***ニュースの取得に成功しました。***")
+            self.log.info(f"***{self.get_news.__doc__} => 成功しました。***")
         finally:
-            local_log.append("<" * self.REPEAT_TIMES)
-            self.log.extend(local_log)
-            return [result, local_log]
-
-    def write_log(self, file_of_log_as_path_type: Path) -> list:
-        """処理結果をログに書き出す"""
-        file_of_log_as_str_type = str(file_of_log_as_path_type)
-        try:
-            result = False
-            fp = ""
-            with open(file_of_log_as_str_type, "w", encoding="utf-8", newline="") as f:
-                f.write("\n".join(self.log))
-        except Exception:
-            pass
-        else:
-            result = True
-            fp = file_of_log_as_str_type
-        finally:
-            return [result, fp]
+            return result

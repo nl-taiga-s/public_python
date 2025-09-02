@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import DatetimeTools, PathTools, PlatformTools
+from source.common.common import GUITools, LogTools, PathTools, PlatformTools
 from source.get_nhk_news.gn2_class import GetNHKNews
 
 
@@ -26,39 +26,79 @@ class MainApp_Of_GN2(QWidget):
     def __init__(self):
         """初期化します"""
         super().__init__()
-        self.obj_of_pft = PlatformTools()
-        self.obj_of_dt2 = DatetimeTools()
-        self.obj_of_pt = PathTools()
-        self.obj_of_cls = GetNHKNews()
+        self.obj_of_lt = LogTools()
+        self.obj_of_cls = GetNHKNews(self.obj_of_lt.logger)
         self.setup_ui()
+        self.obj_of_pft = PlatformTools()
+        self.obj_of_pt = PathTools()
+        self.setup_log()
 
     def closeEvent(self, event):
         """終了します"""
-        self.write_log()
+        self.show_info(f"ログファイルは、\n{self.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
-    def setup_ui(self):
+    def show_info(self, msg: str):
+        """情報を表示します"""
+        QMessageBox.information(self, "情報", msg)
+
+    def show_result(self, label: str, success: bool):
+        """結果を表示します"""
+        QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
+
+    def show_error(self, msg: str):
+        """エラーを表示します"""
+        QMessageBox.critical(self, "エラー", msg)
+
+    def setup_log(self) -> bool:
+        """ログを設定する"""
+        try:
+            result = False
+            # exe化されている場合とそれ以外を切り分ける
+            if getattr(sys, "frozen", False):
+                exe_path = Path(sys.executable)
+            else:
+                exe_path = Path(__file__)
+            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
+            self.file_path_of_log = str(file_of_log_as_path_type)
+            self.obj_of_lt.setup_file_handler(self.file_path_of_log)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
+
+    def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
-        # タイトル
-        self.setWindowTitle("NHKニュース表示アプリ")
-        # ウィジェット
-        layout = QVBoxLayout()
-        genre_layout = QHBoxLayout()
-        genre_label = QLabel("ジャンル:")
-        self.genre_combo = QComboBox()
-        self.fetch_button = QPushButton("ニュース取得")
-        self.news_list = QListWidget()
-        # レイアウト
-        self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
-        genre_layout.addWidget(genre_label)
-        genre_layout.addWidget(self.genre_combo)
-        layout.addLayout(genre_layout)
-        layout.addWidget(self.fetch_button)
-        layout.addWidget(self.news_list)
-        self.setLayout(layout)
-        # シグナル接続
-        self.fetch_button.clicked.connect(self.fetch_news)
-        self.news_list.itemClicked.connect(self.open_news_link)
+        try:
+            result = False
+            # タイトル
+            self.setWindowTitle("NHKニュース表示アプリ")
+            # ウィジェット
+            layout = QVBoxLayout()
+            genre_layout = QHBoxLayout()
+            genre_label = QLabel("ジャンル:")
+            self.genre_combo = QComboBox()
+            self.fetch_button = QPushButton("ニュース取得")
+            self.news_list = QListWidget()
+            # レイアウト
+            self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
+            genre_layout.addWidget(genre_label)
+            genre_layout.addWidget(self.genre_combo)
+            layout.addLayout(genre_layout)
+            layout.addWidget(self.fetch_button)
+            layout.addWidget(self.news_list)
+            self.setLayout(layout)
+            # シグナル接続
+            self.fetch_button.clicked.connect(self.fetch_news)
+            self.news_list.itemClicked.connect(self.open_news_link)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
     def fetch_news(self) -> bool:
         """ニュースを取りに行く"""
@@ -111,25 +151,6 @@ class MainApp_Of_GN2(QWidget):
         finally:
             return result
 
-    def write_log(self):
-        """ログを書き出す"""
-        # exe化されている場合とそれ以外を切り分ける
-        if getattr(sys, "frozen", False):
-            exe_path = Path(sys.executable)
-        else:
-            exe_path = Path(__file__)
-        file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-        result, path = self.obj_of_cls.write_log(file_of_log_as_path_type)
-        self.show_result(f"ログファイル: \n{path}\nの出力", result)
-
-    def show_result(self, label: str, success: bool):
-        """結果を表示します"""
-        QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
-
-    def show_error(self, msg: str):
-        """エラーを表示します"""
-        QMessageBox.information(self, "エラー", msg)
-
 
 class NewsItem_Of_GN2(QWidget):
     def __init__(self, title: str, summary: str):
@@ -137,32 +158,49 @@ class NewsItem_Of_GN2(QWidget):
         super().__init__()
         self.setup_ui(title, summary)
 
-    def setup_ui(self, title: str, summary: str):
+    def setup_ui(self, title: str, summary: str) -> bool:
         """User Interfaceを設定します"""
-        # ウィジェット
-        self.title_label = QLabel(title)
-        self.title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.summary_label = QLabel(summary)
-        self.summary_label.setStyleSheet("color: gray; font-size: 12px;")
-        self.summary_label.setWordWrap(True)
-        # レイアウト
-        layout = QVBoxLayout()
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.summary_label)
-        layout.setContentsMargins(5, 5, 5, 5)
-        self.setLayout(layout)
+        try:
+            result = False
+            # ウィジェット
+            self.title_label = QLabel(title)
+            self.title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+            self.summary_label = QLabel(summary)
+            self.summary_label.setStyleSheet("color: gray; font-size: 12px;")
+            self.summary_label.setWordWrap(True)
+            # レイアウト
+            layout = QVBoxLayout()
+            layout.addWidget(self.title_label)
+            layout.addWidget(self.summary_label)
+            layout.setContentsMargins(5, 5, 5, 5)
+            self.setLayout(layout)
+        except Exception as e:
+            self.show_error(str(e))
+        else:
+            result = True
+        finally:
+            return result
 
 
-def main():
+def main() -> bool:
     """主要関数"""
-    if platform.system().lower() == "windows":
-        # アプリ全体のスケール
-        os.environ["QT_SCALE_FACTOR"] = "0.7"
-    app = QApplication(sys.argv)
-    window = MainApp_Of_GN2()
-    window.resize(600, 400)
-    window.show()
-    sys.exit(app.exec())
+    try:
+        result = False
+        obj_of_gt = GUITools()
+        if platform.system().lower() == "windows":
+            # アプリ全体のスケール
+            os.environ["QT_SCALE_FACTOR"] = "0.7"
+        app = QApplication(sys.argv)
+        window = MainApp_Of_GN2()
+        window.resize(600, 400)
+        window.show()
+        sys.exit(app.exec())
+    except Exception as e:
+        obj_of_gt.show_error(str(e))
+    else:
+        result = True
+    finally:
+        return result
 
 
 if __name__ == "__main__":
