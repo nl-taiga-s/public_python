@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from source.common.common import DatetimeTools, PathTools
+from source.common.common import LogTools, PathTools
 from source.get_file_list.gfl_class import GetFileList
 
 
@@ -11,8 +11,6 @@ class GFL_With_Cui:
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
-        self.obj_of_pt = PathTools()
-        self.obj_of_dt2 = DatetimeTools()
 
     def input_folder_path(self) -> str:
         """フォルダのパスを入力します"""
@@ -91,29 +89,33 @@ class GFL_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
+    obj_of_lt = LogTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+    obj_of_lt.setup_stream_handler()
     while True:
         try:
             result = False
             cancel = False
-            obj_of_pt = PathTools()
             obj_with_cui = GFL_With_Cui()
-            folder_path = obj_with_cui.input_folder_path()
-            bool_of_r = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
-            obj_of_cls = GetFileList(folder_path, bool_of_r)
-            print(*obj_of_cls.log, sep="\n")
-            pattern = obj_with_cui.input_pattern()
-            _, log = obj_of_cls.extract_by_pattern(pattern)
-            print(*log, sep="\n")
-        except Exception as e:
-            print(f"処理が失敗しました。: {str(e)}")
+            obj_of_cls = GetFileList(obj_of_lt.logger)
+            obj_of_cls.folder_path = obj_with_cui.input_folder_path()
+            obj_of_cls.bool_of_r = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
+            if not obj_of_cls.search_recursively():
+                raise
+            obj_of_cls.pattern = obj_with_cui.input_pattern()
+            if not obj_of_cls.extract_by_pattern():
+                raise
+        except Exception:
+            print("処理が失敗しました。")
         except KeyboardInterrupt:
             cancel = True
         else:
             result = True
             print("処理が成功しました。")
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
             if cancel:
                 break
