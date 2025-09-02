@@ -2,7 +2,7 @@ import re
 from enum import Enum
 from pathlib import Path
 
-from source.common.common import DatetimeTools, PathTools
+from source.common.common import DatetimeTools, LogTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -13,7 +13,6 @@ class PT_With_Cui:
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
-        self.obj_of_pt = PathTools()
         self.obj_of_dt2 = DatetimeTools()
         self.MENU = Enum(
             "MENU",
@@ -60,13 +59,13 @@ class PT_With_Cui:
             raise
         return self.MENU(num)
 
-    def input_target_of_pdf(self, extension: str) -> str:
-        """対象のPDFファイルのパスを入力します。"""
+    def input_file_path(self, extension: str) -> str:
+        """ファイルパスを入力します。"""
         while True:
             try:
                 result = False
                 cancel = False
-                file_path_of_pdf_as_str_type = input("対象のPDFファイルパスを入力してください。: ").strip()
+                file_path_of_pdf_as_str_type = input("ファイルパスを入力してください。: ").strip()
                 if file_path_of_pdf_as_str_type == "":
                     raise Exception("未入力です。")
                 file_of_pdf_as_path_type = Path(file_path_of_pdf_as_str_type).expanduser()
@@ -76,7 +75,7 @@ class PT_With_Cui:
                 if not file_of_pdf_as_path_type.is_file():
                     raise Exception("ファイル以外は入力しないでください。")
                 if file_of_pdf_as_path_type.suffix.lower() != extension:
-                    raise Exception("PDF以外は入力しないでください。")
+                    raise Exception(f"{extension}以外は入力しないでください。")
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
@@ -116,22 +115,22 @@ class PT_With_Cui:
             raise
         return password
 
-    def input_writing_metadata(self, metadata_of_writer: dict, fields: list, creation_date: str, utc: str) -> dict:
+    def input_writing_metadata(self, obj_of_cls: PdfTools) -> dict:
         """書き込み用のメタデータを入力します"""
         while True:
             try:
                 result = False
                 cancel = False
-                for key_of_r, key_of_w in fields:
+                for key_of_r, key_of_w in obj_of_cls.fields:
                     match key_of_r:
                         case "creation_date":
-                            metadata_of_writer[key_of_w] = creation_date
+                            obj_of_cls.metadata_of_writer[key_of_w] = obj_of_cls.creation_date
                         case "modification_date":
-                            time = self.obj_of_dt2.convert_for_metadata_in_pdf(utc)
-                            metadata_of_writer[key_of_w] = time
+                            time = self.obj_of_dt2.convert_for_metadata_in_pdf(obj_of_cls.UTC_OF_JP)
+                            obj_of_cls.metadata_of_writer[key_of_w] = time
                         case _:
                             value = input(f"{key_of_r.capitalize().replace("_", " ")}: ").strip()
-                            metadata_of_writer[key_of_w] = value
+                            obj_of_cls.metadata_of_writer[key_of_w] = value
             except Exception as e:
                 print(str(e))
             except KeyboardInterrupt:
@@ -143,20 +142,20 @@ class PT_With_Cui:
                     break
         if cancel:
             raise
-        return metadata_of_writer
+        return obj_of_cls.metadata_of_writer
 
-    def input_list_of_merge(self, extension: str) -> list:
-        """マージ元の全てのファイルを入力します"""
-        pdfs = []
+    def input_list_of_file_path(self, extension: str) -> list:
+        """複数のファイルパスを入力します"""
+        list_of_fp = []
         try:
             while True:
                 cancel = False
-                print("マージ元のPDFファイルパスを順番に入力してください。")
-                file_as_str_type = self.input_target_of_pdf(extension)
-                pdfs.append(file_as_str_type)
+                print("ファイルパスを順番に入力してください。")
+                file_as_str_type = self.input_file_path(extension)
+                list_of_fp.append(file_as_str_type)
                 keep = self.input_bool("対象のファイルは、まだありますか？")
                 if not keep:
-                    if pdfs:
+                    if list_of_fp:
                         break
                     else:
                         print("ファイルが何も入力されていません。")
@@ -169,9 +168,9 @@ class PT_With_Cui:
         finally:
             if cancel:
                 raise
-            return pdfs
+            return list_of_fp
 
-    def input_page_range(self, num_of_pages: int) -> list:
+    def input_pages_range(self, num_of_pages: int) -> list:
         """ページ範囲を入力します"""
         while True:
             try:
@@ -200,8 +199,8 @@ class PT_With_Cui:
             raise
         return [begin_page, end_page]
 
-    def input_rotating_page(self, num_of_pages: int) -> int:
-        """回転するページを入力します"""
+    def input_page(self, num_of_pages: int) -> int:
+        """ページを入力します"""
         while True:
             try:
                 result = False
@@ -288,108 +287,96 @@ class PT_With_Cui:
 
 def main() -> bool:
     """主要関数"""
+    obj_of_pt = PathTools()
+    obj_of_lt = LogTools()
+    file_of_exe_as_path_type = Path(__file__)
+    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+    obj_of_lt.setup_stream_handler()
     while True:
         try:
             result = False
             cancel = False
-            obj_of_pt = PathTools()
             obj_with_cui = PT_With_Cui()
-            obj_of_cls = PdfTools()
-            print(*obj_of_cls.log, sep="\n")
+            obj_of_cls = PdfTools(obj_of_lt.logger)
             # メニューを選択します
             option = obj_with_cui.select_menu()
             match option:
                 case var if var == obj_with_cui.MENU.ファイルを暗号化します:
                     # ファイルを暗号化します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
                     password = obj_with_cui.input_password("暗号化")
-                    _, log = obj_of_cls.encrypt(file_path_of_pdf_as_str_type, password)
-                    print(*log, sep="\n")
+                    if not obj_of_cls.encrypt(password):
+                        raise
                 case var if var == obj_with_cui.MENU.ファイルを復号化します:
                     # ファイルを復号化します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
                     password = obj_with_cui.input_password("復号化")
-                    _, log = obj_of_cls.decrypt(file_path_of_pdf_as_str_type, password)
-                    print(*log, sep="\n")
+                    if not obj_of_cls.decrypt(password):
+                        raise
                 case var if var == obj_with_cui.MENU.メタデータを出力します:
                     # メタデータを出力します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    _, log = obj_of_cls.get_metadata(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    if not obj_of_cls.get_metadata():
+                        raise
                 case var if var == obj_with_cui.MENU.メタデータを書き込みます:
                     # メタデータを書き込みます
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(
-                        obj_of_cls.metadata_of_writer, obj_of_cls.fields, obj_of_cls.creation_date, obj_of_cls.UTC_OF_JP
-                    )
-                    _, log = obj_of_cls.write_metadata(file_path_of_pdf_as_str_type, obj_of_cls.metadata_of_writer)
-                    print(*log, sep="\n")
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(obj_of_cls)
+                    if not obj_of_cls.write_metadata():
+                        raise
                 case var if var == obj_with_cui.MENU.ファイルをマージします:
                     # ファイルをマージします
-                    pdfs = obj_with_cui.input_list_of_merge(obj_of_cls.EXTENSION)
-                    _, log = obj_of_cls.merge(pdfs)
-                    print(*log, sep="\n")
+                    pdfs = obj_with_cui.input_list_of_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.merge(pdfs):
+                        raise
                 case var if var == obj_with_cui.MENU.ページを抽出します:
                     # ページを抽出します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    _, log = obj_of_cls.extract_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    print(*log, sep="\n")
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    begin_page, end_page = obj_with_cui.input_pages_range(obj_of_cls.num_of_pages)
+                    if not obj_of_cls.extract_pages(begin_page, end_page):
+                        raise
                 case var if var == obj_with_cui.MENU.ページを削除します:
                     # ページを削除します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    _, log = obj_of_cls.delete_pages(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    print(*log, sep="\n")
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    begin_page, end_page = obj_with_cui.input_pages_range(obj_of_cls.num_of_pages)
+                    if not obj_of_cls.delete_pages(begin_page, end_page):
+                        raise
                 case var if var == obj_with_cui.MENU.テキストを抽出します:
                     # テキストを抽出します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    begin_page, end_page = obj_with_cui.input_page_range(obj_of_cls.num_of_pages)
-                    _, log = obj_of_cls.extract_text(file_path_of_pdf_as_str_type, begin_page, end_page)
-                    print(*log, sep="\n")
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    begin_page, end_page = obj_with_cui.input_pages_range(obj_of_cls.num_of_pages)
+                    if not obj_of_cls.extract_text(begin_page, end_page):
+                        raise
                 case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
                     # ページを時計回りで回転します
-                    file_path_of_pdf_as_str_type = obj_with_cui.input_target_of_pdf(obj_of_cls.EXTENSION)
-                    result, log = obj_of_cls.read_file(file_path_of_pdf_as_str_type)
-                    print(*log, sep="\n")
-                    if not result:
-                        raise Exception
-                    page = obj_with_cui.input_rotating_page(obj_of_cls.num_of_pages)
+                    obj_of_cls.file_path = obj_with_cui.input_file_path(obj_of_cls.EXTENSION)
+                    if not obj_of_cls.read_file():
+                        raise
+                    page = obj_with_cui.input_page(obj_of_cls.num_of_pages)
                     degrees = obj_with_cui.input_degrees()
-                    _, log = obj_of_cls.rotate_page_clockwise(file_path_of_pdf_as_str_type, page, degrees)
-                    print(*log, sep="\n")
+                    if not obj_of_cls.rotate_page_clockwise(page, degrees):
+                        raise
                 case _:
                     pass
-        except Exception as e:
-            print(f"処理が失敗しました。: {str(e)}")
+        except Exception:
+            print("処理が失敗しました。")
         except KeyboardInterrupt:
             cancel = True
         else:
             result = True
             print("処理が成功しました。")
-            file_of_exe_as_path_type = Path(__file__)
-            file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-            _, _ = obj_of_cls.write_log(file_of_log_as_path_type)
         finally:
             if cancel:
                 break
