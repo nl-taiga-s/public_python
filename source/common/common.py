@@ -1,10 +1,47 @@
 import datetime
+import logging
 import platform
 import shutil
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox, QWidget
+
+
+class LogTools:
+    """
+    logger.debug()
+    logger.info()
+    logger.warning()
+    logger.error()
+    logger.critical()
+    """
+
+    def __init__(self):
+        """初期化します"""
+        self.file_path_of_log = ""
+        # create logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
+    def setup_file_handler(self, file_path: str):
+        """FileHandlerを設定します"""
+        self.file_handler = logging.FileHandler(file_path, mode='w', encoding='utf-8')
+        self.file_handler.setLevel(logging.DEBUG)
+        self.STR_OF_FILE_FORMATTER = "%(message)s - [%(levelname)s] - (%(filename)s) - %(asctime)s"
+        self.file_formatter = logging.Formatter(self.STR_OF_FILE_FORMATTER)
+        self.file_handler.setFormatter(self.file_formatter)
+        self.logger.addHandler(self.file_handler)
+
+    def setup_stream_handler(self):
+        """StreamHandlerを設定します"""
+        self.stream_handler = logging.StreamHandler(sys.stdout)
+        self.stream_handler.setLevel(logging.DEBUG)
+        self.STR_OF_STREAM_FORMATTER = "%(message)s"
+        self.stream_formatter = logging.Formatter(self.STR_OF_STREAM_FORMATTER)
+        self.stream_handler.setFormatter(self.stream_formatter)
+        self.logger.addHandler(self.stream_handler)
 
 
 class PlatformTools:
