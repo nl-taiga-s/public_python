@@ -62,13 +62,13 @@ class ConvertOfficeToPDF:
             if self.number_of_f == 0:
                 raise ValueError("変換元のファイルがありません。")
         except ValueError as e:
-            self.log.error(str(e))
+            self.log.error(f"***{str(e)}***")
         except Exception:
             self.log.error(f"***{self.create_file_list.__doc__} => 失敗しました。***")
         else:
             result = True
             self.set_file_path()
-            self.log.info(f"{self.create_file_list.__doc__} => 成功しました。")
+            self.log.info(f"***{self.create_file_list.__doc__} => 成功しました。***")
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
         finally:
             return result
@@ -127,7 +127,7 @@ class ConvertOfficeToPDF:
     def convert_excel_to_pdf(self) -> bool:
         """ExcelをPDFに変換します"""
         result = False
-        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_excel_to_pdf.__doc__}: ")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_excel_to_pdf.__doc__}: ")
         self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_EXCEL = 0
         try:
@@ -135,10 +135,10 @@ class ConvertOfficeToPDF:
             f = obj.Workbooks.Open(self.current_of_file_path_from, ReadOnly=False)
             f.ExportAsFixedFormat(Filename=self.current_of_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
         except Exception:
-            self.log.error(f"***{self.convert_excel_to_pdf.__doc__} => 失敗しました。***")
+            self.log.error("***失敗しました。***")
         else:
             result = True
-            self.log.info(f"***{self.convert_excel_to_pdf.__doc__} => 成功しました。***")
+            self.log.info("***成功しました。***")
         finally:
             if f:
                 f.Close()
@@ -149,7 +149,7 @@ class ConvertOfficeToPDF:
     def convert_word_to_pdf(self) -> bool:
         """WordをPDFに変換します"""
         result = False
-        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_word_to_pdf.__doc__}: ")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_word_to_pdf.__doc__}: ")
         self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_WORD = 17
         try:
@@ -160,10 +160,10 @@ class ConvertOfficeToPDF:
                 ExportFormat=PDF_NUMBER_OF_WORD,
             )
         except Exception:
-            self.log.error(f"***{self.convert_word_to_pdf.__doc__} => 失敗しました。***")
+            self.log.error("***失敗しました。***")
         else:
             result = True
-            self.log.info(f"***{self.convert_word_to_pdf.__doc__} => 成功しました。***")
+            self.log.info("***成功しました。***")
         finally:
             if f:
                 f.Close()
@@ -174,7 +174,7 @@ class ConvertOfficeToPDF:
     def convert_powerpoint_to_pdf(self) -> bool:
         """PowerPointをPDFに変換します"""
         result = False
-        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.__class__.convert_powerpoint_to_pdf.__doc__}: ")
+        self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_powerpoint_to_pdf.__doc__}: ")
         self.log.info(f"{self.current_of_file_path_from} => {self.current_of_file_path_to}")
         PDF_NUMBER_OF_POWERPOINT = 2
         try:
@@ -185,10 +185,10 @@ class ConvertOfficeToPDF:
                 FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
             )
         except Exception:
-            self.log.error(f"***{self.convert_powerpoint_to_pdf.__doc__} => 失敗しました。***")
+            self.log.error("***失敗しました。***")
         else:
             result = True
-            self.log.info(f"***{self.convert_powerpoint_to_pdf.__doc__} => 成功しました。***")
+            self.log.info("***成功しました。***")
         finally:
             if f:
                 f.Close()

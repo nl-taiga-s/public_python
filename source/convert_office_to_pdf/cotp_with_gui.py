@@ -191,7 +191,7 @@ class MainApp_Of_COTP(QWidget):
         """変換します"""
         try:
             result = False
-            if self.obj_of_cls is None:
+            if not self.obj_of_cls.filtered_list_of_f:
                 raise Exception("ファイルリストが初期化されていません。")
             self.progress_bar.setRange(0, self.obj_of_cls.number_of_f)
             for i in range(self.obj_of_cls.number_of_f):
