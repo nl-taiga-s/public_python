@@ -281,6 +281,7 @@ class MainApp_Of_PT(QMainWindow):
     def get_images(self, file_path: str) -> list:
         """ビューワーに表示するファイルの各ページの画像を取得します"""
         try:
+            error = False
             file_as_path_type = Path(file_path)
             file_name_as_str_type = file_as_path_type.stem
             self.output_dir = Path(__file__).parent / "__images__"
@@ -293,10 +294,13 @@ class MainApp_Of_PT(QMainWindow):
                 pil_image.save(output_file)
                 output_files.append(str(output_file))
         except Exception as e:
+            error = True
             self.show_error(str(e))
         else:
             pass
         finally:
+            if error:
+                raise
             return output_files
 
     def select_pdf(self, reload: bool) -> bool:
@@ -313,7 +317,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = str(file_as_path_type)
             self.file_input.setText(self.obj_of_cls.file_path)
             self.obj_of_cls.read_file()
-            if self.obj_of_cls.reader.is_encrypted:
+            if self.obj_of_cls.encrypted:
                 raise Exception("PDFファイルが暗号化されています。")
             else:
                 images = self.get_images(self.obj_of_cls.file_path)
@@ -333,8 +337,8 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip() or not pw.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            result = self.obj_of_cls.encrypt(pw)
-            self.show_result("暗号化", result)
+            return_value = self.obj_of_cls.encrypt(pw)
+            self.show_result("暗号化", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -350,8 +354,8 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip() or not pw.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            result = self.obj_of_cls.decrypt(pw)
-            self.show_result("復号化", result)
+            return_value = self.obj_of_cls.decrypt(pw)
+            self.show_result("復号化", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -367,8 +371,10 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
-            result = self.obj_of_cls.get_metadata()
-            self.show_result("メタデータの表示", result)
+            # 再読み込み
+            self.select_pdf(True)
+            return_value = self.obj_of_cls.get_metadata()
+            self.show_result("メタデータの表示", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -384,6 +390,8 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
+            # 再読み込み
+            self.select_pdf(True)
             for value, key in self.obj_of_cls.fields:
                 match value:
                     case "creation_date":
@@ -392,8 +400,8 @@ class MainApp_Of_PT(QMainWindow):
                         self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
                     case _:
                         self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
-            result = self.obj_of_cls.write_metadata()
-            self.show_result("メタデータの書き込み", result)
+            return_value = self.obj_of_cls.write_metadata(self.widget_of_metadata)
+            self.show_result("メタデータの書き込み", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -411,8 +419,8 @@ class MainApp_Of_PT(QMainWindow):
             # 各OSに応じたパス区切りに変換する
             for i, element in enumerate(files):
                 files[i] = str(Path(element))
-            result = self.obj_of_cls.merge(files)
-            self.show_result("マージ", result)
+            return_value = self.obj_of_cls.merge(files)
+            self.show_result("マージ", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -428,13 +436,15 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
+            # 再読み込み
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            result = self.obj_of_cls.extract_pages(begin, end)
-            self.show_result("ページの抽出", result)
+            return_value = self.obj_of_cls.extract_pages(begin, end)
+            self.show_result("ページの抽出", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -450,13 +460,15 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
+            # 再読み込み
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            result = self.obj_of_cls.delete_pages(begin, end)
-            self.show_result("ページの削除", result)
+            return_value = self.obj_of_cls.delete_pages(begin, end)
+            self.show_result("ページの削除", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -472,13 +484,15 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
+            # 再読み込み
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            result = self.obj_of_cls.extract_text(begin, end)
-            self.show_result("テキストの抽出", result)
+            return_value = self.obj_of_cls.extract_text(begin, end)
+            self.show_result("テキストの抽出", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -494,18 +508,20 @@ class MainApp_Of_PT(QMainWindow):
             if not self.obj_of_cls.file_path.strip():
                 # 未入力の場合
                 raise Exception("PDFファイルを選択してください。")
+            # 再読み込み
+            self.select_pdf(True)
             page = spin.value()
             if page == 0:
                 raise Exception("ページ範囲を指定してください。")
             if page < 1 or page > self.obj_of_cls.num_of_pages:
                 raise Exception("ページ番号が不正です。")
-            result = self.obj_of_cls.rotate_page_clockwise(page, 90)
-            self.show_result("ページの回転", result)
+            return_value = self.obj_of_cls.rotate_page_clockwise(page, 90)
+            self.show_result("ページの回転", return_value)
         except Exception as e:
             self.show_error(str(e))
         else:
             result = True
-            images = self.get_images(self.file_path)
+            images = self.get_images(self.obj_of_cls.file_path)
             self.setup_second_ui(images)
         finally:
             return result

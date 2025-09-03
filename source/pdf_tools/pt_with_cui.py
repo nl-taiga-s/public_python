@@ -328,7 +328,7 @@ def main() -> bool:
                     if not obj_of_cls.read_file():
                         raise
                     obj_of_cls.metadata_of_writer = obj_with_cui.input_writing_metadata(obj_of_cls)
-                    if not obj_of_cls.write_metadata():
+                    if not obj_of_cls.write_metadata(obj_of_cls.metadata_of_writer):
                         raise
                 case var if var == obj_with_cui.MENU.ファイルをマージします:
                     # ファイルをマージします
