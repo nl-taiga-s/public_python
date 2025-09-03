@@ -101,7 +101,7 @@ class MainApp_Of_GFL(QWidget):
             self.setLayout(layout)
             # シグナル接続
             select_folder_btn.clicked.connect(self.select_folder)
-            open_folder_btn.clicked.connect(lambda: self.open_explorer(self.folder_path))
+            open_folder_btn.clicked.connect(self.open_explorer)
             search_btn.clicked.connect(self.search_files)
         except Exception as e:
             self.show_error(str(e))
@@ -152,7 +152,7 @@ class MainApp_Of_GFL(QWidget):
         """ファイルを検索します"""
         try:
             result = False
-            if not self.obj_of_cls:
+            if not self.obj_of_cls.folder_path:
                 raise Exception("フォルダを選択してください。")
             self.obj_of_cls.pattern = self.pattern_input.text().strip()
             self.obj_of_cls.extract_by_pattern()

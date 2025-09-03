@@ -42,20 +42,23 @@ class GFL_With_Cui:
 
     def input_pattern(self) -> str:
         """検索パターンを入力します"""
-        pattern = ""
-        try:
-            cancel = False
-            pattern = input("ファイルの検索パターンを入力してください。: ").strip()
-        except Exception as e:
-            print(str(e))
-        except KeyboardInterrupt:
-            cancel = True
-        else:
-            pass
-        finally:
-            if cancel:
-                raise
-            return pattern
+        while True:
+            try:
+                result = False
+                cancel = False
+                pattern = input("ファイルの検索パターンを入力してください。: ").strip()
+            except Exception as e:
+                print(str(e))
+            except KeyboardInterrupt:
+                cancel = True
+            else:
+                result = True
+            finally:
+                if cancel or result:
+                    break
+        if cancel:
+            raise
+        return pattern
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
