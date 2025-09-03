@@ -24,7 +24,7 @@ class GetNHKNews:
             "LIVE": "https://www.nhk.or.jp/rss/news/cat-live.xml",
         }
         # 日本のタイムゾーン
-        self.TIMEZONE_OF_JAPAN = 9
+        self.TIMEZONE_OF_JAPAN = 9.0
         # 表示するニュースの数
         self.NUM_OF_NEWS_TO_SHOW = 10
 
@@ -83,8 +83,8 @@ class GetNHKNews:
         """ニュースを取得します"""
         try:
             result = False
-            self.log.info(f"日付: {self.today}")
-            self.log.info(f"ジャンル: {self.key_of_genre}")
+            self.log.info(f"* 日付: {self.today}")
+            self.log.info(f"* ジャンル: {self.key_of_genre}")
             if not self.today_news:
                 raise ValueError("ニュースは、まだありません。")
             else:

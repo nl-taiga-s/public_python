@@ -35,7 +35,7 @@ class MainApp_Of_GN2(QWidget):
 
     def closeEvent(self, event):
         """終了します"""
-        self.show_info(f"ログファイルは、\n{self.file_path_of_log}\nに出力されました。")
+        self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
     def show_info(self, msg: str):
@@ -60,8 +60,8 @@ class MainApp_Of_GN2(QWidget):
             else:
                 exe_path = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-            self.file_path_of_log = str(file_of_log_as_path_type)
-            self.obj_of_lt.setup_file_handler(self.file_path_of_log)
+            self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
         except Exception as e:
             self.show_error(str(e))
         else:
@@ -107,9 +107,12 @@ class MainApp_Of_GN2(QWidget):
         try:
             result = False
             genre_index = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
-            self.obj_of_cls.parse_rss(genre_index, genre_key)
-            self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN)
-            self.obj_of_cls.extract_news_of_today_from_standard_time()
+            if not self.obj_of_cls.parse_rss(genre_index, genre_key):
+                raise
+            if not self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN):
+                raise
+            if not self.obj_of_cls.extract_news_of_today_from_standard_time():
+                raise
             for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
                 title = news.title
                 summary = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
@@ -121,7 +124,8 @@ class MainApp_Of_GN2(QWidget):
                 item.setSizeHint(widget.sizeHint())
                 self.news_list.addItem(item)
                 self.news_list.setItemWidget(item, widget)
-            _, _ = self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW)
+            if not self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW):
+                raise
             if not self.obj_of_cls.today_news:
                 raise Exception("今日のニュースはまだありません。")
         except Exception as e:
