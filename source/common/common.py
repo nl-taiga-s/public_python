@@ -25,23 +25,39 @@ class LogTools:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-    def setup_file_handler(self, file_path: str):
+    def setup_file_handler(self, file_path: str) -> bool:
         """FileHandlerを設定します"""
-        self.file_handler = logging.FileHandler(file_path, mode='w', encoding='utf-8')
-        self.file_handler.setLevel(logging.DEBUG)
-        self.STR_OF_FILE_FORMATTER = "%(message)s - [%(levelname)s] - (%(filename)s) - %(asctime)s"
-        self.file_formatter = logging.Formatter(self.STR_OF_FILE_FORMATTER)
-        self.file_handler.setFormatter(self.file_formatter)
-        self.logger.addHandler(self.file_handler)
+        try:
+            result = False
+            self.file_handler = logging.FileHandler(file_path, mode='w', encoding='utf-8')
+            self.file_handler.setLevel(logging.DEBUG)
+            self.STR_OF_FILE_FORMATTER = "%(message)s - [%(levelname)s] - (%(filename)s) - %(asctime)s"
+            self.file_formatter = logging.Formatter(self.STR_OF_FILE_FORMATTER)
+            self.file_handler.setFormatter(self.file_formatter)
+            self.logger.addHandler(self.file_handler)
+        except Exception as e:
+            print(f"error: \n{str(e)}")
+        else:
+            result = True
+        finally:
+            return result
 
-    def setup_stream_handler(self):
+    def setup_stream_handler(self) -> bool:
         """StreamHandlerを設定します"""
-        self.stream_handler = logging.StreamHandler(sys.stdout)
-        self.stream_handler.setLevel(logging.DEBUG)
-        self.STR_OF_STREAM_FORMATTER = "%(message)s"
-        self.stream_formatter = logging.Formatter(self.STR_OF_STREAM_FORMATTER)
-        self.stream_handler.setFormatter(self.stream_formatter)
-        self.logger.addHandler(self.stream_handler)
+        try:
+            result = False
+            self.stream_handler = logging.StreamHandler(sys.stdout)
+            self.stream_handler.setLevel(logging.DEBUG)
+            self.STR_OF_STREAM_FORMATTER = "%(message)s"
+            self.stream_formatter = logging.Formatter(self.STR_OF_STREAM_FORMATTER)
+            self.stream_handler.setFormatter(self.stream_formatter)
+            self.logger.addHandler(self.stream_handler)
+        except Exception as e:
+            print(f"error: \n{str(e)}")
+        else:
+            result = True
+        finally:
+            return result
 
 
 class PlatformTools:
@@ -51,14 +67,23 @@ class PlatformTools:
 
     def is_wsl(self) -> bool:
         """WSL環境かどうか判定します"""
-        if platform.system().lower() != "linux":
-            return False
         try:
-            with open("/proc/version", "r") as f:
-                content = f.read().lower()
-                return "microsoft" in content or "wsl" in content
-        except Exception:
-            return False
+            result = False
+            error = False
+            if platform.system().lower() == "linux":
+                with open("/proc/version", "r") as f:
+                    content = f.read().lower()
+                    if "microsoft" in content or "wsl" in content:
+                        result = True
+        except Exception as e:
+            error = True
+            print(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            if error:
+                raise
+            return result
 
 
 class DatetimeTools:
@@ -103,6 +128,7 @@ class PathTools:
     def get_file_path_of_log(self, base_path: Path) -> Path:
         """ログファイルのパスを取得します"""
         try:
+            error = False
             # 実行するファイルのディレクトリ
             folder_of_exe_as_path_type = base_path.parent
             # ログフォルダのパス
@@ -111,10 +137,16 @@ class PathTools:
             folder_of_log_as_path_type.mkdir(parents=True, exist_ok=True)
             # ログファイル名
             file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
+        except Exception as e:
+            error = True
+            print(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            if error:
+                raise
             # ログファイルのパス
             return folder_of_log_as_path_type / file_name_of_log
-        except Exception as e:
-            print(e)
 
 
 class GUITools:
@@ -128,6 +160,9 @@ class GUITools:
         box.setIcon(QMessageBox.Icon.Critical)
         box.setWindowTitle("エラー")
         box.setText(msg)
+        box.setStyleSheet("""
+            QMessageBox { font-size: 12pt; }
+        """)
         # 一定時間後に自動終了する
         MILLI_SECONDS = 10000
         QTimer.singleShot(MILLI_SECONDS, box.accept)
