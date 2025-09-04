@@ -37,8 +37,9 @@ class GetNHKNews:
             self.genre = list(self.rss_feeds.keys())[self.num_of_genre]
             self.url_of_rss = self.rss_feeds[self.key_of_genre]
             self.feed = feedparser.parse(self.url_of_rss)
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.parse_rss.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.parse_rss.__doc__} => 成功しました。***")
@@ -53,8 +54,9 @@ class GetNHKNews:
             self.standard_time = timezone(timedelta(hours=time_difference))
             # 今日の日付
             self.today = datetime.now(self.standard_time).date()
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.get_standard_time_and_today.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.get_standard_time_and_today.__doc__} => 成功しました。***")
@@ -71,8 +73,9 @@ class GetNHKNews:
                     pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).astimezone(self.standard_time).date()
                     if pub_date == self.today:
                         self.today_news.append(entry)
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 成功しました。***")
@@ -86,15 +89,14 @@ class GetNHKNews:
             self.log.info(f"* 日付: {self.today}")
             self.log.info(f"* ジャンル: {self.key_of_genre}")
             if not self.today_news:
-                raise ValueError("ニュースは、まだありません。")
+                raise Exception("ニュースは、まだありません。")
             else:
                 for i, news in enumerate(self.today_news[:num_of_news], start=1):
                     self.log.info(f"{i}. {news.title}: ")
                     self.log.info(f"\t{news.link}")
-        except ValueError as e:
-            self.log.error(f"***{str(e)}***")
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.get_news.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.get_news.__doc__} => 成功しました。***")

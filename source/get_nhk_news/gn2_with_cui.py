@@ -31,7 +31,7 @@ class GN2_With_Cui:
                 if 1 > choice or choice > len(genres):
                     raise Exception("入力した番号が範囲外です。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -60,7 +60,7 @@ class GN2_With_Cui:
                         raise Exception("無効な入力です。")
             except Exception as e:
                 error = True
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -75,13 +75,24 @@ class GN2_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    obj_of_pt = PathTools()
-    obj_of_lt = LogTools()
-    file_of_exe_as_path_type = Path(__file__)
-    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
-    obj_of_lt.setup_stream_handler()
+    try:
+        result = False
+        obj_of_pt = PathTools()
+        obj_of_lt = LogTools()
+        file_of_exe_as_path_type = Path(__file__)
+        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+        obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+        if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
+            raise
+        if not obj_of_lt.setup_stream_handler():
+            raise
+    except Exception as e:
+        print(f"error: \n{str(e)}")
+    else:
+        result = True
+    finally:
+        if not result:
+            return result
     while True:
         try:
             result = False
@@ -97,8 +108,9 @@ def main() -> bool:
                 raise
             if not obj_of_cls.get_news(obj_of_cls.NUM_OF_NEWS_TO_SHOW):
                 raise
-        except Exception:
+        except Exception as e:
             print("処理が失敗しました。")
+            print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
             cancel = True
         else:

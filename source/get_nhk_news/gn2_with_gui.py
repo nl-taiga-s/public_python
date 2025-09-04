@@ -1,10 +1,10 @@
-import os
 import platform
 import subprocess
 import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -35,7 +35,8 @@ class MainApp_Of_GN2(QWidget):
 
     def closeEvent(self, event):
         """終了します"""
-        self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        if self.obj_of_lt:
+            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
     def show_info(self, msg: str):
@@ -61,9 +62,10 @@ class MainApp_Of_GN2(QWidget):
                 exe_path = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
+                raise
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -94,7 +96,7 @@ class MainApp_Of_GN2(QWidget):
             self.fetch_button.clicked.connect(self.fetch_news)
             self.news_list.itemClicked.connect(self.open_news_link)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -129,7 +131,7 @@ class MainApp_Of_GN2(QWidget):
             if not self.obj_of_cls.today_news:
                 raise Exception("今日のニュースはまだありません。")
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -149,7 +151,7 @@ class MainApp_Of_GN2(QWidget):
             elif self.obj_of_pft.is_wsl():
                 subprocess.run([POWERSHELL_OF_WSL, "Start-Process", url], check=True)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -168,9 +170,9 @@ class NewsItem_Of_GN2(QWidget):
             result = False
             # ウィジェット
             self.title_label = QLabel(title)
-            self.title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: bold; font-size: 18px;")
             self.summary_label = QLabel(summary)
-            self.summary_label.setStyleSheet("color: gray; font-size: 12px;")
+            self.summary_label.setStyleSheet("color: gray; font-size: 16px;")
             self.summary_label.setWordWrap(True)
             # レイアウト
             layout = QVBoxLayout()
@@ -179,7 +181,7 @@ class NewsItem_Of_GN2(QWidget):
             layout.setContentsMargins(5, 5, 5, 5)
             self.setLayout(layout)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -191,16 +193,18 @@ def main() -> bool:
     try:
         result = False
         obj_of_gt = GUITools()
-        if platform.system().lower() == "windows":
-            # アプリ全体のスケール
-            os.environ["QT_SCALE_FACTOR"] = "0.7"
         app = QApplication(sys.argv)
+        # アプリ単位でフォントを設定する
+        font = QFont()
+        font.setPointSize(12)
+        app.setFont(font)
         window = MainApp_Of_GN2()
-        window.resize(600, 400)
-        window.show()
+        window.resize(1000, 800)
+        # 最大化して、表示させる
+        window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(str(e))
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
