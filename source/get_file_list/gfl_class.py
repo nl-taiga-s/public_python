@@ -31,14 +31,13 @@ class GetFileList:
                 if Path(f).is_file():
                     self.list_file_before.append(f)
             if not self.list_file_before:
-                raise ValueError("***フォルダにファイルがありませんでした。***")
+                raise Exception("フォルダにファイルがありませんでした。")
             self.number_of_f_before = len(self.list_file_before)
             self.log.info(f"{self.number_of_f_before}件のファイルがあります。")
             self.log.info("\n".join(self.list_file_before))
-        except ValueError as e:
-            self.log.error(str(e))
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.search_recursively.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.search_recursively.__doc__} => 成功しました。***")
@@ -52,15 +51,14 @@ class GetFileList:
             self.log.info(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.list_file_after = [f for f in self.list_file_before if self.pattern in f]
             if not self.list_file_after:
-                raise ValueError("***検索パターンによる抽出結果がありませんでした。***")
+                raise Exception("検索パターンによる抽出結果がありませんでした。")
             # ファイルの数
             self.number_of_f_after = len(self.list_file_after)
             self.log.info(f"{self.number_of_f_after}件のファイルが抽出されました。")
             self.log.info("\n".join(self.list_file_after))
-        except ValueError as e:
-            self.log.error(str(e))
-        except Exception:
+        except Exception as e:
             self.log.error(f"***{self.extract_by_pattern.__doc__} => 失敗しました。***")
+            self.log.error(f"error: \n{str(e)}")
         else:
             result = True
             self.log.info(f"***{self.extract_by_pattern.__doc__} => 成功しました。***")
