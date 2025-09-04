@@ -47,7 +47,7 @@ class PT_With_Cui:
                 if 1 > num or num > len(self.MENU):
                     raise Exception("入力した番号が範囲外です。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -77,7 +77,7 @@ class PT_With_Cui:
                 if file_of_pdf_as_path_type.suffix.lower() != extension:
                     raise Exception(f"{extension}以外は入力しないでください。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -103,7 +103,7 @@ class PT_With_Cui:
                 else:
                     raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -132,7 +132,7 @@ class PT_With_Cui:
                             value = input(f"{key_of_r.capitalize().replace("_", " ")}: ").strip()
                             obj_of_cls.metadata_of_writer[key_of_w] = value
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -160,7 +160,7 @@ class PT_With_Cui:
                     else:
                         print("ファイルが何も入力されていません。")
         except Exception as e:
-            print(str(e))
+            print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
             cancel = True
         else:
@@ -187,7 +187,7 @@ class PT_With_Cui:
                 if begin_page < 1 or end_page > num_of_pages or begin_page > end_page:
                     raise Exception("指定のページ範囲が不正です。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -214,7 +214,7 @@ class PT_With_Cui:
                 if page < 1 or page > num_of_pages:
                     raise Exception("指定のページ範囲が不正です。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -243,7 +243,7 @@ class PT_With_Cui:
                 if 1 > num or num > len(self.DEGREES):
                     raise Exception("入力した番号が範囲外です。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -272,7 +272,7 @@ class PT_With_Cui:
                         raise Exception("無効な入力です。")
             except Exception as e:
                 error = True
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -287,13 +287,24 @@ class PT_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    obj_of_pt = PathTools()
-    obj_of_lt = LogTools()
-    file_of_exe_as_path_type = Path(__file__)
-    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
-    obj_of_lt.setup_stream_handler()
+    try:
+        result = False
+        obj_of_pt = PathTools()
+        obj_of_lt = LogTools()
+        file_of_exe_as_path_type = Path(__file__)
+        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+        obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+        if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
+            raise
+        if not obj_of_lt.setup_stream_handler():
+            raise
+    except Exception as e:
+        print(f"error: \n{str(e)}")
+    else:
+        result = True
+    finally:
+        if not result:
+            return result
     while True:
         try:
             result = False
@@ -370,8 +381,9 @@ def main() -> bool:
                         raise
                 case _:
                     pass
-        except Exception:
+        except Exception as e:
             print("処理が失敗しました。")
+            print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
             cancel = True
         else:

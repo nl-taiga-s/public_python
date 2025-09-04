@@ -1,12 +1,10 @@
 import logging
-import os
-import platform
 import sys
 from pathlib import Path
 
 import pypdfium2
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -54,7 +52,8 @@ class MainApp_Of_PT(QMainWindow):
         """終了します"""
         image_dir = Path(__file__).parent / "__images__"
         self.obj_of_fst.clear_folder(image_dir)
-        self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        if self.obj_of_lt:
+            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
     def show_info(self, msg: str):
@@ -80,12 +79,13 @@ class MainApp_Of_PT(QMainWindow):
                 exe_path = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
+                raise
             text_handler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -234,7 +234,7 @@ class MainApp_Of_PT(QMainWindow):
             page_layout_of_rp.addWidget(rotate_btn)
             left_func_area.addLayout(page_layout_of_rp)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -272,7 +272,7 @@ class MainApp_Of_PT(QMainWindow):
                 # グリッドにページごとに追加する
                 self.center_viewer.addWidget(page_widget)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -295,7 +295,7 @@ class MainApp_Of_PT(QMainWindow):
                 output_files.append(str(output_file))
         except Exception as e:
             error = True
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             pass
         finally:
@@ -316,14 +316,13 @@ class MainApp_Of_PT(QMainWindow):
             file_as_path_type = Path(self.obj_of_cls.file_path).expanduser()
             self.obj_of_cls.file_path = str(file_as_path_type)
             self.file_input.setText(self.obj_of_cls.file_path)
-            self.obj_of_cls.read_file()
-            if self.obj_of_cls.encrypted:
-                raise Exception("PDFファイルが暗号化されています。")
-            else:
-                images = self.get_images(self.obj_of_cls.file_path)
-                self.setup_second_ui(images)
+            # 読み込む
+            if not self.obj_of_cls.read_file():
+                raise
+            images = self.get_images(self.obj_of_cls.file_path)
+            self.setup_second_ui(images)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -340,7 +339,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.encrypt(pw)
             self.show_result("暗号化", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -357,7 +356,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.decrypt(pw)
             self.show_result("復号化", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -368,15 +367,13 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             return_value = self.obj_of_cls.get_metadata()
             self.show_result("メタデータの表示", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -387,11 +384,9 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             for value, key in self.obj_of_cls.fields:
                 match value:
                     case "creation_date":
@@ -403,7 +398,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.write_metadata(self.widget_of_metadata)
             self.show_result("メタデータの書き込み", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -422,7 +417,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.merge(files)
             self.show_result("マージ", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -433,11 +428,9 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -446,7 +439,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.extract_pages(begin, end)
             self.show_result("ページの抽出", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -457,11 +450,9 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -470,7 +461,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.delete_pages(begin, end)
             self.show_result("ページの削除", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -481,11 +472,9 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -494,7 +483,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.extract_text(begin, end)
             self.show_result("テキストの抽出", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -505,11 +494,9 @@ class MainApp_Of_PT(QMainWindow):
         try:
             result = False
             self.obj_of_cls.file_path = self.file_input.text()
-            if not self.obj_of_cls.file_path.strip():
-                # 未入力の場合
-                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            self.select_pdf(True)
+            if not self.select_pdf(True):
+                raise
             page = spin.value()
             if page == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -518,7 +505,7 @@ class MainApp_Of_PT(QMainWindow):
             return_value = self.obj_of_cls.rotate_page_clockwise(page, 90)
             self.show_result("ページの回転", return_value)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
             images = self.get_images(self.obj_of_cls.file_path)
@@ -532,16 +519,18 @@ def main() -> bool:
     try:
         result = False
         obj_of_gt = GUITools()
-        if platform.system().lower() == "windows":
-            # アプリ全体のスケール
-            os.environ["QT_SCALE_FACTOR"] = "0.7"
         app = QApplication(sys.argv)
+        # アプリ単位でフォントを設定する
+        font = QFont()
+        font.setPointSize(12)
+        app.setFont(font)
         window = MainApp_Of_PT()
-        window.resize(1600, 800)
-        window.show()
+        window.resize(1000, 800)
+        # 最大化して、表示させる
+        window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(str(e))
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
