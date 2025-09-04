@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 from source.common.common import GUITools, LogTools, PathTools, PlatformTools
@@ -32,7 +33,8 @@ class MainApp_Of_COTP(QWidget):
 
     def closeEvent(self, event):
         """終了します"""
-        self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        if self.obj_of_lt:
+            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
     def show_info(self, msg: str):
@@ -58,12 +60,13 @@ class MainApp_Of_COTP(QWidget):
                 exe_path = Path(__file__)
             file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
+                raise
             text_handler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -110,7 +113,7 @@ class MainApp_Of_COTP(QWidget):
             btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
             btn_convert.clicked.connect(self.convert_file)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -128,7 +131,7 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_to:
                     self.show_file_list()
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -146,7 +149,7 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_from:
                     self.show_file_list()
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -160,7 +163,7 @@ class MainApp_Of_COTP(QWidget):
                 raise Exception("フォルダを選択してください。")
             os.startfile(folder_path)
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -181,7 +184,7 @@ class MainApp_Of_COTP(QWidget):
             self.progress_bar.setValue(0)
         except Exception as e:
             self.file_list_widget.clear()
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -197,9 +200,11 @@ class MainApp_Of_COTP(QWidget):
             for i in range(self.obj_of_cls.number_of_f):
                 self.obj_of_cls.handle_file()
                 self.progress_bar.setValue(i + 1)
+                if self.obj_of_cls.p == self.obj_of_cls.number_of_f - 1:
+                    break
                 self.obj_of_cls.move_to_next_file()
         except Exception as e:
-            self.show_error(str(e))
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -211,19 +216,22 @@ def main() -> bool:
     try:
         result = False
         obj_of_gt = GUITools()
-        # アプリ全体のスケール
-        os.environ["QT_SCALE_FACTOR"] = "0.7"
         app = QApplication(sys.argv)
         from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
 
+        # アプリ単位でフォントを設定する
+        font = QFont()
+        font.setPointSize(12)
+        app.setFont(font)
         window = MainApp_Of_COTP(ConvertOfficeToPDF)
-        window.resize(700, 600)
-        window.show()
+        window.resize(1000, 800)
+        # 最大化して、表示させる
+        window.showMaximized()
         sys.exit(app.exec())
     except ImportError as e:
-        obj_of_gt.show_error(str(e))
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     except Exception as e:
-        obj_of_gt.show_error(str(e))
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:

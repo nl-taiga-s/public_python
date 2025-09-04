@@ -30,7 +30,7 @@ class COTP_With_Cui:
                 if not folder_of_from_as_path_type.is_dir() or not folder_of_to_as_path_type.is_dir():
                     raise Exception("フォルダではありません。")
             except Exception as e:
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -59,7 +59,7 @@ class COTP_With_Cui:
                         raise Exception("無効な入力です。")
             except Exception as e:
                 error = True
-                print(str(e))
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
                 cancel = True
             else:
@@ -74,13 +74,24 @@ class COTP_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    obj_of_pt = PathTools()
-    obj_of_lt = LogTools()
-    file_of_exe_as_path_type = Path(__file__)
-    file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-    obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-    obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
-    obj_of_lt.setup_stream_handler()
+    try:
+        result = False
+        obj_of_pt = PathTools()
+        obj_of_lt = LogTools()
+        file_of_exe_as_path_type = Path(__file__)
+        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
+        obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+        if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
+            raise
+        if not obj_of_lt.setup_stream_handler():
+            raise
+    except Exception as e:
+        print(f"error: \n{str(e)}")
+    else:
+        result = True
+    finally:
+        if not result:
+            return result
     while True:
         try:
             result = False
@@ -94,12 +105,15 @@ def main() -> bool:
                 raise
             for _ in range(obj_of_cls.number_of_f):
                 obj_of_cls.handle_file()
+                if obj_of_cls.p == obj_of_cls.number_of_f - 1:
+                    break
                 obj_of_cls.move_to_next_file()
         except ImportError as e:
             cancel = True
-            print(str(e))
-        except Exception:
+            print(f"error: \n{str(e)}")
+        except Exception as e:
             print("処理が失敗しました。")
+            print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
             cancel = True
         else:
