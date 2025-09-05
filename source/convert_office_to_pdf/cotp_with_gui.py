@@ -200,7 +200,7 @@ class MainApp_Of_COTP(QWidget):
             for i in range(self.obj_of_cls.number_of_f):
                 self.obj_of_cls.handle_file()
                 self.progress_bar.setValue(i + 1)
-                if self.obj_of_cls.p == self.obj_of_cls.number_of_f - 1:
+                if self.obj_of_cls.complete:
                     break
                 self.obj_of_cls.move_to_next_file()
         except Exception as e:

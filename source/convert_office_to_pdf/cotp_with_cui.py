@@ -105,7 +105,7 @@ def main() -> bool:
                 raise
             for _ in range(obj_of_cls.number_of_f):
                 obj_of_cls.handle_file()
-                if obj_of_cls.p == obj_of_cls.number_of_f - 1:
+                if obj_of_cls.complete:
                     break
                 obj_of_cls.move_to_next_file()
         except ImportError as e:
