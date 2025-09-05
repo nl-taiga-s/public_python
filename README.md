@@ -1,5 +1,5 @@
 # public_python
-## creation
+## creations
 ### convert_office_to_pdf(COTP)
 * You can convert excel, word, powerpoint files to pdf files.
 ### get_file_list(GFL)
