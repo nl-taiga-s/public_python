@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -226,6 +227,10 @@ def main() -> bool:
         result = False
         obj_of_gt = GUITools()
         app = QApplication(sys.argv)
+        # LibreOfficeのコマンド
+        LIBRE_COMMAND = "soffice"
+        if not shutil.which(LIBRE_COMMAND):
+            raise ImportError("各OSのLibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
         # アプリ単位でフォントを設定する
         font = QFont()
         font.setPointSize(12)
@@ -235,6 +240,8 @@ def main() -> bool:
         # 最大化して、表示させる
         window.showMaximized()
         sys.exit(app.exec())
+    except ImportError as e:
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     except Exception as e:
         obj_of_gt.show_error(f"error: \n{str(e)}")
     else:

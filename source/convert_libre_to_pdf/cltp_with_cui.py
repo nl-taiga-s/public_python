@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from source.common.common import LogTools, PathTools
@@ -97,6 +98,10 @@ def main() -> bool:
         try:
             result = False
             cancel = False
+            # LibreOfficeのコマンド
+            LIBRE_COMMAND = "soffice"
+            if not shutil.which(LIBRE_COMMAND):
+                raise ImportError("各OSのLibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
             obj_with_cui = CLTP_With_Cui()
             obj_of_cls = ConvertLibreToPDF(obj_of_lt.logger)
             obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui.input_folder_path()
@@ -107,6 +112,9 @@ def main() -> bool:
                 if obj_of_cls.complete:
                     break
                 obj_of_cls.move_to_next_file()
+        except ImportError as e:
+            cancel = True
+            print(f"error: \n{str(e)}")
         except Exception as e:
             print("処理が失敗しました。")
             print(f"error: \n{str(e)}")
