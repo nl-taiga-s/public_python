@@ -7,6 +7,7 @@ __log__/
 __images__/
 wheels/
 *cache*/
-samples/
+__from__/
+__to__/
 .venv/
 uv.lock
