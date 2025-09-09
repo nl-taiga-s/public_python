@@ -101,7 +101,7 @@ def main() -> bool:
             # LibreOfficeのコマンド
             LIBRE_COMMAND = "soffice"
             if not shutil.which(LIBRE_COMMAND):
-                raise ImportError("各OSのLibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
+                raise ImportError("LibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
             obj_with_cui = CLTP_With_Cui()
             obj_of_cls = ConvertLibreToPDF(obj_of_lt.logger)
             obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui.input_folder_path()

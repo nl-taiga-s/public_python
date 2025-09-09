@@ -81,7 +81,7 @@ class MainApp_Of_CLTP(QWidget):
         try:
             result = False
             # タイトル
-            self.setWindowTitle("Officeファイル => PDF 一括変換アプリ by LibreOffice")
+            self.setWindowTitle("Officeファイル => PDF 一括変換アプリ with LibreOffice")
             # ウィジェット
             self.label_from = QLabel("変換元フォルダ: 未選択")
             btn_select_from = QPushButton("変換元フォルダを選択")
@@ -230,7 +230,7 @@ def main() -> bool:
         # LibreOfficeのコマンド
         LIBRE_COMMAND = "soffice"
         if not shutil.which(LIBRE_COMMAND):
-            raise ImportError("各OSのLibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
+            raise ImportError("LibreOfficeをインストールしてください。\nhttps://ja.libreoffice.org/")
         # アプリ単位でフォントを設定する
         font = QFont()
         font.setPointSize(12)
