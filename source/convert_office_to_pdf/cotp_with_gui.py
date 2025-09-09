@@ -77,7 +77,7 @@ class MainApp_Of_COTP(QWidget):
         try:
             result = False
             # タイトル
-            self.setWindowTitle("Officeファイル => PDF 一括変換アプリ")
+            self.setWindowTitle("Officeファイル => PDF 一括変換アプリ by Microsoft Office")
             # ウィジェット
             self.label_from = QLabel("変換元フォルダ: 未選択")
             btn_select_from = QPushButton("変換元フォルダを選択")
