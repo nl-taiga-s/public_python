@@ -66,6 +66,7 @@ class ConvertLibreToPDF:
             self.set_file_path()
             self.log.info(f"***{self.create_file_list.__doc__} => 成功しました。***")
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
+            self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
         finally:
             return result
 
@@ -124,7 +125,7 @@ class ConvertLibreToPDF:
         try:
             result = False
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
-            self.log.info(self.current_of_file_path_from)
+            self.log.info(f"{self.current_of_file_path_from} => PDF")
             file_of_currentfrom_as_path_type = Path(self.current_of_file_path_from)
             ext = file_of_currentfrom_as_path_type.suffix.lower()
             if ext in self.valid_exts:
@@ -133,10 +134,13 @@ class ConvertLibreToPDF:
                     capture_output=True,
                     text=True,
                 )
-                result = result_obj.returncode == 0
+                result = not result_obj.returncode
             self.count += 1
             if result:
                 self.success += 1
+                self.log.info("***成功しました。***")
+            else:
+                self.log.error("***失敗しました。***")
             if self.count == self.number_of_f:
                 if self.success == self.number_of_f:
                     self.complete = True
