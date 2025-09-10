@@ -82,7 +82,7 @@ class MainApp_Of_GFL(QWidget):
             # タイトル
             self.setWindowTitle("ファイル検索アプリ")
             # ウィジェット
-            self.folder_label = QLabel("フォルダ未選択")
+            self.folder_label = QLabel("フォルダが未選択")
             select_folder_btn = QPushButton("フォルダを選択")
             self.recursive_checkbox = QCheckBox("サブフォルダも含めて検索（再帰）")
             self.pattern_input = QLineEdit()
