@@ -82,7 +82,7 @@ class MainApp_Of_GN2(QWidget):
             genre_layout = QHBoxLayout()
             genre_label = QLabel("ジャンル:")
             self.genre_combo = QComboBox()
-            self.fetch_button = QPushButton("ニュース取得")
+            self.fetch_button = QPushButton("ニュースを取得")
             self.news_list = QListWidget()
             # レイアウト
             self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
