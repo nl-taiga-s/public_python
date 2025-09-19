@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from source.common.common import LogTools, PathTools
-from source.get_statistics.g2s_class import GetGovernmentStatistics
+from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
 
 class GS_With_Cui:
