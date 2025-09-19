@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from source.common.common import LogTools, PathTools
-from source.get_statistics.gs_class import GetStatistics
+from source.get_statistics.g2s_class import GetGovernmentStatistics
 
 
 class GS_With_Cui:
@@ -166,7 +166,7 @@ def main() -> bool:
             df = None
             filtered_df = None
             obj_with_cui = GS_With_Cui()
-            obj_of_cls = GetStatistics(obj_of_lt.logger)
+            obj_of_cls = GetGovernmentStatistics(obj_of_lt.logger)
             obj_of_cls.STATS_DATA_ID = obj_with_cui.select_target(obj_of_cls.STATS_DATA_IDS)
             obj_of_cls.lst_of_data_type = obj_with_cui.select_target(obj_with_cui.dct_of_data_type)
             df = obj_of_cls.get_data_from_api()

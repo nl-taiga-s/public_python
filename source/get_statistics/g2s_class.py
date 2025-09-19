@@ -12,7 +12,7 @@ from requests import Response
 from tabulate import tabulate
 
 
-class GetStatistics:
+class GetGovernmentStatistics:
     """政府の統計データを取得します"""
 
     def __init__(self, logger: Logger):
@@ -35,7 +35,7 @@ class GetStatistics:
         self.APP_ID = os.environ.get("first_appid_of_estat")
         # 統計表ID
         self.STATS_DATA_ID = ""
-        # 統計表IDの選択肢
+        # 統計表IDの一覧
         self.STATS_DATA_IDS = [
             "0003443838",
             "0003443839",
@@ -102,7 +102,7 @@ class GetStatistics:
     def get_data_from_api(self) -> DataFrame:
         """APIからデータを取得します"""
 
-        def with_xml(self: GetStatistics, response: Response) -> DataFrame:
+        def with_xml(self: GetGovernmentStatistics, response: Response) -> DataFrame:
             """XMLでデータを取得します"""
             try:
                 result = False
@@ -150,7 +150,7 @@ class GetStatistics:
                     raise
                 return df
 
-        def with_json(self: GetStatistics, response: Response) -> DataFrame:
+        def with_json(self: GetGovernmentStatistics, response: Response) -> DataFrame:
             """JSONでデータを取得します"""
             try:
                 result = False
@@ -211,7 +211,7 @@ class GetStatistics:
                     raise
                 return df
 
-        def with_csv(self: GetStatistics, response: Response) -> DataFrame:
+        def with_csv(self: GetGovernmentStatistics, response: Response) -> DataFrame:
             """CSVでデータを取得します"""
             try:
                 result = False
@@ -267,7 +267,7 @@ class GetStatistics:
                     raise
                 return df
 
-        def handle_data_type(self: GetStatistics, response: Response) -> DataFrame:
+        def handle_data_type(self: GetGovernmentStatistics, response: Response) -> DataFrame:
             """データタイプで条件分岐させます"""
             try:
                 result = False
