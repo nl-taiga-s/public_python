@@ -40,13 +40,13 @@ class GFL_With_Cui:
             raise
         return folder_path_of_pdf_as_str_type
 
-    def input_pattern(self) -> str:
-        """検索パターンを入力します"""
+    def input_keyword(self, msg: str) -> str:
+        """キーワードを入力します"""
         while True:
             try:
                 result = False
                 cancel = False
-                pattern = input("ファイルの検索パターンを入力してください。: ").strip()
+                pattern = input(f"{msg}: ").strip()
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
@@ -120,7 +120,7 @@ def main() -> bool:
             obj_of_cls.bool_of_r = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
             if not obj_of_cls.search_recursively():
                 raise
-            obj_of_cls.pattern = obj_with_cui.input_pattern()
+            obj_of_cls.pattern = obj_with_cui.input_keyword("ファイルの検索パターンを入力してください。")
             if not obj_of_cls.extract_by_pattern():
                 raise
         except Exception as e:
