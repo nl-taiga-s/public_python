@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -109,6 +110,34 @@ class GS_With_Cui:
                 raise
             return list_of_kw
 
+    def input_stats_data_id(self) -> str:
+        """統計表IDを入力します"""
+        while True:
+            try:
+                result = False
+                cancel = False
+                id = input("統計表IDを入力してください。: ").strip()
+                if id == "":
+                    raise Exception("統計表IDが未入力です。")
+                if not id.isdecimal():
+                    raise Exception("数字を入力してください。")
+                # 桁
+                DIGIT = 10
+                if len(id) != DIGIT:
+                    raise Exception(f"{DIGIT}桁で入力してください。")
+            except Exception as e:
+                print(f"error: \n{str(e)}")
+            except KeyboardInterrupt:
+                cancel = True
+            else:
+                result = True
+            finally:
+                if cancel or result:
+                    break
+        if cancel:
+            raise
+        return id
+
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         while True:
@@ -139,7 +168,7 @@ class GS_With_Cui:
         return result
 
 
-def main() -> bool:
+async def main() -> bool:
     """主要関数"""
     try:
         result = False
@@ -163,12 +192,29 @@ def main() -> bool:
         try:
             result = False
             cancel = False
-            df = None
-            filtered_df = None
             obj_with_cui = GS_With_Cui()
             obj_of_cls = GetGovernmentStatistics(obj_of_lt.logger)
-            obj_of_cls.STATS_DATA_ID = obj_with_cui.select_target(obj_of_cls.STATS_DATA_IDS)
             obj_of_cls.lst_of_data_type = obj_with_cui.select_target(obj_with_cui.dct_of_data_type)
+            async for page in obj_of_cls.get_stats_data_ids():
+                for stat_id, info in page.items():
+                    match obj_of_cls.lst_of_data_type[obj_of_cls.KEY]:
+                        case "xml":
+                            stat_name = info.get("stat_name", "")
+                            title = info.get("title", "")
+                            obj_of_cls.log.info(f"{stat_id}, {stat_name}, {title}")
+                        case "json":
+                            statistics_name = info.get("statistics_name", "")
+                            title = info.get("title", "")
+                            obj_of_cls.log.info(f"{stat_id}, {statistics_name}, {title}")
+                        case "csv":
+                            stat_name = info.get("stat_name", "")
+                            category = info.get("category", "")
+                            obj_of_cls.log.info(f"{stat_id}, {stat_name}, {category}")
+                        case _:
+                            raise Exception("データタイプが対応していません。")
+            df = None
+            filtered_df = None
+            obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df = obj_of_cls.get_data_from_api()
             obj_of_cls.lst_of_match = obj_with_cui.select_target(obj_with_cui.dct_of_match)
             obj_of_cls.lst_of_keyword = obj_with_cui.input_list_of_keyword("抽出するキーワードを入力してください。")
@@ -197,4 +243,4 @@ def main() -> bool:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
