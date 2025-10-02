@@ -7,7 +7,7 @@ from source.get_nhk_news.gn2_class import GetNHKNews
 class GN2_With_Cui:
     def __init__(self):
         """初期化します"""
-        self.dct_of_bool: dict = {
+        self.dct_of_choices: dict = {
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
@@ -50,11 +50,11 @@ class GN2_With_Cui:
         error: bool = False
         while True:
             try:
-                str_of_bool: bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
-                match str_of_bool:
-                    case var if var in self.dct_of_bool["yes"]:
+                str_of_choice: bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
+                match str_of_choice:
+                    case var if var in self.dct_of_choices["yes"]:
                         result = True
-                    case var if var in self.dct_of_bool["no"]:
+                    case var if var in self.dct_of_choices["no"]:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
