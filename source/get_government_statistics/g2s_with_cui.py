@@ -227,7 +227,7 @@ async def main() -> bool:
             if not obj_of_cls.show_data(filtered_df):
                 raise
         except Exception as e:
-            print(f"***処理が失敗しました。\n{repr(e)}***")
+            print(f"***処理が失敗しました。: \n{repr(e)}***")
         except KeyboardInterrupt:
             cancel = True
         else:
