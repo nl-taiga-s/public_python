@@ -33,7 +33,7 @@ class GS_With_Cui:
 
     def select_element(self, elements: Any) -> list:
         """要素を選択します"""
-        flag: bool = False
+        result: bool = False
         cancel: bool = False
         lst: list = []
         while True:
@@ -63,9 +63,9 @@ class GS_With_Cui:
             except KeyboardInterrupt:
                 cancel = True
             else:
-                flag = True
+                result = True
             finally:
-                if cancel or flag:
+                if cancel or result:
                     break
         if cancel:
             raise
@@ -73,7 +73,7 @@ class GS_With_Cui:
 
     def input_text(self, msg: str) -> str:
         """文字列を入力します"""
-        flag: bool = False
+        result: bool = False
         cancel: bool = False
         while True:
             try:
@@ -83,9 +83,9 @@ class GS_With_Cui:
             except KeyboardInterrupt:
                 cancel = True
             else:
-                flag = True
+                result = True
             finally:
-                if cancel or flag:
+                if cancel or result:
                     break
         if cancel:
             raise
@@ -118,7 +118,7 @@ class GS_With_Cui:
 
     def input_stats_data_id(self) -> str:
         """統計表IDを入力します"""
-        flag: bool = False
+        result: bool = False
         cancel: bool = False
         # 桁
         DIGIT: int = 10
@@ -136,9 +136,9 @@ class GS_With_Cui:
             except KeyboardInterrupt:
                 cancel = True
             else:
-                flag = True
+                result = True
             finally:
-                if cancel or flag:
+                if cancel or result:
                     break
         if cancel:
             raise
@@ -146,14 +146,14 @@ class GS_With_Cui:
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
-        flag: bool = False
+        result: bool = False
         cancel: bool = False
         while True:
             try:
                 text: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match text:
                     case var if var in self.dct_of_bool["yes"]:
-                        flag = True
+                        result = True
                     case var if var in self.dct_of_bool["no"]:
                         continue
                     case _:
@@ -163,24 +163,24 @@ class GS_With_Cui:
             except KeyboardInterrupt:
                 cancel = True
             else:
-                flag = True
+                pass
             finally:
-                if flag or cancel:
+                if cancel or result:
                     break
         if cancel:
             raise
-        return flag
+        return result
 
 
 async def main() -> bool:
     """主要関数"""
-    flag: bool = False
+    result: bool = False
     try:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
-        file_of_exe_as_path_type: Path = Path(__file__)
-        file_of_log_as_path_type = obj_of_pt.get_file_path_of_log(file_of_exe_as_path_type)
-        obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+        file_of_exe_p: Path = Path(__file__)
+        file_of_log_p: Path = obj_of_pt.get_file_path_of_log(file_of_exe_p)
+        obj_of_lt.file_path_of_log = str(file_of_log_p)
         if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
             raise
         if not obj_of_lt.setup_stream_handler():
@@ -188,11 +188,11 @@ async def main() -> bool:
     except Exception as e:
         print(f"error: \n{repr(e)}")
     else:
-        flag = True
+        result = True
     finally:
-        if not flag:
-            return flag
-    flag = False
+        if not result:
+            return result
+    result = False
     cancel: bool = False
     while True:
         try:
@@ -231,7 +231,7 @@ async def main() -> bool:
         except KeyboardInterrupt:
             cancel = True
         else:
-            flag = True
+            result = True
             print("***処理が成功しました。***")
         finally:
             if cancel:
@@ -240,7 +240,7 @@ async def main() -> bool:
                 break
             else:
                 continue
-    return flag
+    return result
 
 
 if __name__ == "__main__":
