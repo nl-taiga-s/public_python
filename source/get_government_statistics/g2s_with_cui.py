@@ -11,7 +11,7 @@ from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 class GS_With_Cui:
     def __init__(self):
         """初期化します"""
-        self.dct_of_bool: dict = {
+        self.dct_of_choices: dict = {
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
@@ -152,9 +152,9 @@ class GS_With_Cui:
             try:
                 text: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match text:
-                    case var if var in self.dct_of_bool["yes"]:
+                    case var if var in self.dct_of_choices["yes"]:
                         result = True
-                    case var if var in self.dct_of_bool["no"]:
+                    case var if var in self.dct_of_choices["no"]:
                         continue
                     case _:
                         raise Exception("無効な入力です。")
