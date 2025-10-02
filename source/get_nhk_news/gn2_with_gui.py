@@ -2,6 +2,7 @@ import platform
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -26,11 +27,11 @@ class MainApp_Of_GN2(QWidget):
     def __init__(self):
         """初期化します"""
         super().__init__()
-        self.obj_of_lt = LogTools()
-        self.obj_of_cls = GetNHKNews(self.obj_of_lt.logger)
+        self.obj_of_lt: LogTools = LogTools()
+        self.obj_of_cls: GetNHKNews = GetNHKNews(self.obj_of_lt.logger)
         self.setup_ui()
-        self.obj_of_pft = PlatformTools()
-        self.obj_of_pt = PathTools()
+        self.obj_of_pt: PathTools = PathTools()
+        self.obj_of_pft: PlatformTools = PlatformTools()
         self.setup_log()
 
     def closeEvent(self, event):
@@ -53,19 +54,20 @@ class MainApp_Of_GN2(QWidget):
 
     def setup_log(self) -> bool:
         """ログを設定する"""
+        result: bool = False
+        exe_path: Path = None
         try:
-            result = False
             # exe化されている場合とそれ以外を切り分ける
             if getattr(sys, "frozen", False):
                 exe_path = Path(sys.executable)
             else:
                 exe_path = Path(__file__)
-            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-            self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            self.obj_of_lt.file_path_of_log = str(file_of_log_p)
             if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
                 raise
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -73,30 +75,30 @@ class MainApp_Of_GN2(QWidget):
 
     def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
+        result: bool = False
         try:
-            result = False
             # タイトル
             self.setWindowTitle("NHKニュース表示アプリ")
             # ウィジェット
-            layout = QVBoxLayout()
-            genre_layout = QHBoxLayout()
-            genre_label = QLabel("ジャンル:")
-            self.genre_combo = QComboBox()
-            self.fetch_button = QPushButton("ニュースを取得")
-            self.news_list = QListWidget()
+            layout: QVBoxLayout = QVBoxLayout()
+            genre_layout: QHBoxLayout = QHBoxLayout()
+            genre_label: QLabel = QLabel("ジャンル:")
+            self.genre_combo: QComboBox = QComboBox()
+            self.fetch_button: QPushButton = QPushButton("ニュースを取得")
+            self.news_lst: QListWidget = QListWidget()
             # レイアウト
             self.genre_combo.addItems(self.obj_of_cls.rss_feeds.keys())
             genre_layout.addWidget(genre_label)
             genre_layout.addWidget(self.genre_combo)
             layout.addLayout(genre_layout)
             layout.addWidget(self.fetch_button)
-            layout.addWidget(self.news_list)
+            layout.addWidget(self.news_lst)
             self.setLayout(layout)
             # シグナル接続
             self.fetch_button.clicked.connect(self.fetch_news)
-            self.news_list.itemClicked.connect(self.open_news_link)
+            self.news_lst.itemClicked.connect(self.open_news_link)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -104,11 +106,11 @@ class MainApp_Of_GN2(QWidget):
 
     def fetch_news(self) -> bool:
         """ニュースを取りに行く"""
-        self.news_list.clear()
-        genre_key = self.genre_combo.currentText()
+        result: bool = False
         try:
-            result = False
-            genre_index = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
+            self.news_lst.clear()
+            genre_key: str = self.genre_combo.currentText()
+            genre_index: int = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
             if not self.obj_of_cls.parse_rss(genre_index, genre_key):
                 raise
             if not self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN):
@@ -116,22 +118,22 @@ class MainApp_Of_GN2(QWidget):
             if not self.obj_of_cls.extract_news_of_today_from_standard_time():
                 raise
             for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
-                title = news.title
-                summary = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
+                title: str = news.title
+                summary: str = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
                 # QListWidgetItem + カスタムWidgetのセット
-                item = QListWidgetItem()
-                widget = NewsItem_Of_GN2(title, summary)
+                item: QListWidgetItem = QListWidgetItem()
+                widget: NewsItem_Of_GN2 = NewsItem_Of_GN2(title, summary)
                 # アイテムにURL情報をセット
                 item.setData(Qt.UserRole, news.link)
                 item.setSizeHint(widget.sizeHint())
-                self.news_list.addItem(item)
-                self.news_list.setItemWidget(item, widget)
+                self.news_lst.addItem(item)
+                self.news_lst.setItemWidget(item, widget)
             if not self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW):
                 raise
             if not self.obj_of_cls.today_news:
                 raise Exception("今日のニュースはまだありません。")
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -139,11 +141,11 @@ class MainApp_Of_GN2(QWidget):
 
     def open_news_link(self, item: QListWidgetItem) -> bool:
         """ニュースのリンクを開きます"""
-        POWERSHELL_OF_WSL = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-        POWERSHELL_OF_WINDOWS = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+        result: bool = False
+        POWERSHELL_OF_WSL: str = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+        POWERSHELL_OF_WINDOWS: str = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         try:
-            result = False
-            url = item.data(Qt.UserRole)
+            url: Any = item.data(Qt.UserRole)
             if not url:
                 raise Exception
             if platform.system().lower() == "windows":
@@ -151,7 +153,7 @@ class MainApp_Of_GN2(QWidget):
             elif self.obj_of_pft.is_wsl():
                 subprocess.run([POWERSHELL_OF_WSL, "Start-Process", url], check=True)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -166,22 +168,22 @@ class NewsItem_Of_GN2(QWidget):
 
     def setup_ui(self, title: str, summary: str) -> bool:
         """User Interfaceを設定します"""
+        result: bool = False
         try:
-            result = False
             # ウィジェット
-            self.title_label = QLabel(title)
+            self.title_label: QLabel = QLabel(title)
             self.title_label.setStyleSheet("font-weight: bold; font-size: 18px;")
-            self.summary_label = QLabel(summary)
+            self.summary_label: QLabel = QLabel(summary)
             self.summary_label.setStyleSheet("color: gray; font-size: 16px;")
             self.summary_label.setWordWrap(True)
             # レイアウト
-            layout = QVBoxLayout()
+            layout: QVBoxLayout = QVBoxLayout()
             layout.addWidget(self.title_label)
             layout.addWidget(self.summary_label)
             layout.setContentsMargins(5, 5, 5, 5)
             self.setLayout(layout)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -190,21 +192,21 @@ class NewsItem_Of_GN2(QWidget):
 
 def main() -> bool:
     """主要関数"""
+    result = False
     try:
-        result = False
-        obj_of_gt = GUITools()
-        app = QApplication(sys.argv)
+        obj_of_gt: GUITools = GUITools()
+        app: QApplication = QApplication(sys.argv)
         # アプリ単位でフォントを設定する
-        font = QFont()
+        font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window = MainApp_Of_GN2()
+        window: MainApp_Of_GN2 = MainApp_Of_GN2()
         window.resize(1000, 800)
         # 最大化して、表示させる
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt.show_error(f"error: \n{repr(e)}")
     else:
         result = True
     finally:
