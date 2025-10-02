@@ -60,12 +60,12 @@ class GetGovernmentStatistics:
         async def fetch_page(client: AsyncClient, url: str, params: dict, parser: Callable[[Response], tuple[dict, int]]) -> tuple[dict, int]:
             """1ページ分を取得します"""
             flag_of_error: bool = False
-            page_dict: dict = {}
+            page_dct: dict = {}
             count: int = 0
             try:
                 res: Response = await client.get(url, params=params)
                 res.raise_for_status()
-                page_dict, count = parser(res)
+                page_dct, count = parser(res)
             except Exception as e:
                 flag_of_error = True
                 tb: str = traceback.format_exc()
@@ -75,7 +75,7 @@ class GetGovernmentStatistics:
             finally:
                 if flag_of_error:
                     raise
-                return page_dict, count
+                return page_dct, count
 
         async def fetch_all_pages(
             url: str,
@@ -85,7 +85,7 @@ class GetGovernmentStatistics:
         ) -> AsyncGenerator[dict]:
             """共通処理でページごとに取得します"""
             flag_of_error: bool = False
-            page_dict: dict = {}
+            page_dct: dict = {}
             count: int = 0
             # タイムアウト時間を設定する
             async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
@@ -108,9 +108,9 @@ class GetGovernmentStatistics:
                                 tb: str = traceback.format_exc()
                                 self.log.error(f"タスクで例外発生: \n{repr(res)}\n{tb}")
                                 continue
-                            page_dict, count = res
+                            page_dct, count = res
                             if count > 0:
-                                yield page_dict
+                                yield page_dct
                                 stop = False
                         if stop:
                             break
@@ -127,17 +127,17 @@ class GetGovernmentStatistics:
         def parser_xml(res: Response) -> tuple[dict, int]:
             """XMLのデータを解析します"""
             flag_of_error: bool = False
-            page_dict: dict = {}
+            page_dct: dict = {}
             try:
                 root: Element[str] = et.fromstring(res.text)
-                table_list: list[Element[str]] = root.findall(".//TABLE_INF")
-                for t in table_list:
+                table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
+                for t in table_lst:
                     stat_id: str = t.attrib.get("id", "")
                     element_of_stat_name: Element[str] = t.find("STAT_NAME")
                     stat_name: str = element_of_stat_name.text
                     stat_code: str = element_of_stat_name.attrib.get("code")
                     title: str = t.find("TITLE").text
-                    page_dict[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
+                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
                 flag_of_error = True
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{repr(e)}")
@@ -148,25 +148,24 @@ class GetGovernmentStatistics:
                 pyperclip.copy(res.text)
                 if flag_of_error:
                     raise
-                return page_dict, len(table_list)
+                return page_dct, len(table_lst)
 
         def parser_json(res: Response) -> tuple[dict, int]:
             """JSONのデータを解析します"""
             flag_of_error: bool = False
-            page_dict: dict = {}
+            page_dct: dict = {}
             try:
                 data: Any = res.json()
-                table_list: Any = data["GET_STATS_LIST"]["DATALIST_INF"]["TABLE_INF"]
-                if isinstance(table_list, dict):
-                    table_list = [table_list]
-                for t in table_list:
+                table_data: Any = data["GET_STATS_LIST"]["DATALIST_INF"]["TABLE_INF"]
+                table_lst = [table_data] if isinstance(table_data, dict) else table_data
+                for t in table_lst:
                     stat_id: str = t.get("@id", "")
                     element_of_stat_name: Element[str] = t.get("STAT_NAME", {})
                     stat_name: str = element_of_stat_name.get("$", "")
                     stat_code: str = element_of_stat_name.get("@code", "")
                     statistics_name: str = t.get("STATISTICS_NAME", {})
                     title: str = t.get("TITLE", {})
-                    page_dict[stat_id] = {
+                    page_dct[stat_id] = {
                         "stat_name": stat_name,
                         "stat_code": stat_code,
                         "statistics_name": statistics_name,
@@ -182,12 +181,12 @@ class GetGovernmentStatistics:
                 pyperclip.copy(json.dumps(data, indent=4, ensure_ascii=False))
                 if flag_of_error:
                     raise
-                return page_dict, len(table_list)
+                return page_dct, len(table_lst)
 
         def parser_csv(res: Response) -> tuple[dict, int]:
             """CSVのデータを解析します"""
             flag_of_error: bool = False
-            page_dict: dict = {}
+            page_dct: dict = {}
             row_count: int = 0
             try:
                 res.encoding = "utf-8"
@@ -198,7 +197,7 @@ class GetGovernmentStatistics:
                     stat_name: str = row.get("STAT_NAME", "")
                     stat_code: str = row.get("STAT_CODE", "")
                     category: str = row.get("TABULATION_SUB_CATEGORY3", "")
-                    page_dict[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
+                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
             except Exception as e:
                 flag_of_error = True
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{repr(e)}")
@@ -209,7 +208,7 @@ class GetGovernmentStatistics:
                 pyperclip.copy(res.text)
                 if flag_of_error:
                     raise
-                return page_dict, row_count
+                return page_dct, row_count
 
         flag_of_error: bool = False
         URL: str = ""

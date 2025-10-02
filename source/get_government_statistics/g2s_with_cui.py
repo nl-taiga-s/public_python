@@ -91,17 +91,17 @@ class GS_With_Cui:
             raise
         return text
 
-    def input_list_of_text(self, msg: str) -> list:
+    def input_lst_of_text(self, msg: str) -> list:
         """複数の文字列を入力します"""
         cancel: bool = False
-        list_of_txt: list = []
+        lst_of_txt: list = []
         try:
             while True:
                 text: str = self.input_text(msg)
-                list_of_txt.append(text)
+                lst_of_txt.append(text)
                 keep: bool = self.input_bool("入力する文字列は、まだありますか？")
                 if not keep:
-                    if list_of_txt:
+                    if lst_of_txt:
                         break
                     else:
                         print("文字列が何も入力されていません。")
@@ -114,7 +114,7 @@ class GS_With_Cui:
         finally:
             if cancel:
                 raise
-            return list_of_txt
+            return lst_of_txt
 
     def input_stats_data_id(self) -> str:
         """統計表IDを入力します"""
@@ -219,7 +219,7 @@ async def main() -> bool:
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
             obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_with_cui.dct_of_match)
-            obj_of_cls.lst_of_keyword = obj_with_cui.input_list_of_keyword("抽出するキーワードを入力してください。")
+            obj_of_cls.lst_of_keyword = obj_with_cui.input_lst_of_text("抽出するキーワードを入力してください。")
             if len(obj_of_cls.lst_of_keyword) > 1:
                 obj_of_cls.lst_of_logic = obj_with_cui.select_element(obj_with_cui.dct_of_logic)
             filtered_df: DataFrame = obj_of_cls.filter_data(df)
