@@ -25,8 +25,8 @@ class GetFileList:
 
     def search_recursively(self) -> bool:
         """再帰的に検索します"""
+        result: bool = False
         try:
-            result: bool = False
             RECURSIVE: str = "**" if self.recursive else "*"
             search_folder_p: Path = Path(self.folder_path) / RECURSIVE
             search_folder_s: str = str(search_folder_p)
@@ -50,8 +50,8 @@ class GetFileList:
 
     def extract_by_pattern(self) -> bool:
         """検索パターンで抽出します"""
+        result: bool = False
         try:
-            result: bool = False
             self.log.info(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.lst_file_after = [f for f in self.lst_file_before if self.pattern in f]
             if not self.lst_file_after:
