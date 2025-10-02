@@ -16,10 +16,10 @@ from source.get_file_list.gfl_class import GetFileList
 class QTextEditHandler(logging.Handler):
     def __init__(self, widget: QTextEdit):
         super().__init__()
-        self.widget = widget
+        self.widget: QTextEdit = widget
 
     def emit(self, record: logging.LogRecord):
-        msg = self.format(record)
+        msg: str = self.format(record)
         self.widget.append(msg)
 
 
@@ -27,11 +27,11 @@ class MainApp_Of_GFL(QWidget):
     def __init__(self):
         """初期化します"""
         super().__init__()
-        self.obj_of_lt = LogTools()
-        self.obj_of_cls = GetFileList(self.obj_of_lt.logger)
+        self.obj_of_lt: LogTools = LogTools()
+        self.obj_of_cls: GetFileList = GetFileList(self.obj_of_lt.logger)
         self.setup_ui()
-        self.obj_of_pt = PathTools()
-        self.obj_of_pft = PlatformTools()
+        self.obj_of_pt: PathTools = PathTools()
+        self.obj_of_pft: PlatformTools = PlatformTools()
         self.setup_log()
 
     def closeEvent(self, event):
@@ -54,18 +54,19 @@ class MainApp_Of_GFL(QWidget):
 
     def setup_log(self) -> bool:
         """ログを設定する"""
+        result: bool = False
+        exe_path: Path = None
         try:
-            result = False
             # exe化されている場合とそれ以外を切り分ける
             if getattr(sys, "frozen", False):
                 exe_path = Path(sys.executable)
             else:
                 exe_path = Path(__file__)
-            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-            self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
+            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            self.obj_of_lt.file_path_of_log = str(file_of_log_p)
             if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
                 raise
-            text_handler = QTextEditHandler(self.log_area)
+            text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
@@ -77,21 +78,21 @@ class MainApp_Of_GFL(QWidget):
 
     def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
+        result: bool = False
         try:
-            result = False
             # タイトル
             self.setWindowTitle("ファイル検索アプリ")
             # ウィジェット
-            self.folder_label = QLabel("フォルダが未選択")
-            select_folder_btn = QPushButton("フォルダを選択")
-            self.recursive_checkbox = QCheckBox("サブフォルダも含めて検索（再帰）")
-            self.pattern_input = QLineEdit()
+            self.folder_label: QLabel = QLabel("フォルダが未選択")
+            select_folder_btn: QPushButton = QPushButton("フォルダを選択")
+            self.recursive_checkbox: QCheckBox = QCheckBox("サブフォルダも含めて検索（再帰）")
+            self.pattern_input: QLineEdit = QLineEdit()
             self.pattern_input.setPlaceholderText("検索パターンを入力...")
-            open_folder_btn = QPushButton("フォルダを開く")
-            search_btn = QPushButton("検索実行")
-            self.log_area = QTextEdit()
+            open_folder_btn: QPushButton = QPushButton("フォルダを開く")
+            search_btn: QPushButton = QPushButton("検索実行")
+            self.log_area: QTextEdit = QTextEdit()
             # レイアウト
-            layout = QVBoxLayout()
+            layout: QVBoxLayout = QVBoxLayout()
             layout.addWidget(self.folder_label)
             layout.addWidget(select_folder_btn)
             layout.addWidget(self.recursive_checkbox)
@@ -115,18 +116,18 @@ class MainApp_Of_GFL(QWidget):
 
     def select_folder(self, reload: bool) -> bool:
         """フォルダを選択します"""
+        result: bool = False
         try:
-            result = False
             if reload:
                 if not self.obj_of_cls.folder_path.strip():
                     raise Exception("フォルダを選択してください。")
             else:
                 self.obj_of_cls.folder_path = QFileDialog.getExistingDirectory(self, "フォルダを選択")
-            folder_as_path_type = Path(self.obj_of_cls.folder_path).expanduser()
-            self.obj_of_cls.folder_path = str(folder_as_path_type)
+            folder_p: Path = Path(self.obj_of_cls.folder_path).expanduser()
+            self.obj_of_cls.folder_path = str(folder_p)
             if self.obj_of_cls.folder_path:
                 self.folder_label.setText(self.obj_of_cls.folder_path)
-                self.obj_of_cls.bool_of_r = self.recursive_checkbox.isChecked()
+                self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
                 self.obj_of_cls.search_recursively()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -137,16 +138,16 @@ class MainApp_Of_GFL(QWidget):
 
     def open_explorer(self) -> bool:
         """エクスプローラーを開きます"""
-        EXPLORER = "/mnt/c/Windows/explorer.exe"
+        result: bool = False
+        EXPLORER: str = "/mnt/c/Windows/explorer.exe"
         try:
-            result = False
             if not self.obj_of_cls.folder_path:
                 raise Exception("フォルダを選択してください。")
             if platform.system().lower() == "windows":
                 os.startfile(self.obj_of_cls.folder_path)
             elif self.obj_of_pft.is_wsl():
                 # Windowsのパスに変換（/mnt/c/... 形式）
-                wsl_path = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
+                wsl_path: str = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER, wsl_path])
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -157,8 +158,8 @@ class MainApp_Of_GFL(QWidget):
 
     def search_files(self) -> bool:
         """ファイルを検索します"""
+        result: bool = False
         try:
-            result = False
             if not self.obj_of_cls.folder_path:
                 raise Exception("フォルダを選択してください。")
             # 再読み込み
@@ -175,21 +176,21 @@ class MainApp_Of_GFL(QWidget):
 
 def main() -> bool:
     """主要関数"""
+    result: bool = False
     try:
-        result = False
-        obj_of_gt = GUITools()
-        app = QApplication(sys.argv)
+        obj_of_gt: GUITools = GUITools()
+        app: QApplication = QApplication(sys.argv)
         # アプリ単位でフォントを設定する
-        font = QFont()
+        font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window = MainApp_Of_GFL()
+        window: MainApp_Of_GFL = MainApp_Of_GFL()
         window.resize(1000, 800)
         # 最大化して、表示させる
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt.show_error(f"error: \n{repr(e)}")
     else:
         result = True
     finally:
