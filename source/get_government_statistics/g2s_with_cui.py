@@ -11,7 +11,7 @@ from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 class GS_With_Cui:
     def __init__(self):
         """初期化します"""
-        self.dct_of_choices: dict = {
+        self.binary_choices: dict = {
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
@@ -75,9 +75,10 @@ class GS_With_Cui:
         """文字列を入力します"""
         result: bool = False
         cancel: bool = False
+        text: str = ""
         while True:
             try:
-                text: str = input(f"{msg}: ").strip()
+                text = input(f"{msg}: ").strip()
             except Exception as e:
                 print(f"error: \n{repr(e)}")
             except KeyboardInterrupt:
@@ -93,15 +94,16 @@ class GS_With_Cui:
 
     def input_lst_of_text(self, msg: str) -> list:
         """複数の文字列を入力します"""
+        result: bool = False
         cancel: bool = False
-        lst_of_txt: list = []
+        lst: list = []
         try:
             while True:
                 text: str = self.input_text(msg)
-                lst_of_txt.append(text)
+                lst.append(text)
                 keep: bool = self.input_bool("入力する文字列は、まだありますか？")
                 if not keep:
-                    if lst_of_txt:
+                    if lst:
                         break
                     else:
                         print("文字列が何も入力されていません。")
@@ -110,21 +112,23 @@ class GS_With_Cui:
         except KeyboardInterrupt:
             cancel = True
         else:
-            pass
+            result = True
         finally:
             if cancel:
                 raise
-            return lst_of_txt
+            if result:
+                return lst
 
     def input_stats_data_id(self) -> str:
         """統計表IDを入力します"""
         result: bool = False
         cancel: bool = False
+        text: str = ""
         # 桁
         DIGIT: int = 10
         while True:
             try:
-                text: str = input("統計表IDを入力してください。: ").strip()
+                text = input("統計表IDを入力してください。: ").strip()
                 if text == "":
                     raise Exception("統計表IDが未入力です。")
                 if not text.isdecimal():
@@ -152,9 +156,9 @@ class GS_With_Cui:
             try:
                 text: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
                 match text:
-                    case var if var in self.dct_of_choices["yes"]:
+                    case var if var in self.binary_choices["yes"]:
                         result = True
-                    case var if var in self.dct_of_choices["no"]:
+                    case var if var in self.binary_choices["no"]:
                         continue
                     case _:
                         raise Exception("無効な入力です。")
@@ -174,6 +178,7 @@ class GS_With_Cui:
 
 async def main() -> bool:
     """主要関数"""
+    # ログを設定する
     result: bool = False
     try:
         obj_of_pt: PathTools = PathTools()
@@ -187,12 +192,13 @@ async def main() -> bool:
             raise
     except Exception as e:
         print(f"error: \n{repr(e)}")
+        return result
     else:
-        result = True
+        pass
     finally:
-        if not result:
-            return result
-    result = False
+        pass
+    # 処理の本体部分
+    result: bool = False
     cancel: bool = False
     while True:
         try:

@@ -59,23 +59,18 @@ class GetGovernmentStatistics:
 
         async def fetch_page(client: AsyncClient, url: str, params: dict, parser: Callable[[Response], tuple[dict, int]]) -> tuple[dict, int]:
             """1ページ分を取得します"""
-            error: bool = False
-            page_dct: dict = {}
-            count: int = 0
             try:
                 res: Response = await client.get(url, params=params)
                 res.raise_for_status()
                 page_dct, count = parser(res)
             except Exception as e:
-                error = True
                 tb: str = traceback.format_exc()
                 self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{repr(e)}\n{tb}")
+                raise
             else:
-                pass
-            finally:
-                if error:
-                    raise
                 return page_dct, count
+            finally:
+                pass
 
         async def fetch_all_pages(
             url: str,
@@ -84,14 +79,10 @@ class GetGovernmentStatistics:
             concurrency: int = 5,  # 非同期で処理する並列数
         ) -> AsyncGenerator[dict]:
             """共通処理でページごとに取得します"""
-            error: bool = False
-            page_dct: dict = {}
-            count: int = 0
             # タイムアウト時間を設定する
             async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
                 start: int = 1
                 while True:
-                    stop: bool = True
                     try:
                         tasks: list[CoroutineType] = [
                             fetch_page(
@@ -103,6 +94,7 @@ class GetGovernmentStatistics:
                             for i in range(concurrency)
                         ]
                         results: list = await asyncio.gather(*tasks, return_exceptions=True)
+                        stop: bool = True
                         for res in results:
                             if isinstance(res, Exception):
                                 tb: str = traceback.format_exc()
@@ -115,18 +107,14 @@ class GetGovernmentStatistics:
                         if stop:
                             break
                     except Exception as e:
-                        error = True
                         self.log.error(f"***{fetch_all_pages.__doc__} => 失敗しました。***: \n{repr(e)}")
                     else:
                         pass
                     finally:
-                        if error:
-                            raise
                         start += page_limit * concurrency
 
         def parser_xml(res: Response) -> tuple[dict, int]:
             """XMLのデータを解析します"""
-            error: bool = False
             page_dct: dict = {}
             try:
                 root: Element[str] = et.fromstring(res.text)
@@ -139,20 +127,16 @@ class GetGovernmentStatistics:
                     title: str = t.find("TITLE").text
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
-                error = True
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return page_dct, len(table_lst)
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(res.text)
-                if error:
-                    raise
-                return page_dct, len(table_lst)
 
         def parser_json(res: Response) -> tuple[dict, int]:
             """JSONのデータを解析します"""
-            error: bool = False
             page_dct: dict = {}
             try:
                 data: Any = res.json()
@@ -172,20 +156,16 @@ class GetGovernmentStatistics:
                         "title": title,
                     }
             except Exception as e:
-                error = True
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return page_dct, len(table_lst)
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(json.dumps(data, indent=4, ensure_ascii=False))
-                if error:
-                    raise
-                return page_dct, len(table_lst)
 
         def parser_csv(res: Response) -> tuple[dict, int]:
             """CSVのデータを解析します"""
-            error: bool = False
             page_dct: dict = {}
             row_count: int = 0
             try:
@@ -199,20 +179,15 @@ class GetGovernmentStatistics:
                     category: str = row.get("TABULATION_SUB_CATEGORY3", "")
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
             except Exception as e:
-                error = True
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return page_dct, row_count
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(res.text)
-                if error:
-                    raise
-                return page_dct, row_count
 
-        error: bool = False
         URL: str = ""
-        dct: dict = {}
         try:
             # データタイプに応じてジェネレータを返す
             match self.lst_of_data_type[self.KEY]:
@@ -231,13 +206,12 @@ class GetGovernmentStatistics:
                 case _:
                     raise Exception("データタイプが対応していません。")
         except Exception as e:
-            error = True
             self.log.error(f"***{self.get_stats_data_ids.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             self.log.info(f"***{self.get_stats_data_ids.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
+            pass
 
     def get_data_from_api(self) -> DataFrame:
         """APIからデータを取得します"""
@@ -260,8 +234,6 @@ class GetGovernmentStatistics:
 
         def with_xml(client: Client) -> DataFrame:
             """XMLでデータを取得します"""
-            error: bool = False
-            df: DataFrame = None
             try:
                 self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsData"
                 # リクエストを送信する
@@ -286,7 +258,7 @@ class GetGovernmentStatistics:
                             row[key] = value
                     row["値"] = value.text.strip()
                     rows.append(row)
-                df = pd.DataFrame(rows)
+                df: DataFrame = pd.DataFrame(rows)
                 # --- 3. 列名をCLASS_OBJのname属性に置換 ---
                 id2name: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
@@ -299,21 +271,16 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                error = True
                 self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return df
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(res.text)
-                if error:
-                    raise
-                return df
 
         def with_json(client: Client) -> DataFrame:
             """JSONでデータを取得します"""
-            error: bool = False
-            df: DataFrame = None
             try:
                 self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsData"
                 # リクエストを送信する
@@ -360,26 +327,21 @@ class GetGovernmentStatistics:
                         else:
                             row[k] = val
                     translated_rows.append(row)
-                df = pd.DataFrame(translated_rows)
+                df: DataFrame = pd.DataFrame(translated_rows)
                 # --- 値列を数値型に変換 ---
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                error = True
                 self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return df
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
-                if error:
-                    raise
-                return df
 
         def with_csv(client: Client) -> DataFrame:
             """CSVでデータを取得します"""
-            error: bool = False
-            df: DataFrame = None
             try:
                 self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsData"
                 # リクエストを送信する
@@ -397,7 +359,7 @@ class GetGovernmentStatistics:
                 header_cols: str = [h.strip('"') for h in lines[value_idx + 1].split(',')]
                 # --- データ本体をそのまま読み込む ---
                 csv_body: str = "\n".join(lines[value_idx + 2 :])
-                df = pd.read_csv(StringIO(csv_body), header=None)
+                df: DataFrame = pd.read_csv(StringIO(csv_body), header=None)
                 df.columns = header_cols  # 英語+日本語ペア含めて13列のまま
                 # --- 列名置換 ---
                 rename_map: dict = {}
@@ -425,18 +387,14 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                error = True
                 self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{repr(e)}")
+                raise
             else:
-                pass
+                return df
             finally:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(res.text)
-                if error:
-                    raise
-                return df
 
-        error: bool = False
         df: DataFrame = None
         try:
             self.log.info(self.get_data_from_api.__doc__)
@@ -453,18 +411,16 @@ class GetGovernmentStatistics:
                     case _:
                         raise Exception("データタイプが対応していません。")
         except Exception as e:
-            error = True
             self.log.error(f"***{self.get_data_from_api.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             self.log.info(f"***{self.get_data_from_api.__doc__} => 成功しました。***")
-        finally:
-            if error:
-                raise
             return df
+        finally:
+            pass
 
     def filter_data(self, df: DataFrame) -> DataFrame:
         """データをフィルターにかけます"""
-        error: bool = False
         filtered_df: DataFrame = None
         try:
             self.log.info(self.filter_data.__doc__)
@@ -508,18 +464,16 @@ class GetGovernmentStatistics:
                 case _:
                     raise Exception("その検索方式はありません。")
         except Exception as e:
-            error = True
             self.log.error(f"***{self.filter_data.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             self.log.info(f"***{self.filter_data.__doc__} => 成功しました。***")
-        finally:
-            if error:
-                raise
             return filtered_df
+        finally:
+            pass
 
     def show_data(self, df: DataFrame) -> bool:
         """データを表示させます"""
-        error: bool = False
         result: bool = False
         try:
             self.log.info(self.show_data.__doc__)
@@ -538,12 +492,11 @@ class GetGovernmentStatistics:
             self.log.info(f"表示順: {self.order}")
             self.log.info(f"表示件数: {self.DATA_COUNT}")
         except Exception as e:
-            error = True
             self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.show_data.__doc__} => 成功しました。***")
-        finally:
-            if error:
-                raise
             return result
+        finally:
+            pass
