@@ -226,16 +226,16 @@ def main() -> bool:
     """主要関数"""
     result: bool = False
     try:
-        # LibreOfficeのコマンド
-        LIBRE_COMMAND: str = "soffice"
-        if not shutil.which(LIBRE_COMMAND):
-            raise ImportError("LibreOfficeをインストールしてください。: \nhttps://ja.libreoffice.org/")
         obj_of_gt: GUITools = GUITools()
         app: QApplication = QApplication(sys.argv)
         # アプリ単位でフォントを設定する
         font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
+        # エラーチェック
+        LIBRE_COMMAND: str = "soffice"
+        if not shutil.which(LIBRE_COMMAND):
+            raise ImportError("LibreOfficeをインストールしてください。: \nhttps://ja.libreoffice.org/")
         window: MainApp_Of_CLTP = MainApp_Of_CLTP()
         window.resize(1000, 800)
         # 最大化して、表示させる

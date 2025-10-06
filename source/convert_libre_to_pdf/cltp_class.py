@@ -86,7 +86,6 @@ class ConvertLibreToPDF:
             raise
         else:
             result = True
-            self.log.info(f"***{self.move_to_previous_file.__doc__} => 成功しました。***")
         finally:
             return result
 
@@ -104,7 +103,6 @@ class ConvertLibreToPDF:
             raise
         else:
             result = True
-            self.log.info(f"***{self.move_to_next_file.__doc__} => 成功しました。***")
         finally:
             return result
 

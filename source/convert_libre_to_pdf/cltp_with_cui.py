@@ -19,17 +19,17 @@ class CLTP_With_Cui:
         cancel: bool = False
         while True:
             try:
-                folder_path_from: str = input("ファイルを一括変換するフォルダを指定してください。: ").strip()
-                folder_path_to: str = input("一括変換したファイルを格納するフォルダを指定してください。: ").strip()
-                if folder_path_from == "" or folder_path_to == "":
+                folder_from_s: str = input("ファイルを一括変換するフォルダを指定してください。: ").strip()
+                folder_to_s: str = input("一括変換したファイルを格納するフォルダを指定してください。: ").strip()
+                if folder_from_s == "" or folder_to_s == "":
                     raise Exception("未入力です。")
-                folder_of_from_p: Path = Path(folder_path_from).expanduser()
-                folder_of_to_p: Path = Path(folder_path_to).expanduser()
-                folder_path_from = str(folder_of_from_p)
-                folder_path_to = str(folder_of_to_p)
-                if not folder_of_from_p.exists() or not folder_of_to_p.exists():
+                folder_from_p: Path = Path(folder_from_s).expanduser()
+                folder_to_p: Path = Path(folder_to_s).expanduser()
+                folder_from_s = str(folder_from_p)
+                folder_to_s = str(folder_to_p)
+                if not folder_from_p.exists() or not folder_to_p.exists():
                     raise Exception("存在しません。")
-                if not folder_of_from_p.is_dir() or not folder_of_to_p.is_dir():
+                if not folder_from_p.is_dir() or not folder_to_p.is_dir():
                     raise Exception("フォルダではありません。")
             except Exception as e:
                 print(f"error: \n{repr(e)}")
@@ -42,7 +42,7 @@ class CLTP_With_Cui:
                     break
         if cancel:
             raise
-        return [folder_path_from, folder_path_to]
+        return [folder_from_s, folder_to_s]
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
@@ -65,7 +65,7 @@ class CLTP_With_Cui:
             else:
                 pass
             finally:
-                if cancel:
+                if cancel or result:
                     break
         if cancel:
             raise
@@ -74,19 +74,7 @@ class CLTP_With_Cui:
 
 def main() -> bool:
     """主要関数"""
-    # LibreOfficeのコマンドが使用可能か確認する
     result: bool = False
-    try:
-        LIBRE_COMMAND: str = "soffice"
-        if not shutil.which(LIBRE_COMMAND):
-            raise ImportError("LibreOfficeをインストールしてください。: \nhttps://ja.libreoffice.org/")
-    except ImportError as e:
-        print(f"error: \n{repr(e)}")
-        return result
-    else:
-        pass
-    finally:
-        pass
     # ログを設定する
     try:
         obj_of_pt: PathTools = PathTools()
@@ -105,9 +93,23 @@ def main() -> bool:
         pass
     finally:
         pass
+    # エラーチェック
+    try:
+        LIBRE_COMMAND: str = "soffice"
+        if not shutil.which(LIBRE_COMMAND):
+            raise ImportError("LibreOfficeをインストールしてください。: \nhttps://ja.libreoffice.org/")
+    except ImportError as e:
+        print(f"error: \n{repr(e)}")
+        return result
+    else:
+        pass
+    finally:
+        pass
     # 処理の本体部分
     cancel: bool = False
     while True:
+        result = False
+        cancel = False
         try:
             obj_with_cui: CLTP_With_Cui = CLTP_With_Cui()
             obj_of_cls: ConvertLibreToPDF = ConvertLibreToPDF(obj_of_lt.logger)
