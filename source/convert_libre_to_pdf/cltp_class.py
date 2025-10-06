@@ -60,12 +60,12 @@ class ConvertLibreToPDF:
             self.number_of_f = len(self.filtered_lst_of_f)
             if self.number_of_f == 0:
                 raise Exception("変換元のファイルがありません。")
+            self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
             self.log.error(f"***{self.create_file_lst.__doc__} => 失敗しました。***: \n{repr(e)}")
             raise
         else:
             result = True
-            self.current_file_path_from = self.filtered_lst_of_f[self.p]
             self.log.info(f"***{self.create_file_lst.__doc__} => 成功しました。***")
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
             self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
@@ -83,6 +83,7 @@ class ConvertLibreToPDF:
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
             self.log.error(f"***{self.move_to_previous_file.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.move_to_previous_file.__doc__} => 成功しました。***")
@@ -100,6 +101,7 @@ class ConvertLibreToPDF:
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
             self.log.error(f"***{self.move_to_next_file.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.move_to_next_file.__doc__} => 成功しました。***")
@@ -135,6 +137,7 @@ class ConvertLibreToPDF:
                     raise Exception("一部のファイルの変換が失敗しました。")
         except Exception as e:
             self.log.error(f"error: \n{repr(e)}")
+            raise
         else:
             pass
         finally:
