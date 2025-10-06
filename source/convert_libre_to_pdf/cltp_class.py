@@ -34,10 +34,10 @@ class ConvertLibreToPDF:
         self.filtered_lst_of_f: list = []
         # 変換元のフォルダのファイルの数
         self.number_of_f: int = 0
-        # 変換元のファイルパス
-        self.current_file_path_from: str = ""
         # ファイルリストのポインタ
         self.p: int = 0
+        # 変換元のファイルパス
+        self.current_file_path_from: str = ""
         # 処理したファイルの数
         self.count: int = 0
         # 処理が成功したファイルの数
@@ -57,7 +57,6 @@ class ConvertLibreToPDF:
                 file_p: Path = Path(f)
                 if file_p.suffix.lower() in self.valid_exts:
                     self.filtered_lst_of_f.append(f)
-            # ファイルの数
             self.number_of_f = len(self.filtered_lst_of_f)
             if self.number_of_f == 0:
                 raise Exception("変換元のファイルがありません。")
