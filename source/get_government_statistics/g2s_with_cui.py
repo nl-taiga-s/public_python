@@ -198,7 +198,6 @@ async def main() -> bool:
     finally:
         pass
     # 処理の本体部分
-    result: bool = False
     cancel: bool = False
     while True:
         try:
