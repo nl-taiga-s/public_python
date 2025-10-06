@@ -26,7 +26,6 @@ class GetFileList:
     def search_recursively(self) -> bool:
         """再帰的に検索します"""
         result: bool = False
-        error: bool = False
         try:
             RECURSIVE: str = "**" if self.recursive else "*"
             search_folder_p: Path = Path(self.folder_path) / RECURSIVE
@@ -42,20 +41,17 @@ class GetFileList:
             self.log.info(f"{self.num_of_f_before}件のファイルがあります。")
             self.log.info("\n".join(self.lst_file_before))
         except Exception as e:
-            error = True
             self.log.error(f"***{self.search_recursively.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.search_recursively.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
             return result
 
     def extract_by_pattern(self) -> bool:
         """検索パターンで抽出します"""
         result: bool = False
-        error: bool = False
         try:
             self.log.info(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.lst_file_after = [f for f in self.lst_file_before if self.pattern in f]
@@ -65,12 +61,10 @@ class GetFileList:
             self.log.info(f"{self.num_of_f_after}件のファイルが抽出されました。")
             self.log.info("\n".join(self.lst_file_after))
         except Exception as e:
-            error = True
             self.log.error(f"***{self.extract_by_pattern.__doc__} => 失敗しました。***: \n{repr(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.extract_by_pattern.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
             return result

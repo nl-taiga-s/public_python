@@ -70,7 +70,7 @@ class MainApp_Of_GFL(QWidget):
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -108,7 +108,7 @@ class MainApp_Of_GFL(QWidget):
             open_folder_btn.clicked.connect(self.open_explorer)
             search_btn.clicked.connect(self.search_files)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -130,7 +130,7 @@ class MainApp_Of_GFL(QWidget):
                 self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
                 self.obj_of_cls.search_recursively()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -150,7 +150,7 @@ class MainApp_Of_GFL(QWidget):
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER, wsl_path])
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:
@@ -167,7 +167,7 @@ class MainApp_Of_GFL(QWidget):
             self.obj_of_cls.pattern = self.pattern_input.text().strip()
             self.obj_of_cls.extract_by_pattern()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self.show_error(f"error: \n{repr(e)}")
         else:
             result = True
         finally:

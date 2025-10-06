@@ -7,7 +7,7 @@ from source.get_file_list.gfl_class import GetFileList
 class GFL_With_Cui:
     def __init__(self):
         """初期化します"""
-        self.dct_of_choices = {
+        self.binary_choices: dict = {
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
@@ -66,11 +66,11 @@ class GFL_With_Cui:
         cancel: bool = False
         while True:
             try:
-                str_of_choice: bool = input(f"{msg}\n(Yes => y or No => n): ").strip()
-                match str_of_choice:
-                    case var if var in self.dct_of_choices["yes"]:
+                binary_choice: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
+                match binary_choice:
+                    case var if var in self.binary_choices["yes"]:
                         result = True
-                    case var if var in self.dct_of_choices["no"]:
+                    case var if var in self.binary_choices["no"]:
                         continue
                     case _:
                         raise Exception("無効な入力です。")
@@ -91,6 +91,7 @@ class GFL_With_Cui:
 def main() -> bool:
     """主要関数"""
     result: bool = False
+    # ログを設定する
     try:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
@@ -103,14 +104,16 @@ def main() -> bool:
             raise
     except Exception as e:
         print(f"error: \n{repr(e)}")
+        return result
     else:
-        result = True
+        pass
     finally:
-        if not result:
-            return result
-    result = False
+        pass
+    # 処理の本体部分
     cancel: bool = False
     while True:
+        result = False
+        cancel = False
         try:
             obj_with_cui: GFL_With_Cui = GFL_With_Cui()
             obj_of_cls: GetFileList = GetFileList(obj_of_lt.logger)
