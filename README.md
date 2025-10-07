@@ -10,9 +10,6 @@
 ### get_file_list(GFL)
 * You can get and see file list from folder.
 > ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1757468251/icon_of_gfl_d2eyyf.svg)
-### get_nhk_news(GN2)
-* You can get and see nhk news.
-> ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1757468286/icon_of_gn2_ipztkx.svg)
 ### pdf_tools(PT)
 * You can edit pdf files.
 > ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1757468306/icon_of_pt_igi3yq.svg)
