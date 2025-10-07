@@ -48,6 +48,9 @@ class ConvertLibreToPDF:
     def create_file_lst(self) -> bool:
         """ファイルリストを作成します"""
         result: bool = False
+        # 初期化する
+        self.filtered_lst_of_f = []
+        self.number_of_f = 0
         try:
             search_folder_p: Path = Path(self.folder_path_from) / "*"
             search_folder_s: str = str(search_folder_p)
@@ -62,7 +65,8 @@ class ConvertLibreToPDF:
                 raise Exception("変換元のファイルがありません。")
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
-            self.log.error(f"***{self.create_file_lst.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.create_file_lst.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
@@ -70,7 +74,8 @@ class ConvertLibreToPDF:
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
             self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
         finally:
-            return result
+            pass
+        return result
 
     def move_to_previous_file(self) -> bool:
         """前のファイルへ"""
@@ -82,12 +87,14 @@ class ConvertLibreToPDF:
                 self.p -= 1
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
-            self.log.error(f"***{self.move_to_previous_file.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.move_to_previous_file.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def move_to_next_file(self) -> bool:
         """次のファイルへ"""
@@ -99,12 +106,14 @@ class ConvertLibreToPDF:
                 self.p += 1
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
-            self.log.error(f"***{self.move_to_next_file.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.move_to_next_file.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def convert_file(self) -> bool:
         """ファイルの種類を判定して、変換を実行します"""
@@ -134,9 +143,11 @@ class ConvertLibreToPDF:
                 else:
                     raise Exception("一部のファイルの変換が失敗しました。")
         except Exception as e:
-            self.log.error(f"error: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"error: \n{str(e)}")
             raise
         else:
             pass
         finally:
-            return result
+            pass
+        return result
