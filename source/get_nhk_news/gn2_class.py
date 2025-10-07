@@ -44,43 +44,40 @@ class GetNHKNews:
     def parse_rss(self) -> bool:
         """RSSを解析します"""
         result: bool = False
-        error: bool = False
         try:
             url_of_rss: str = self.rss_feeds[self.key_of_genre]
             self.feed = feedparser.parse(url_of_rss)
         except Exception as e:
-            error = True
-            self.log.error(f"***{self.parse_rss.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.parse_rss.__doc__} => 失敗しました。***: \n{str(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.parse_rss.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
-            return result
+            pass
+        return result
 
     def get_standard_time_and_today(self) -> bool:
         """指定の標準時と今日の日付を取得します"""
         result: bool = False
-        error: bool = False
         try:
             self.standard_time = timezone(timedelta(hours=self.TIMEZONE_OF_JAPAN))
             self.today = datetime.now(self.standard_time).date()
         except Exception as e:
-            error = True
-            self.log.error(f"***{self.get_standard_time_and_today.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.get_standard_time_and_today.__doc__} => 失敗しました。***: \n{str(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.get_standard_time_and_today.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
-            return result
+            pass
+        return result
 
     def extract_news_of_today_from_standard_time(self) -> bool:
         """指定の標準時の今日のニュースを抽出します"""
         result: bool = False
-        error: bool = False
         try:
             for entry in self.feed.entries:
                 if hasattr(entry, "published_parsed"):
@@ -88,20 +85,19 @@ class GetNHKNews:
                     if pub_date == self.today:
                         self.today_news.append(entry)
         except Exception as e:
-            error = True
-            self.log.error(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 失敗しました。***: \n{str(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.extract_news_of_today_from_standard_time.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
-            return result
+            pass
+        return result
 
     def get_news(self) -> bool:
         """ニュースを取得します"""
         result: bool = False
-        error: bool = False
         try:
             self.log.info(f"* 日付: {self.today}")
             self.log.info(f"* ジャンル: {self.key_of_genre}")
@@ -111,12 +107,12 @@ class GetNHKNews:
                 self.log.info(f"{i}. {news.title}: ")
                 self.log.info(f"\t{news.link}")
         except Exception as e:
-            error = True
-            self.log.error(f"***{self.get_news.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.get_news.__doc__} => 失敗しました。***: \n{str(e)}")
+            raise
         else:
             result = True
             self.log.info(f"***{self.get_news.__doc__} => 成功しました。***")
         finally:
-            if error:
-                raise
-            return result
+            pass
+        return result

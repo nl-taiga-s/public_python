@@ -64,14 +64,14 @@ class MainApp_Of_GN2(QWidget):
                 exe_path = Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
-                raise
+            result = self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
-            result = True
+            pass
         finally:
-            return result
+            pass
+        return result
 
     def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
@@ -98,25 +98,22 @@ class MainApp_Of_GN2(QWidget):
             self.fetch_button.clicked.connect(self.fetch_news)
             self.news_lst.itemClicked.connect(self.open_news_link)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def fetch_news(self) -> bool:
         """ニュースを取りに行く"""
         result: bool = False
         try:
             self.news_lst.clear()
-            genre_key: str = self.genre_combo.currentText()
-            genre_index: int = list(self.obj_of_cls.rss_feeds.keys()).index(genre_key)
-            if not self.obj_of_cls.parse_rss(genre_index, genre_key):
-                raise
-            if not self.obj_of_cls.get_standard_time_and_today(self.obj_of_cls.TIMEZONE_OF_JAPAN):
-                raise
-            if not self.obj_of_cls.extract_news_of_today_from_standard_time():
-                raise
+            self.obj_of_cls.key_of_genre = self.genre_combo.currentText()
+            result = self.obj_of_cls.parse_rss()
+            result = self.obj_of_cls.get_standard_time_and_today()
+            result = self.obj_of_cls.extract_news_of_today_from_standard_time()
             for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
                 title: str = news.title
                 summary: str = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
@@ -128,16 +125,14 @@ class MainApp_Of_GN2(QWidget):
                 item.setSizeHint(widget.sizeHint())
                 self.news_lst.addItem(item)
                 self.news_lst.setItemWidget(item, widget)
-            if not self.obj_of_cls.get_news(self.obj_of_cls.NUM_OF_NEWS_TO_SHOW):
-                raise
-            if not self.obj_of_cls.today_news:
-                raise Exception("今日のニュースはまだありません。")
+            result = self.obj_of_cls.get_news()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def open_news_link(self, item: QListWidgetItem) -> bool:
         """ニュースのリンクを開きます"""
@@ -153,11 +148,12 @@ class MainApp_Of_GN2(QWidget):
             elif self.obj_of_pft.is_wsl():
                 subprocess.run([POWERSHELL_OF_WSL, "Start-Process", url], check=True)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
 
 class NewsItem_Of_GN2(QWidget):
@@ -183,16 +179,17 @@ class NewsItem_Of_GN2(QWidget):
             layout.setContentsMargins(5, 5, 5, 5)
             self.setLayout(layout)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
 
 def main() -> bool:
     """主要関数"""
-    result = False
+    result: bool = False
     try:
         obj_of_gt: GUITools = GUITools()
         app: QApplication = QApplication(sys.argv)
@@ -206,11 +203,12 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{repr(e)}")
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
-        return result
+        pass
+    return result
 
 
 if __name__ == "__main__":
