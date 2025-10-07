@@ -64,17 +64,17 @@ class MainApp_Of_GFL(QWidget):
                 exe_path = Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
-                raise
+            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
@@ -108,11 +108,12 @@ class MainApp_Of_GFL(QWidget):
             open_folder_btn.clicked.connect(self.open_explorer)
             search_btn.clicked.connect(self.search_files)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def select_folder(self, reload: bool) -> bool:
         """フォルダを選択します"""
@@ -130,11 +131,12 @@ class MainApp_Of_GFL(QWidget):
                 self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
                 self.obj_of_cls.search_recursively()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def open_explorer(self) -> bool:
         """エクスプローラーを開きます"""
@@ -150,11 +152,12 @@ class MainApp_Of_GFL(QWidget):
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER, wsl_path])
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def search_files(self) -> bool:
         """ファイルを検索します"""
@@ -167,11 +170,12 @@ class MainApp_Of_GFL(QWidget):
             self.obj_of_cls.pattern = self.pattern_input.text().strip()
             self.obj_of_cls.extract_by_pattern()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
 
 def main() -> bool:
@@ -190,11 +194,12 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{repr(e)}")
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
-        return result
+        pass
+    return result
 
 
 if __name__ == "__main__":
