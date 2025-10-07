@@ -11,11 +11,11 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 class LogTools:
     """
-    * logger.debug()
-    * logger.info()
-    * logger.warning()
-    * logger.error()
-    * logger.critical()
+    * logger.debug(): デバッグ
+    * logger.info(): 通常
+    * logger.warning(): 小さいエラー
+    * logger.error(): 普通のエラー
+    * logger.critical(): 大きいエラー
     """
 
     def __init__(self):
@@ -36,30 +36,32 @@ class LogTools:
             self.file_handler.setFormatter(self.file_formatter)
             self.logger.addHandler(self.file_handler)
         except Exception as e:
-            print(f"error: \n{repr(e)}")
+            print(f"error: \n{str(e)}")
             raise
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def setup_stream_handler(self) -> bool:
         """StreamHandlerを設定します"""
         result: bool = False
         try:
             self.stream_handler: StreamHandler = logging.StreamHandler(sys.stdout)
-            self.stream_handler.setLevel(logging.DEBUG)
+            self.stream_handler.setLevel(logging.INFO)
             self.STR_OF_STREAM_FORMATTER: str = "%(message)s"
             self.stream_formatter: Formatter = logging.Formatter(self.STR_OF_STREAM_FORMATTER)
             self.stream_handler.setFormatter(self.stream_formatter)
             self.logger.addHandler(self.stream_handler)
         except Exception as e:
-            print(f"error: \n{repr(e)}")
+            print(f"error: \n{str(e)}")
             raise
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
 
 class PlatformTools:
@@ -77,12 +79,13 @@ class PlatformTools:
                     if "microsoft" in content or "wsl" in content:
                         result = True
         except Exception as e:
-            print(f"error: \n{repr(e)}")
+            print(f"error: \n{str(e)}")
             raise
         else:
             pass
         finally:
-            return result
+            pass
+        return result
 
 
 class DatetimeTools:
@@ -126,6 +129,7 @@ class PathTools:
 
     def get_file_path_of_log(self, base_path: Path) -> Path:
         """ログファイルのパスを取得します"""
+        file_p: Path = None
         try:
             # 実行するファイルのディレクトリ
             folder_of_exe_p: Path = base_path.parent
@@ -134,15 +138,15 @@ class PathTools:
             # ログフォルダが存在しない場合は作成します
             folder_of_log_p.mkdir(parents=True, exist_ok=True)
             # ログファイル名
-            file_name_of_log: str = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
+            file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
         except Exception as e:
-            print(f"error: \n{repr(e)}")
+            print(f"error: \n{str(e)}")
             raise
         else:
-            # ログファイルのパス
-            return folder_of_log_p / file_name_of_log
+            file_p = folder_of_log_p / file_name_of_log
         finally:
             pass
+        return file_p
 
 
 class GUITools:
