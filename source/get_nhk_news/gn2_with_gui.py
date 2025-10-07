@@ -129,7 +129,7 @@ class MainApp_Of_GN2(QWidget):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            result = True
+            pass
         finally:
             pass
         return result
@@ -142,7 +142,7 @@ class MainApp_Of_GN2(QWidget):
         try:
             url: Any = item.data(Qt.UserRole)
             if not url:
-                raise Exception
+                raise Exception("URLが設定されていません。")
             if platform.system().lower() == "windows":
                 subprocess.run([POWERSHELL_OF_WINDOWS, "Start-Process", url], check=True)
             elif self.obj_of_pft.is_wsl():

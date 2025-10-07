@@ -35,7 +35,7 @@ class GN2_With_Cui:
                 break
             finally:
                 pass
-        return [choice, genres[num - 1]]
+        return [num, genres[num - 1]]
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
