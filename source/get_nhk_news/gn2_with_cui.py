@@ -64,6 +64,7 @@ class GN2_With_Cui:
 def main() -> bool:
     """主要関数"""
     result: bool = False
+    # ログを設定する
     try:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
@@ -79,8 +80,9 @@ def main() -> bool:
         pass
     finally:
         pass
-    result = False
+    # 処理の本体部分
     while True:
+        result = False
         try:
             obj_with_cui: GN2_With_Cui = GN2_With_Cui()
             obj_of_cls: GetNHKNews = GetNHKNews(obj_of_lt.logger)

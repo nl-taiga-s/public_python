@@ -64,11 +64,11 @@ class MainApp_Of_GN2(QWidget):
                 exe_path = Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            result = self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            pass
+            result = True
         finally:
             pass
         return result
@@ -111,9 +111,9 @@ class MainApp_Of_GN2(QWidget):
         try:
             self.news_lst.clear()
             self.obj_of_cls.key_of_genre = self.genre_combo.currentText()
-            result = self.obj_of_cls.parse_rss()
-            result = self.obj_of_cls.get_standard_time_and_today()
-            result = self.obj_of_cls.extract_news_of_today_from_standard_time()
+            self.obj_of_cls.parse_rss()
+            self.obj_of_cls.get_standard_time_and_today()
+            self.obj_of_cls.extract_news_of_today_from_standard_time()
             for news in self.obj_of_cls.today_news[: self.obj_of_cls.NUM_OF_NEWS_TO_SHOW]:
                 title: str = news.title
                 summary: str = (news.summary or "").splitlines()[0] if hasattr(news, "summary") else ""
@@ -125,11 +125,11 @@ class MainApp_Of_GN2(QWidget):
                 item.setSizeHint(widget.sizeHint())
                 self.news_lst.addItem(item)
                 self.news_lst.setItemWidget(item, widget)
-            result = self.obj_of_cls.get_news()
+            self.obj_of_cls.get_news()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            pass
+            result = True
         finally:
             pass
         return result
