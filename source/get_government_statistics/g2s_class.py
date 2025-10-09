@@ -6,8 +6,7 @@ import xml.etree.ElementTree as et
 from csv import DictReader
 from io import StringIO
 from logging import Logger
-from types import CoroutineType
-from typing import Any, AsyncGenerator, Callable
+from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Tuple, Union, cast
 from xml.etree.ElementTree import Element
 
 import httpx
@@ -65,7 +64,7 @@ class GetGovernmentStatistics:
                 page_dct, count = parser(res)
             except Exception as e:
                 tb: str = traceback.format_exc()
-                self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{repr(e)}\n{tb}")
+                self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{str(e)}\n{tb}")
                 raise
             else:
                 return page_dct, count
@@ -84,7 +83,7 @@ class GetGovernmentStatistics:
                 start: int = 1
                 while True:
                     try:
-                        tasks: list[CoroutineType] = [
+                        tasks: List[Coroutine[Any, Any, Tuple[Dict[Any, Any], int]]] = [
                             fetch_page(
                                 client,
                                 url,
@@ -93,12 +92,12 @@ class GetGovernmentStatistics:
                             )
                             for i in range(concurrency)
                         ]
-                        results: list = await asyncio.gather(*tasks, return_exceptions=True)
+                        results = cast(List[Union[Tuple[Dict[Any, Any], int], BaseException]], await asyncio.gather(*tasks, return_exceptions=True))
                         stop: bool = True
                         for res in results:
-                            if isinstance(res, Exception):
+                            if isinstance(res, BaseException):
                                 tb: str = traceback.format_exc()
-                                self.log.error(f"タスクで例外発生: \n{repr(res)}\n{tb}")
+                                self.log.error(f"タスクで例外発生: \n{str(res)}\n{tb}")
                                 continue
                             page_dct, count = res
                             if count > 0:
@@ -107,7 +106,7 @@ class GetGovernmentStatistics:
                         if stop:
                             break
                     except Exception as e:
-                        self.log.error(f"***{fetch_all_pages.__doc__} => 失敗しました。***: \n{repr(e)}")
+                        self.log.error(f"***{fetch_all_pages.__doc__} => 失敗しました。***: \n{str(e)}")
                     else:
                         pass
                     finally:
@@ -120,14 +119,15 @@ class GetGovernmentStatistics:
                 root: Element[str] = et.fromstring(res.text)
                 table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
                 for t in table_lst:
-                    stat_id: str = t.attrib.get("id", "")
-                    element_of_stat_name: Element[str] = t.find("STAT_NAME")
-                    stat_name: str = element_of_stat_name.text
-                    stat_code: str = element_of_stat_name.attrib.get("code")
-                    title: str = t.find("TITLE").text
+                    stat_id: str = (t.attrib.get("id", "") or "") if t else ""
+                    element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
+                    stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name else ""
+                    stat_code: str = (element_of_stat_name.attrib.get("code") or "") if element_of_stat_name else ""
+                    element_of_title: Optional[Element] = t.find("TITLE")
+                    title: str = (element_of_title.text or "") if element_of_title else ""
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
-                self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return page_dct, len(table_lst)
@@ -156,7 +156,7 @@ class GetGovernmentStatistics:
                         "title": title,
                     }
             except Exception as e:
-                self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return page_dct, len(table_lst)
@@ -179,7 +179,7 @@ class GetGovernmentStatistics:
                     category: str = row.get("TABULATION_SUB_CATEGORY3", "")
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
             except Exception as e:
-                self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return page_dct, row_count
@@ -206,7 +206,7 @@ class GetGovernmentStatistics:
                 case _:
                     raise Exception("データタイプが対応していません。")
         except Exception as e:
-            self.log.error(f"***{self.get_stats_data_ids.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.error(f"***{self.get_stats_data_ids.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             self.log.info(f"***{self.get_stats_data_ids.__doc__} => 成功しました。***")
@@ -256,7 +256,10 @@ class GetGovernmentStatistics:
                             row[key] = mapping[key].get(value, value)
                         else:
                             row[key] = value
-                    row["値"] = value.text.strip()
+                    if isinstance(value, Element):
+                        row["値"] = (value.text or "").strip()
+                    else:
+                        row["値"] = str(value).strip()
                     rows.append(row)
                 df: DataFrame = pd.DataFrame(rows)
                 # --- 3. 列名をCLASS_OBJのname属性に置換 ---
@@ -271,7 +274,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return df
@@ -332,7 +335,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return df
@@ -353,10 +356,10 @@ class GetGovernmentStatistics:
                     if line.strip().replace('"', '') == "VALUE":
                         value_idx = i
                         break
-                if not value_idx:
+                if value_idx == 0:
                     raise Exception("CSVに 'VALUE' 行が見つかりませんでした。")
                 # --- ヘッダー行 ---
-                header_cols: str = [h.strip('"') for h in lines[value_idx + 1].split(',')]
+                header_cols: list[str] = [h.strip('"') for h in lines[value_idx + 1].split(',')]
                 # --- データ本体をそのまま読み込む ---
                 csv_body: str = "\n".join(lines[value_idx + 2 :])
                 df: DataFrame = pd.read_csv(StringIO(csv_body), header=None)
@@ -387,7 +390,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{repr(e)}")
+                self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 return df
@@ -395,7 +398,7 @@ class GetGovernmentStatistics:
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 pyperclip.copy(res.text)
 
-        df: DataFrame = None
+        df: Optional[DataFrame] = None
         try:
             self.log.info(self.get_data_from_api.__doc__)
             self.params = get_params_of_url()
@@ -411,7 +414,7 @@ class GetGovernmentStatistics:
                     case _:
                         raise Exception("データタイプが対応していません。")
         except Exception as e:
-            self.log.error(f"***{self.get_data_from_api.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.error(f"***{self.get_data_from_api.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             self.log.info(f"***{self.get_data_from_api.__doc__} => 成功しました。***")
@@ -421,7 +424,7 @@ class GetGovernmentStatistics:
 
     def filter_data(self, df: DataFrame) -> DataFrame:
         """データをフィルターにかけます"""
-        filtered_df: DataFrame = None
+        filtered_df: Optional[DataFrame] = None
         try:
             self.log.info(self.filter_data.__doc__)
             match self.lst_of_match[self.KEY]:
@@ -464,7 +467,7 @@ class GetGovernmentStatistics:
                 case _:
                     raise Exception("その検索方式はありません。")
         except Exception as e:
-            self.log.error(f"***{self.filter_data.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.error(f"***{self.filter_data.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             self.log.info(f"***{self.filter_data.__doc__} => 成功しました。***")
@@ -492,7 +495,7 @@ class GetGovernmentStatistics:
             self.log.info(f"表示順: {self.order}")
             self.log.info(f"表示件数: {self.DATA_COUNT}")
         except Exception as e:
-            self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{repr(e)}")
+            self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True

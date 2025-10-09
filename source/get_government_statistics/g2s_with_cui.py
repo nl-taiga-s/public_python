@@ -33,8 +33,6 @@ class GS_With_Cui:
 
     def select_element(self, elements: Any) -> list:
         """要素を選択します"""
-        result: bool = False
-        cancel: bool = False
         lst: list = []
         while True:
             try:
@@ -59,43 +57,33 @@ class GS_With_Cui:
                 if num < 1 or num > len(lst):
                     raise Exception("入力した番号が範囲外です。")
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                result = True
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return lst[num - 1]
 
     def input_text(self, msg: str) -> str:
         """文字列を入力します"""
-        result: bool = False
-        cancel: bool = False
         text: str = ""
         while True:
             try:
                 text = input(f"{msg}: ").strip()
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                result = True
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return text
 
     def input_lst_of_text(self, msg: str) -> list:
         """複数の文字列を入力します"""
-        result: bool = False
-        cancel: bool = False
         lst: list = []
         try:
             while True:
@@ -108,21 +96,17 @@ class GS_With_Cui:
                     else:
                         print("文字列が何も入力されていません。")
         except Exception as e:
-            print(f"error: \n{repr(e)}")
+            print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
-            cancel = True
+            raise
         else:
-            result = True
+            pass
         finally:
-            if cancel:
-                raise
-            if result:
-                return lst
+            pass
+        return lst
 
     def input_stats_data_id(self) -> str:
         """統計表IDを入力します"""
-        result: bool = False
-        cancel: bool = False
         text: str = ""
         # 桁
         DIGIT: int = 10
@@ -136,22 +120,18 @@ class GS_With_Cui:
                 if len(text) != DIGIT:
                     raise Exception(f"{DIGIT}桁で入力してください。")
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                result = True
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return text
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         result: bool = False
-        cancel: bool = False
         while True:
             try:
                 text: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
@@ -159,20 +139,17 @@ class GS_With_Cui:
                     case var if var in self.binary_choices["yes"]:
                         result = True
                     case var if var in self.binary_choices["no"]:
-                        continue
+                        pass
                     case _:
                         raise Exception("無効な入力です。")
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                pass
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return result
 
 
@@ -186,23 +163,20 @@ async def main() -> bool:
         file_of_exe_p: Path = Path(__file__)
         file_of_log_p: Path = obj_of_pt.get_file_path_of_log(file_of_exe_p)
         obj_of_lt.file_path_of_log = str(file_of_log_p)
-        if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
-            raise
-        if not obj_of_lt.setup_stream_handler():
-            raise
+        obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+        obj_of_lt.setup_stream_handler()
     except Exception as e:
-        print(f"error: \n{repr(e)}")
+        print(f"error: \n{str(e)}")
         return result
     else:
         pass
     finally:
         pass
     # 処理の本体部分
-    cancel: bool = False
+    obj_with_cui: GS_With_Cui = GS_With_Cui()
+    obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
-            obj_with_cui: GS_With_Cui = GS_With_Cui()
-            obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_with_cui.dct_of_data_type)
             async for page in obj_of_cls.get_stats_data_ids():
                 for stat_id, info in page.items():
@@ -229,18 +203,15 @@ async def main() -> bool:
                 obj_of_cls.lst_of_logic = obj_with_cui.select_element(obj_with_cui.dct_of_logic)
             filtered_df: DataFrame = obj_of_cls.filter_data(df)
             obj_of_cls.order = str(obj_with_cui.select_element(obj_with_cui.lst_of_order))
-            if not obj_of_cls.show_data(filtered_df):
-                raise
-        except Exception as e:
-            print(f"***処理が失敗しました。***: \n{repr(e)}")
+            obj_of_cls.show_data(filtered_df)
+        except Exception:
+            print("***処理が失敗しました。***")
         except KeyboardInterrupt:
-            cancel = True
+            raise
         else:
             result = True
             print("***処理が成功しました。***")
         finally:
-            if cancel:
-                break
             if obj_with_cui.input_bool("終了しますか？"):
                 break
             else:
