@@ -1,6 +1,8 @@
 import logging
+import shutil
 import sys
 from pathlib import Path
+from typing import Any, Optional
 
 import pypdfium2
 from PySide6.QtCore import Qt
@@ -21,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import DatetimeTools, FileSystemTools, GUITools, LogTools, PathTools
+from source.common.common import DatetimeTools, GUITools, LogTools, PathTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -29,10 +31,10 @@ from source.pdf_tools.pt_class import PdfTools
 class QTextEditHandler(logging.Handler):
     def __init__(self, widget: QTextEdit):
         super().__init__()
-        self.widget = widget
+        self.widget: QTextEdit = widget
 
     def emit(self, record: logging.LogRecord):
-        msg = self.format(record)
+        msg: str = self.format(record)
         self.widget.append(msg)
 
 
@@ -40,18 +42,23 @@ class MainApp_Of_PT(QMainWindow):
     def __init__(self):
         """初期化します"""
         super().__init__()
-        self.obj_of_lt = LogTools()
-        self.obj_of_cls = PdfTools(self.obj_of_lt.logger)
+        self.obj_of_lt: LogTools = LogTools()
+        self.obj_of_cls: PdfTools = PdfTools(self.obj_of_lt.logger)
         self.setup_first_ui()
-        self.obj_of_pt = PathTools()
-        self.obj_of_dt2 = DatetimeTools()
-        self.obj_of_fst = FileSystemTools()
+        self.obj_of_pt: PathTools = PathTools()
+        self.obj_of_dt2: DatetimeTools = DatetimeTools()
         self.setup_log()
 
     def closeEvent(self, event):
         """終了します"""
-        image_dir = Path(__file__).parent / "__images__"
-        self.obj_of_fst.clear_folder(image_dir)
+        image_dir: Path = Path(__file__).parent / "__images__"
+        # フォルダを空にする
+        if image_dir.exists():
+            for element in image_dir.iterdir():
+                if element.is_dir():
+                    shutil.rmtree(element)
+                else:
+                    element.unlink()
         if self.obj_of_lt:
             self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
@@ -70,17 +77,17 @@ class MainApp_Of_PT(QMainWindow):
 
     def setup_log(self) -> bool:
         """ログを設定する"""
+        result: bool = False
+        exe_path: Optional[Path] = None
         try:
-            result = False
             # exe化されている場合とそれ以外を切り分ける
             if getattr(sys, "frozen", False):
                 exe_path = Path(sys.executable)
             else:
                 exe_path = Path(__file__)
-            file_of_log_as_path_type = self.obj_of_pt.get_file_path_of_log(exe_path)
-            self.obj_of_lt.file_path_of_log = str(file_of_log_as_path_type)
-            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
-                raise
+            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            self.obj_of_lt.file_path_of_log = str(file_of_log_p)
+            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
@@ -89,182 +96,192 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def setup_first_ui(self) -> bool:
         """1回目のUser Interfaceを設定します"""
+        result: bool = False
         try:
-            result = False
             # タイトル
             self.setWindowTitle("PDF編集アプリ")
-            central = QWidget()
+            central: QWidget = QWidget()
             self.setCentralWidget(central)
             # 主要
-            main_layout = QHBoxLayout(central)
+            main_layout: QHBoxLayout = QHBoxLayout(central)
             # 左側
-            left_layout = QVBoxLayout()
+            left_layout: QVBoxLayout = QVBoxLayout()
             left_layout.addWidget(QLabel("機能"))
-            left_func_area = QVBoxLayout()
+            left_func_area: QVBoxLayout = QVBoxLayout()
             left_layout.addLayout(left_func_area)
             main_layout.addLayout(left_layout)
             # 中央
-            center_layout = QVBoxLayout()
+            center_layout: QVBoxLayout = QVBoxLayout()
             center_layout.addWidget(QLabel("ビューワー"))
-            center_scroll_area = QScrollArea()
+            center_scroll_area: QScrollArea = QScrollArea()
             center_layout.addWidget(center_scroll_area)
             center_scroll_area.setWidgetResizable(True)
             main_layout.addLayout(center_layout)
             # 仮想コンテナのウィジェットとレイアウト
-            center_widget = QWidget()
-            self.center_viewer = QVBoxLayout()
+            center_widget: QWidget = QWidget()
+            self.center_viewer: QVBoxLayout = QVBoxLayout()
             center_widget.setLayout(self.center_viewer)
             center_scroll_area.setWidget(center_widget)
             # 右側
-            right_layout = QVBoxLayout()
+            right_layout: QVBoxLayout = QVBoxLayout()
             main_layout.addLayout(right_layout)
             right_layout.addWidget(QLabel("ログ"))
-            self.log_area = QTextEdit()
+            self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
             right_layout.addWidget(self.log_area)
-
             # ファイル選択と再読み込み
-            self.file_input = QLineEdit()
+            self.file_input: QLineEdit = QLineEdit()
             left_func_area.addWidget(QLabel("PDFファイルパス"))
             left_func_area.addWidget(self.file_input)
-            select_and_reload_area = QHBoxLayout()
-            browse_btn = QPushButton("参照")
+            select_and_reload_area: QHBoxLayout = QHBoxLayout()
+            browse_btn: QPushButton = QPushButton("参照")
             select_and_reload_area.addWidget(browse_btn)
-            browse_btn.clicked.connect(lambda: self.select_pdf(False))
-            reload_btn = QPushButton("再読み込み")
+            reload_btn: QPushButton = QPushButton("再読み込み")
             select_and_reload_area.addWidget(reload_btn)
-            reload_btn.clicked.connect(lambda: self.select_pdf(True))
             left_func_area.addLayout(select_and_reload_area)
-
+            browse_btn.clicked.connect(lambda: self.select_pdf(False))
+            reload_btn.clicked.connect(lambda: self.select_pdf(True))
             # パスワード入力
-            self.password_input = QLineEdit()
+            self.password_input: QLineEdit = QLineEdit()
             self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
             left_func_area.addWidget(QLabel("パスワード"))
             left_func_area.addWidget(self.password_input)
-
             # 暗号化と復号化
-            encrypt_and_decrypt_area = QHBoxLayout()
-            encrypt_btn = QPushButton("暗号化")
+            encrypt_and_decrypt_area: QHBoxLayout = QHBoxLayout()
+            encrypt_btn: QPushButton = QPushButton("暗号化")
             encrypt_and_decrypt_area.addWidget(encrypt_btn)
-            encrypt_btn.clicked.connect(self.encrypt_pdf)
-            decrypt_btn = QPushButton("復号化")
+            decrypt_btn: QPushButton = QPushButton("復号化")
             encrypt_and_decrypt_area.addWidget(decrypt_btn)
-            decrypt_btn.clicked.connect(self.decrypt_pdf)
             left_func_area.addLayout(encrypt_and_decrypt_area)
-
+            encrypt_btn.clicked.connect(self.encrypt_pdf)
+            decrypt_btn.clicked.connect(self.decrypt_pdf)
             # メタデータの表示
-            meta_btn = QPushButton("メタデータの表示")
-            meta_btn.clicked.connect(self.show_metadata)
+            meta_btn: QPushButton = QPushButton("メタデータの表示")
             left_func_area.addWidget(meta_btn)
-
+            meta_btn.clicked.connect(self.show_metadata)
             # メタデータの入力
             left_func_area.addWidget(QLabel("メタデータの入力"))
-            self.widget_of_metadata = {}
-            self.line_edits_of_metadata = {}
+            self.widget_of_metadata: dict = {}
+            self.line_edits_of_metadata: dict = {}
             for value, key in self.obj_of_cls.fields:
                 if value in ["creation_date", "modification_date"]:
                     continue
                 self.line_edits_of_metadata[key] = QLineEdit()
                 left_func_area.addWidget(QLabel(value.capitalize().replace("_", " ")))
                 left_func_area.addWidget(self.line_edits_of_metadata[key])
-
             # メタデータの書き込み
-            write_meta_btn = QPushButton("メタデータの書き込み")
-            write_meta_btn.clicked.connect(self.write_metadata)
+            write_meta_btn: QPushButton = QPushButton("メタデータの書き込み")
             left_func_area.addWidget(write_meta_btn)
-
+            write_meta_btn.clicked.connect(self.write_metadata)
             # マージ
-            merge_btn = QPushButton("複数PDFをマージ")
-            merge_btn.clicked.connect(self.merge_pdfs)
+            merge_btn: QPushButton = QPushButton("複数PDFをマージ")
             left_func_area.addWidget(merge_btn)
-
+            merge_btn.clicked.connect(self.merge_pdfs)
             # ページの抽出
-            begin_spin_of_ep = QSpinBox()
-            end_spin_of_ep = QSpinBox()
-            page_layout_of_ep = QHBoxLayout()
+            begin_spin_of_ep: QSpinBox = QSpinBox()
+            end_spin_of_ep: QSpinBox = QSpinBox()
+            page_layout_of_ep: QHBoxLayout = QHBoxLayout()
             page_layout_of_ep.addWidget(QLabel("ページの抽出開始"))
             page_layout_of_ep.addWidget(begin_spin_of_ep)
             page_layout_of_ep.addWidget(QLabel("ページの抽出終了"))
             page_layout_of_ep.addWidget(end_spin_of_ep)
             left_func_area.addLayout(page_layout_of_ep)
-
-            extract_page_btn = QPushButton("ページの抽出")
-            extract_page_btn.clicked.connect(lambda: self.extract_pages(begin_spin_of_ep, end_spin_of_ep))
+            extract_page_btn: QPushButton = QPushButton("ページの抽出")
             left_func_area.addWidget(extract_page_btn)
-
+            extract_page_btn.clicked.connect(lambda: self.extract_pages(begin_spin_of_ep, end_spin_of_ep))
             # ページの削除
-            begin_spin_of_dp = QSpinBox()
-            end_spin_of_dp = QSpinBox()
-            page_layout_of_dp = QHBoxLayout()
+            begin_spin_of_dp: QSpinBox = QSpinBox()
+            end_spin_of_dp: QSpinBox = QSpinBox()
+            page_layout_of_dp: QHBoxLayout = QHBoxLayout()
             page_layout_of_dp.addWidget(QLabel("ページの削除開始"))
             page_layout_of_dp.addWidget(begin_spin_of_dp)
             page_layout_of_dp.addWidget(QLabel("ページの削除終了"))
             page_layout_of_dp.addWidget(end_spin_of_dp)
             left_func_area.addLayout(page_layout_of_dp)
-
-            delete_page_btn = QPushButton("ページの削除")
-            delete_page_btn.clicked.connect(lambda: self.delete_pages(begin_spin_of_dp, end_spin_of_dp))
+            delete_page_btn: QPushButton = QPushButton("ページの削除")
             left_func_area.addWidget(delete_page_btn)
-
+            delete_page_btn.clicked.connect(lambda: self.delete_pages(begin_spin_of_dp, end_spin_of_dp))
             # テキストの抽出
-            begin_spin_of_et = QSpinBox()
-            end_spin_of_et = QSpinBox()
-            page_layout_of_et = QHBoxLayout()
+            begin_spin_of_et: QSpinBox = QSpinBox()
+            end_spin_of_et: QSpinBox = QSpinBox()
+            page_layout_of_et: QHBoxLayout = QHBoxLayout()
             page_layout_of_et.addWidget(QLabel("テキストの抽出開始"))
             page_layout_of_et.addWidget(begin_spin_of_et)
             page_layout_of_et.addWidget(QLabel("テキストの抽出終了"))
             page_layout_of_et.addWidget(end_spin_of_et)
             left_func_area.addLayout(page_layout_of_et)
-
-            extract_text_btn = QPushButton("テキストの抽出")
-            extract_text_btn.clicked.connect(lambda: self.extract_text(begin_spin_of_et, end_spin_of_et))
+            extract_text_btn: QPushButton = QPushButton("テキストの抽出")
             left_func_area.addWidget(extract_text_btn)
-
+            extract_text_btn.clicked.connect(lambda: self.extract_text(begin_spin_of_et, end_spin_of_et))
             # ページの回転
-            spin_of_rp = QSpinBox()
-            page_layout_of_rp = QHBoxLayout()
+            spin_of_rp: QSpinBox = QSpinBox()
+            page_layout_of_rp: QHBoxLayout = QHBoxLayout()
             page_layout_of_rp.addWidget(QLabel("回転するページ"))
             page_layout_of_rp.addWidget(spin_of_rp)
-            rotate_btn = QPushButton("ページを時計回りに回転（90度）")
-            rotate_btn.clicked.connect(lambda: self.rotate_page(spin_of_rp))
+            rotate_btn: QPushButton = QPushButton("ページを時計回りに回転（90度）")
             page_layout_of_rp.addWidget(rotate_btn)
             left_func_area.addLayout(page_layout_of_rp)
+            rotate_btn.clicked.connect(lambda: self.rotate_page(spin_of_rp))
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
+
+    def get_images(self, file_path: str) -> list:
+        """ビューワーに表示するファイルの各ページの画像を取得します"""
+        output_files: list = []
+        try:
+            file_p: Path = Path(file_path)
+            file_name_s = file_p.stem
+            self.output_dir = Path(__file__).parent / "__images__"
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            pdf = pypdfium2.PdfDocument(file_path)
+            for i, page in enumerate(pdf):
+                pil_image: Any = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
+                output_file = self.output_dir / f"{file_name_s}_{i + 1}.png"
+                pil_image.save(output_file)
+                output_files.append(str(output_file))
+        except Exception as e:
+            self.show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+        return output_files
 
     def setup_second_ui(self, images: list) -> bool:
         """2回目のUser Interfaceを設定します"""
+        result: bool = False
         try:
-            result = False
             # 既存のレイアウトをクリア（再表示に対応）
             for i in reversed(range(self.center_viewer.count())):
-                widget = self.center_viewer.itemAt(i).widget()
+                widget: QWidget = self.center_viewer.itemAt(i).widget()
                 if widget is not None:
                     widget.setParent(None)
-            if images is None:
-                return None
+            if not images:
+                raise Exception("PDFファイルの各ページの画像がありません。")
             # 各ページを表示する
             for i, element in enumerate(images):
                 # 垂直レイアウトを用意する
-                page_layout = QVBoxLayout()
+                page_layout: QVBoxLayout = QVBoxLayout()
                 page_layout.setAlignment(Qt.AlignCenter)
-                page_widget = QWidget()
+                page_widget: QWidget = QWidget()
                 page_widget.setLayout(page_layout)
                 # ページ番号のラベル
-                page_num_label = QLabel(f"page: {i + 1}\n")
+                page_num_label: QLabel = QLabel(f"page: {i + 1}\n")
                 page_num_label.setAlignment(Qt.AlignCenter)
                 page_layout.addWidget(page_num_label)
                 # 画像のラベル
-                image_label = QLabel()
-                pixmap = QPixmap(element).scaledToWidth(300, Qt.SmoothTransformation)
+                image_label: QLabel = QLabel()
+                pixmap: QPixmap = QPixmap(element).scaledToWidth(300, Qt.SmoothTransformation)
                 image_label.setPixmap(pixmap)
                 image_label.setScaledContents(True)
                 image_label.setFixedSize(pixmap.size())
@@ -276,117 +293,95 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            return result
-
-    def get_images(self, file_path: str) -> list:
-        """ビューワーに表示するファイルの各ページの画像を取得します"""
-        try:
-            error = False
-            file_as_path_type = Path(file_path)
-            file_name_as_str_type = file_as_path_type.stem
-            self.output_dir = Path(__file__).parent / "__images__"
-            self.output_dir.mkdir(parents=True, exist_ok=True)
-            pdf = pypdfium2.PdfDocument(file_path)
-            output_files = []
-            for i, page in enumerate(pdf):
-                pil_image = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
-                output_file = self.output_dir / f"{file_name_as_str_type}_{i + 1}.png"
-                pil_image.save(output_file)
-                output_files.append(str(output_file))
-        except Exception as e:
-            error = True
-            self.show_error(f"error: \n{str(e)}")
-        else:
             pass
-        finally:
-            if error:
-                raise
-            return output_files
+        return result
 
     def select_pdf(self, reload: bool) -> bool:
         """選択します"""
+        result: bool = False
         try:
-            result = False
             if reload:
-                if not self.obj_of_cls.file_path.strip():
+                if self.obj_of_cls.file_path == "":
                     raise Exception("PDFファイルを選択してください。")
             else:
                 self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
             # 各OSに応じたパス区切りに変換する
-            file_as_path_type = Path(self.obj_of_cls.file_path).expanduser()
-            self.obj_of_cls.file_path = str(file_as_path_type)
+            file_p: Path = Path(self.obj_of_cls.file_path).expanduser()
+            self.obj_of_cls.file_path = str(file_p)
             self.file_input.setText(self.obj_of_cls.file_path)
             # 読み込む
-            if not self.obj_of_cls.read_file():
-                raise
-            images = self.get_images(self.obj_of_cls.file_path)
+            self.obj_of_cls.read_file()
+            images: list = self.get_images(self.obj_of_cls.file_path)
             self.setup_second_ui(images)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def encrypt_pdf(self) -> bool:
         """暗号化します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
-            if not self.obj_of_cls.file_path.strip() or not pw.strip():
+            if self.obj_of_cls.file_path == "" or pw == "":
                 # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            return_value = self.obj_of_cls.encrypt(pw)
-            self.show_result("暗号化", return_value)
+            self.obj_of_cls.encrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("暗号化", result)
+        return result
 
     def decrypt_pdf(self) -> bool:
         """復号化します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
-            if not self.obj_of_cls.file_path.strip() or not pw.strip():
+            if self.obj_of_cls.file_path == "" or pw == "":
                 # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            return_value = self.obj_of_cls.decrypt(pw)
-            self.show_result("復号化", return_value)
+            self.obj_of_cls.decrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("復号化", result)
+        return result
 
     def show_metadata(self) -> bool:
         """メタデータを表示します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
-            return_value = self.obj_of_cls.get_metadata()
-            self.show_result("メタデータの表示", return_value)
+            self.select_pdf(True)
+            self.obj_of_cls.get_metadata()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("メタデータの表示", result)
+        return result
 
     def write_metadata(self) -> bool:
         """メタデータを書き込みます"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
+            self.select_pdf(True)
             for value, key in self.obj_of_cls.fields:
                 match value:
                     case "creation_date":
@@ -395,136 +390,140 @@ class MainApp_Of_PT(QMainWindow):
                         self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
                     case _:
                         self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
-            return_value = self.obj_of_cls.write_metadata(self.widget_of_metadata)
-            self.show_result("メタデータの書き込み", return_value)
+            self.obj_of_cls.write_metadata(self.widget_of_metadata)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("メタデータの書き込み", result)
+        return result
 
     def merge_pdfs(self) -> bool:
         """マージします"""
+        result: bool = False
         try:
-            result = False
             files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
             if not files:
                 raise Exception("PDFファイルを選択してください。")
             # 各OSに応じたパス区切りに変換する
             for i, element in enumerate(files):
                 files[i] = str(Path(element))
-            return_value = self.obj_of_cls.merge(files)
-            self.show_result("マージ", return_value)
+            self.obj_of_cls.merge(files)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("マージ", result)
+        return result
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """ページを抽出します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            return_value = self.obj_of_cls.extract_pages(begin, end)
-            self.show_result("ページの抽出", return_value)
+            self.obj_of_cls.extract_pages(begin, end)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("ページの抽出", result)
+        return result
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """ページを削除します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            return_value = self.obj_of_cls.delete_pages(begin, end)
-            self.show_result("ページの削除", return_value)
+            self.obj_of_cls.delete_pages(begin, end)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("ページの削除", result)
+        return result
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
         """テキストを抽出します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
+            self.select_pdf(True)
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
             if begin < 1 or end > self.obj_of_cls.num_of_pages or end < begin:
                 raise Exception("ページ範囲またはパスが不正です。")
-            return_value = self.obj_of_cls.extract_text(begin, end)
-            self.show_result("テキストの抽出", return_value)
+            self.obj_of_cls.extract_text(begin, end)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            self.show_result("テキストの抽出", result)
+        return result
 
     def rotate_page(self, spin: QSpinBox) -> bool:
         """ページを回転します"""
+        result: bool = False
         try:
-            result = False
             self.obj_of_cls.file_path = self.file_input.text()
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
             # 再読み込み
-            if not self.select_pdf(True):
-                raise
-            page = spin.value()
+            self.select_pdf(True)
+            page: int = spin.value()
             if page == 0:
                 raise Exception("ページ範囲を指定してください。")
             if page < 1 or page > self.obj_of_cls.num_of_pages:
                 raise Exception("ページ番号が不正です。")
-            return_value = self.obj_of_cls.rotate_page_clockwise(page, 90)
-            self.show_result("ページの回転", return_value)
+            self.obj_of_cls.rotate_page_clockwise(page, 90)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
-            images = self.get_images(self.obj_of_cls.file_path)
+            images: list = self.get_images(self.obj_of_cls.file_path)
             self.setup_second_ui(images)
         finally:
-            return result
+            self.show_result("ページの回転", result)
+        return result
 
 
 def main() -> bool:
     """主要関数"""
+    result: bool = False
     try:
-        result = False
-        obj_of_gt = GUITools()
-        app = QApplication(sys.argv)
+        obj_of_gt: GUITools = GUITools()
+        app: QApplication = QApplication(sys.argv)
         # アプリ単位でフォントを設定する
-        font = QFont()
+        font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window = MainApp_Of_PT()
+        window: MainApp_Of_PT = MainApp_Of_PT()
         window.resize(1000, 800)
         # 最大化して、表示させる
         window.showMaximized()
@@ -534,7 +533,8 @@ def main() -> bool:
     else:
         result = True
     finally:
-        return result
+        pass
+    return result
 
 
 if __name__ == "__main__":
