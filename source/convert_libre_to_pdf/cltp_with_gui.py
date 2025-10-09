@@ -1,10 +1,10 @@
 import logging
-import os
 import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
@@ -56,7 +56,7 @@ class MainApp_Of_CLTP(QWidget):
     def setup_log(self) -> bool:
         """ログを設定する"""
         result: bool = False
-        exe_path: Path = None
+        exe_path: Optional[Path] = None
         try:
             # exe化されている場合とそれ以外を切り分ける
             if getattr(sys, "frozen", False):
@@ -166,16 +166,16 @@ class MainApp_Of_CLTP(QWidget):
     def open_explorer(self, folder_path: str) -> bool:
         """エクスプローラーを開きます"""
         result: bool = False
-        EXPLORER: str = "/mnt/c/Windows/explorer.exe"
+        EXPLORER_OF_WSL: str = "/mnt/c/Windows/explorer.exe"
         try:
-            if not folder_path:
+            if folder_path == "":
                 raise Exception("フォルダを選択してください。")
             if platform.system().lower() == "windows":
-                os.startfile(folder_path)
+                subprocess.run(["explorer", folder_path], shell=False)
             elif self.obj_of_pft.is_wsl():
                 # Windowsのパスに変換（/mnt/c/... 形式）
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", folder_path]).decode("utf-8").strip()
-                subprocess.run([EXPLORER, wsl_path])
+                subprocess.run([EXPLORER_OF_WSL, wsl_path])
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -188,7 +188,7 @@ class MainApp_Of_CLTP(QWidget):
         """ファイル一覧を表示します"""
         result: bool = False
         try:
-            if not self.obj_of_cls.folder_path_from or not self.obj_of_cls.folder_path_to:
+            if self.obj_of_cls.folder_path_from == "" or self.obj_of_cls.folder_path_to == "":
                 raise Exception("変換元と変換先のフォルダを選択してください。")
             self.obj_of_cls.create_file_lst()
             self.file_lst_widget.clear()
@@ -210,6 +210,8 @@ class MainApp_Of_CLTP(QWidget):
         """変換します"""
         result: bool = False
         try:
+            if not self.obj_of_cls.filtered_lst_of_f:
+                raise Exception("ファイルリストが初期化されていません。")
             self.progress_bar.setRange(0, self.obj_of_cls.number_of_f)
             for i in range(self.obj_of_cls.number_of_f):
                 self.obj_of_cls.convert_file()

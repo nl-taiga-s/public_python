@@ -61,7 +61,7 @@ class ConvertLibreToPDF:
                 if file_p.suffix.lower() in self.valid_exts:
                     self.filtered_lst_of_f.append(f)
             self.number_of_f = len(self.filtered_lst_of_f)
-            if self.number_of_f == 0:
+            if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
         except Exception as e:
@@ -81,7 +81,7 @@ class ConvertLibreToPDF:
         """前のファイルへ"""
         result: bool = False
         try:
-            if self.p == 0:
+            if not self.p:
                 self.p = self.number_of_f - 1
             else:
                 self.p -= 1
