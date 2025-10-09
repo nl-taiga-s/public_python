@@ -1,7 +1,8 @@
 import logging
-import os
+import subprocess
 import sys
 from pathlib import Path
+from typing import Any, Optional, Type
 
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
@@ -21,11 +22,11 @@ class QTextEditHandler(logging.Handler):
 
 
 class MainApp_Of_COTP(QWidget):
-    def __init__(self, obj_of_cls: object):
+    def __init__(self, obj_of_cls: Type[Any]):
         """初期化します"""
         super().__init__()
         self.obj_of_lt: LogTools = LogTools()
-        self.obj_of_cls: object = obj_of_cls(self.obj_of_lt.logger)
+        self.obj_of_cls: Any = obj_of_cls(self.obj_of_lt.logger)
         self.setup_ui()
         self.obj_of_pft: PlatformTools = PlatformTools()
         self.obj_of_pt: PathTools = PathTools()
@@ -52,7 +53,7 @@ class MainApp_Of_COTP(QWidget):
     def setup_log(self) -> bool:
         """ログを設定する"""
         result: bool = False
-        exe_path: Path = None
+        exe_path: Optional[Path] = None
         try:
             # exe化されている場合とそれ以外を切り分ける
             if getattr(sys, "frozen", False):
@@ -61,17 +62,17 @@ class MainApp_Of_COTP(QWidget):
                 exe_path = Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            if not self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log):
-                raise
+            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def setup_ui(self) -> bool:
         """User Interfaceを設定します"""
@@ -114,11 +115,12 @@ class MainApp_Of_COTP(QWidget):
             btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
             btn_convert.clicked.connect(self.convert_file)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def select_folder_from(self) -> bool:
         """変換元のフォルダを選択します"""
@@ -132,11 +134,12 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_to:
                     self.show_file_lst()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def select_folder_to(self) -> bool:
         """変換先のフォルダを選択します"""
@@ -150,31 +153,33 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_from:
                     self.show_file_lst()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def open_explorer(self, folder_path: str) -> bool:
         """エクスプローラーを開きます"""
         result: bool = False
         try:
-            if not folder_path:
+            if folder_path == "":
                 raise Exception("フォルダを選択してください。")
-            os.startfile(folder_path)
+            subprocess.run(["explorer", folder_path], shell=False)
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def show_file_lst(self) -> bool:
         """ファイル一覧を表示します"""
         result: bool = False
         try:
-            if not self.obj_of_cls.folder_path_from or not self.obj_of_cls.folder_path_to:
+            if self.obj_of_cls.folder_path_from == "" or self.obj_of_cls.folder_path_to == "":
                 raise Exception("変換元と変換先のフォルダを選択してください。")
             self.obj_of_cls.create_file_lst()
             self.file_lst_widget.clear()
@@ -185,11 +190,12 @@ class MainApp_Of_COTP(QWidget):
             self.progress_bar.setValue(0)
         except Exception as e:
             self.file_lst_widget.clear()
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
     def convert_file(self) -> bool:
         """変換します"""
@@ -205,11 +211,12 @@ class MainApp_Of_COTP(QWidget):
                     break
                 self.obj_of_cls.move_to_next_file()
         except Exception as e:
-            self.show_error(f"error: \n{repr(e)}")
+            self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            return result
+            pass
+        return result
 
 
 def main() -> bool:
@@ -231,13 +238,14 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except ImportError as e:
-        obj_of_gt.show_error(f"error: \n{repr(e)}")
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{repr(e)}")
+        obj_of_gt.show_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
-        return result
+        pass
+    return result
 
 
 if __name__ == "__main__":

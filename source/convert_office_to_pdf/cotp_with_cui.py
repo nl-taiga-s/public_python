@@ -13,8 +13,6 @@ class COTP_With_Cui:
 
     def input_folder_path(self) -> list:
         """フォルダのパスを入力します"""
-        result: bool = False
-        cancel: bool = False
         while True:
             try:
                 folder_from_s: str = input("ファイルを一括変換するフォルダを指定してください。: ").strip()
@@ -30,22 +28,18 @@ class COTP_With_Cui:
                 if not folder_from_p.is_dir() or not folder_to_p.is_dir():
                     raise Exception("フォルダではありません。")
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                result = True
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return [folder_from_s, folder_to_s]
 
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         result: bool = False
-        cancel: bool = False
         while True:
             try:
                 binary_choice: str = input(f"{msg}\n(Yes => y or No => n): ").strip()
@@ -53,20 +47,17 @@ class COTP_With_Cui:
                     case var if var in self.binary_choices["yes"]:
                         result = True
                     case var if var in self.binary_choices["no"]:
-                        continue
+                        pass
                     case _:
                         raise Exception("無効な入力です。")
             except Exception as e:
-                print(f"error: \n{repr(e)}")
+                print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                cancel = True
+                raise
             else:
-                pass
+                break
             finally:
-                if cancel or result:
-                    break
-        if cancel:
-            raise
+                pass
         return result
 
 
@@ -80,12 +71,10 @@ def main() -> bool:
         file_of_exe_p: Path = Path(__file__)
         file_of_log_p: Path = obj_of_pt.get_file_path_of_log(file_of_exe_p)
         obj_of_lt.file_path_of_log = str(file_of_log_p)
-        if not obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log):
-            raise
-        if not obj_of_lt.setup_stream_handler():
-            raise
+        obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
+        obj_of_lt.setup_stream_handler()
     except Exception as e:
-        print(f"error: \n{repr(e)}")
+        print(f"error: \n{str(e)}")
         return result
     else:
         pass
@@ -97,37 +86,32 @@ def main() -> bool:
 
         obj_of_cls: ConvertOfficeToPDF = ConvertOfficeToPDF(obj_of_lt.logger)
     except ImportError as e:
-        print(f"error: \n{repr(e)}")
+        print(f"error: \n{str(e)}")
         return result
     else:
         pass
     finally:
         pass
     # 処理の本体部分
-    cancel: bool = False
+    obj_with_cui: COTP_With_Cui = COTP_With_Cui()
     while True:
         result = False
-        cancel = False
         try:
-            obj_with_cui: COTP_With_Cui = COTP_With_Cui()
             obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui.input_folder_path()
-            if not obj_of_cls.create_file_lst():
-                raise
+            obj_of_cls.create_file_lst()
             for _ in range(obj_of_cls.number_of_f):
                 obj_of_cls.handle_file()
                 if obj_of_cls.complete:
                     break
                 obj_of_cls.move_to_next_file()
-        except Exception as e:
-            print(f"***処理が失敗しました。***: \n{repr(e)}")
+        except Exception:
+            print("***処理が失敗しました。***")
         except KeyboardInterrupt:
-            cancel = True
+            raise
         else:
             result = True
             print("***処理が成功しました。***")
         finally:
-            if cancel:
-                break
             if obj_with_cui.input_bool("終了しますか？"):
                 break
             else:
