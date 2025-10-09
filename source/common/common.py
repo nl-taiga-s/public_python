@@ -4,6 +4,7 @@ import platform
 import sys
 from logging import FileHandler, Formatter, Logger, StreamHandler
 from pathlib import Path
+from typing import Optional
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox, QWidget
@@ -129,7 +130,7 @@ class PathTools:
 
     def get_file_path_of_log(self, base_path: Path) -> Path:
         """ログファイルのパスを取得します"""
-        file_p: Path = None
+        file_p: Optional[Path] = None
         try:
             # 実行するファイルのディレクトリ
             folder_of_exe_p: Path = base_path.parent
