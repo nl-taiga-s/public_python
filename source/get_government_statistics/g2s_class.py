@@ -6,6 +6,7 @@ import xml.etree.ElementTree as et
 from csv import DictReader
 from io import StringIO
 from logging import Logger
+from pathlib import Path
 from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Tuple, Union, cast
 from xml.etree.ElementTree import Element
 
@@ -16,6 +17,12 @@ from httpx import AsyncClient, Client, Response, Timeout
 from pandas import DataFrame
 from tabulate import tabulate
 
+from source.common.common import DatetimeTools
+
+# 進捗通知型（CUI:％表示 / GUI: QProgressBar 用）
+# # int は 0-100
+ProgressCallback = Callable[[int], None]
+
 
 class GetGovernmentStatistics:
     """政府の統計データを取得します"""
@@ -24,6 +31,7 @@ class GetGovernmentStatistics:
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
+        self.obj_of_dt2: DatetimeTools = DatetimeTools()
         # dict変数のキー番号
         self.KEY: int = 0
         # dict変数の説明番号
@@ -51,7 +59,7 @@ class GetGovernmentStatistics:
         # 表示するデータの件数
         self.DATA_COUNT: int = 12
         # セッション管理のタイムアウト
-        self.TIMEOUT: Timeout = Timeout(10.0)
+        self.TIMEOUT: Timeout = Timeout(60.0)
 
     async def get_stats_data_ids(self) -> AsyncGenerator[dict]:
         """統計表IDの一覧を取得します"""
@@ -212,6 +220,84 @@ class GetGovernmentStatistics:
             self.log.info(f"***{self.get_stats_data_ids.__doc__} => 成功しました。***")
         finally:
             pass
+
+    async def write_stats_data_ids_to_file(
+        self,
+        page_generator,
+        data_type_key: str,
+        chunk_size: int = 100,
+        show_progress: bool = True,
+        progress_callback: ProgressCallback | None = None,
+    ) -> bool:
+        """
+        統計表IDを100件ごとにファイル保存
+        * page_generator: async generator
+            統計表IDをyieldする非同期ジェネレータ
+        * data_type_key: str
+            "xml", "json", "csv" のいずれか
+        * chunk_size: int
+            1ファイルあたりの件数
+        * show_progress: bool
+            CUIの場合はアニメーションを表示
+        * progress_callback: 進捗通知用コールバック
+        """
+        result: bool = False
+        try:
+            # 出力するフォルダ
+            folder_p: Path = Path(__file__).parent / "__stats_data_ids__"
+            folder_s: str = str(folder_p)
+            folder_p.mkdir(parents=True, exist_ok=True)
+            pages_cache: list = [page async for page in page_generator]
+            total_count: int = sum(len(p) for p in pages_cache)
+            counter: int = 0
+            buffer: list = []
+            for page in pages_cache:
+                for stat_id, info in page.items():
+                    counter += 1
+                    match data_type_key:
+                        case "xml":
+                            buffer.append(f"{stat_id}, {info.get('stat_name', '')}, {info.get('title', '')}")
+                        case "json":
+                            buffer.append(f"{stat_id}, {info.get('statistics_name', '')}, {info.get('title', '')}")
+                        case "csv":
+                            buffer.append(f"{stat_id}, {info.get('stat_name', '')}, {info.get('category', '')}")
+                        case _:
+                            raise Exception("データタイプが対応していません。")
+                    # 指定の件数ごとのデータを書き込む
+                    if counter % chunk_size == 0:
+                        # 出力するファイル
+                        date: str = self.obj_of_dt2.convert_for_file_name()
+                        file_name: str = f"list_of_stats_data_ids_{date}.txt"
+                        file_p: Path = folder_p / file_name
+                        file_p.write_text("\n".join(buffer), encoding="utf-8")
+                        buffer.clear()
+                    # 進捗通知
+                    if progress_callback and total_count > 0:
+                        pct = int(counter / total_count * 100)
+                        progress_callback(pct)
+            # 余りの件数のデータを書き込む
+            if buffer:
+                # 出力するファイル
+                date: str = self.obj_of_dt2.convert_for_file_name()
+                file_name: str = f"list_of_stats_data_ids_{date}.txt"
+                file_p: Path = folder_p / file_name
+                file_p.write_text("\n".join(buffer), encoding="utf-8")
+                buffer.clear()
+            if progress_callback:
+                progress_callback(100)
+        except Exception as e:
+            self.log.debug(repr(e))
+            self.log.error(f"***{self.write_stat_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+            raise
+        except KeyboardInterrupt:
+            raise
+        else:
+            result = True
+            self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
+            self.log.info(f"***{self.write_stat_ids_to_file.__doc__} => 成功しました。***")
+        finally:
+            pass
+        return result
 
     def get_data_from_api(self) -> DataFrame:
         """APIからデータを取得します"""

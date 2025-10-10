@@ -152,6 +152,10 @@ class GS_With_Cui:
                 pass
         return result
 
+    def show_percent(self, pct: int):
+        """進捗を表示します"""
+        print(f"\r処理中...{'.' * ((pct // 10) % 3 + 1)} {pct}%", end="", flush=True)
+
 
 async def main() -> bool:
     """主要関数"""
@@ -178,23 +182,16 @@ async def main() -> bool:
     while True:
         try:
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_with_cui.dct_of_data_type)
-            async for page in obj_of_cls.get_stats_data_ids():
-                for stat_id, info in page.items():
-                    match obj_of_cls.lst_of_data_type[obj_of_cls.KEY]:
-                        case "xml":
-                            stat_name: str = info.get("stat_name", "")
-                            title: str = info.get("title", "")
-                            print(f"{stat_id}, {stat_name}, {title}")
-                        case "json":
-                            statistics_name: str = info.get("statistics_name", "")
-                            title: str = info.get("title", "")
-                            print(f"{stat_id}, {statistics_name}, {title}")
-                        case "csv":
-                            stat_name: str = info.get("stat_name", "")
-                            category: str = info.get("category", "")
-                            print(f"{stat_id}, {stat_name}, {category}")
-                        case _:
-                            raise Exception("データタイプが対応していません。")
+            # 非同期ジェネレータをキャッシュ
+            pages_cache: list = [page async for page in obj_of_cls.get_stats_data_ids()]
+            # 統計表IDをテキストファイルに書き出す
+            await obj_of_cls.write_stat_ids_to_file(
+                page_generator=iter(pages_cache),
+                data_type_key=obj_of_cls.lst_of_data_type[obj_of_cls.KEY],
+                chunk_size=100,
+                progress_callback=obj_with_cui.show_percent,
+            )
+            print()
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
             obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_with_cui.dct_of_match)
