@@ -68,6 +68,7 @@ class GetGovernmentStatistics:
             """1ページ分を取得します"""
             try:
                 res: Response = await client.get(url, params=params)
+                res.encoding = "utf-8"
                 res.raise_for_status()
                 page_dct, count = parser(res)
             except Exception as e:
@@ -177,7 +178,6 @@ class GetGovernmentStatistics:
             page_dct: dict = {}
             row_count: int = 0
             try:
-                res.encoding = "utf-8"
                 reader: DictReader[str] = DictReader(StringIO(res.text))
                 for row in reader:
                     row_count += 1
