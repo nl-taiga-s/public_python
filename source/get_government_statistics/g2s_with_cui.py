@@ -154,7 +154,7 @@ class GS_With_Cui:
 
     def show_percent(self, pct: int):
         """進捗を表示します"""
-        print(f"\r処理中...{'.' * ((pct // 10) % 3 + 1)} {pct}%", end="", flush=True)
+        print(f"処理中...{'.' * ((pct // 10) % 3 + 1)} {pct}%", end="", flush=True)
 
 
 async def main() -> bool:

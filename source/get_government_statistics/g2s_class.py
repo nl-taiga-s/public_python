@@ -137,12 +137,13 @@ class GetGovernmentStatistics:
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                # clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                pass
 
         def parser_json(res: Response) -> tuple[dict, int]:
             """JSONのデータを解析します"""
@@ -166,12 +167,13 @@ class GetGovernmentStatistics:
                     }
             except Exception as e:
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                # clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(json.dumps(data, indent=4, ensure_ascii=False))
+                pass
 
         def parser_csv(res: Response) -> tuple[dict, int]:
             """CSVのデータを解析します"""
@@ -188,12 +190,13 @@ class GetGovernmentStatistics:
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
             except Exception as e:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                # clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, row_count
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                pass
 
         URL: str = ""
         try:
