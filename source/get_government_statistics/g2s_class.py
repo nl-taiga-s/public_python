@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Tuple, Union, cast
 from xml.etree.ElementTree import Element
 
+import clipboard
 import httpx
 import pandas as pd
 import pyperclip
@@ -138,7 +139,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                # clipboard.copy(res.text)
+                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, len(table_lst)
@@ -168,7 +169,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                # clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
+                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
                 raise
             else:
                 return page_dct, len(table_lst)
@@ -191,7 +192,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                # clipboard.copy(res.text)
+                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, row_count

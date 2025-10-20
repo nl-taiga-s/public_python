@@ -185,7 +185,7 @@ async def main() -> bool:
             # 非同期ジェネレータをキャッシュ
             pages_cache: list = [page async for page in obj_of_cls.get_stats_data_ids()]
             # 統計表IDをテキストファイルに書き出す
-            await obj_of_cls.write_stat_ids_to_file(
+            await obj_of_cls.write_stats_data_ids_to_file(
                 page_generator=iter(pages_cache),
                 data_type_key=obj_of_cls.lst_of_data_type[obj_of_cls.KEY],
                 chunk_size=100,
