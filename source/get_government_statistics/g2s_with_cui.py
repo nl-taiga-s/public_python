@@ -209,10 +209,11 @@ async def main() -> bool:
             result = True
             print("***処理が成功しました。***")
         finally:
-            if obj_with_cui.input_bool("終了しますか？"):
-                break
-            else:
-                continue
+            pass
+        if obj_with_cui.input_bool("終了しますか？"):
+            break
+        else:
+            continue
     return result
 
 

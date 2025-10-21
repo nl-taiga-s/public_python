@@ -365,12 +365,13 @@ class GetGovernmentStatistics:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                pyperclip.copy(res.text)
                 raise
             else:
                 return df
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                pass
 
         def with_json(client: Client) -> DataFrame:
             """JSONでデータを取得します"""
@@ -426,12 +427,13 @@ class GetGovernmentStatistics:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                pyperclip.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
                 raise
             else:
                 return df
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
+                pass
 
         def with_csv(client: Client) -> DataFrame:
             """CSVでデータを取得します"""
@@ -481,12 +483,13 @@ class GetGovernmentStatistics:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                pyperclip.copy(res.text)
                 raise
             else:
                 return df
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                pass
 
         df: Optional[DataFrame] = None
         try:
