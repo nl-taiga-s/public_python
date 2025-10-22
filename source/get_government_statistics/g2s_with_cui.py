@@ -179,12 +179,13 @@ async def main() -> bool:
         try:
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_with_cui.dct_of_data_type)
             # 統計表IDをテキストファイルに書き出す
+            obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 開始しました。")
             await obj_of_cls.write_stats_data_ids_to_file(
                 page_generator=obj_of_cls.get_stats_data_ids(),
                 data_type_key=obj_of_cls.lst_of_data_type[obj_of_cls.KEY],
                 chunk_size=100,
             )
-            print(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 完了しました。")
+            obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
             obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_with_cui.dct_of_match)
@@ -196,12 +197,12 @@ async def main() -> bool:
             obj_of_cls.order = str(order_lst)
             obj_of_cls.show_data(filtered_df)
         except Exception:
-            print("***処理が失敗しました。***")
+            obj_of_lt.logger.critical("***処理が失敗しました。***")
         except KeyboardInterrupt:
             raise
         else:
             result = True
-            print("***処理が成功しました。***")
+            obj_of_lt.logger.info("***処理が成功しました。***")
         finally:
             pass
         if obj_with_cui.input_bool("終了しますか？"):

@@ -225,7 +225,7 @@ class GetGovernmentStatistics:
         data_type_key: str,
         chunk_size: int = 100,
     ) -> bool:
-        """統計表IDを100件ごとにファイル保存"""
+        """統計表IDを指定の件数ごとにファイルへ保存します"""
 
         def get_info_columns(info: dict, data_type_key: str) -> tuple[str, str]:
             """2列目・3列目を安全に取得します"""
@@ -256,6 +256,7 @@ class GetGovernmentStatistics:
             folder_p: Path = Path(__file__).parent / "__stats_data_ids__"
             folder_p.mkdir(parents=True, exist_ok=True)
             folder_s: str = str(folder_p)
+            self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
             file_index: int = 1
             buffer: list[str] = []
             async for page in page_generator:
@@ -284,7 +285,6 @@ class GetGovernmentStatistics:
             raise
         else:
             result = True
-            self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
             self.log.info(f"***{self.write_stats_data_ids_to_file.__doc__} => 成功しました。***")
         finally:
             pass
