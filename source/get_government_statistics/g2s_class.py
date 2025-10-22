@@ -20,10 +20,6 @@ from tabulate import tabulate
 
 from source.common.common import DatetimeTools
 
-# 進捗通知型（CUI:％表示 / GUI: QProgressBar 用）
-# # int は 0-100
-ProgressCallback = Callable[[int], None]
-
 
 class GetGovernmentStatistics:
     """政府の統計データを取得します"""
@@ -129,21 +125,21 @@ class GetGovernmentStatistics:
                 root: Element[str] = et.fromstring(res.text)
                 table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
                 for t in table_lst:
-                    stat_id: str = (t.attrib.get("id", "") or "") if t else ""
+                    stat_id: str = (t.attrib.get("id", "") or "") if t is not None else ""
                     element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
-                    stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name else ""
-                    stat_code: str = (element_of_stat_name.attrib.get("code") or "") if element_of_stat_name else ""
+                    stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name is not None else ""
+                    stat_code: str = (element_of_stat_name.attrib.get("code") or "") if element_of_stat_name is not None else ""
                     element_of_title: Optional[Element] = t.find("TITLE")
-                    title: str = (element_of_title.text or "") if element_of_title else ""
+                    title: str = (element_of_title.text or "") if element_of_title is not None else ""
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                # clipboard.copy(res.text)
                 pass
 
         def parser_json(res: Response) -> tuple[dict, int]:
@@ -155,7 +151,7 @@ class GetGovernmentStatistics:
                 table_lst = [table_data] if isinstance(table_data, dict) else table_data
                 for t in table_lst:
                     stat_id: str = t.get("@id", "")
-                    element_of_stat_name: Element[str] = t.get("STAT_NAME", {})
+                    element_of_stat_name: dict = t.get("STAT_NAME", {})
                     stat_name: str = element_of_stat_name.get("$", "")
                     stat_code: str = element_of_stat_name.get("@code", "")
                     statistics_name: str = t.get("STATISTICS_NAME", {})
@@ -168,13 +164,12 @@ class GetGovernmentStatistics:
                     }
             except Exception as e:
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
-                pass
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
 
         def parser_csv(res: Response) -> tuple[dict, int]:
             """CSVのデータを解析します"""
@@ -191,13 +186,12 @@ class GetGovernmentStatistics:
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
             except Exception as e:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, row_count
             finally:
-                pass
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(res.text)
 
         URL: str = ""
         try:
@@ -227,78 +221,71 @@ class GetGovernmentStatistics:
 
     async def write_stats_data_ids_to_file(
         self,
-        page_generator,
+        page_generator: AsyncGenerator[dict],
         data_type_key: str,
         chunk_size: int = 100,
-        show_progress: bool = True,
-        progress_callback: ProgressCallback | None = None,
     ) -> bool:
-        """
-        統計表IDを100件ごとにファイル保存
-        * page_generator: async generator
-            統計表IDをyieldする非同期ジェネレータ
-        * data_type_key: str
-            "xml", "json", "csv" のいずれか
-        * chunk_size: int
-            1ファイルあたりの件数
-        * show_progress: bool
-            CUIの場合はアニメーションを表示
-        * progress_callback: 進捗通知用コールバック
-        """
+        """統計表IDを100件ごとにファイル保存"""
+
+        def get_info_columns(info: dict, data_type_key: str) -> tuple[str, str]:
+            """2列目・3列目を安全に取得します"""
+            try:
+                match data_type_key:
+                    case "xml":
+                        col2 = info.get("stat_name")
+                        col3 = info.get("title")
+                    case "json":
+                        col2 = info.get("statistics_name") or info.get("stat_name") or ""
+                        col3 = info.get("title") or ""
+                    case "csv":
+                        col2 = info.get("stat_name") or ""
+                        col3 = info.get("category") or ""
+                    case _:
+                        col2 = ""
+                        col3 = ""
+            except Exception as e:
+                self.log.error(f"***{get_info_columns.__doc__} => 失敗しました。***: \n{str(e)}")
+                raise
+            else:
+                return col2, col3
+            finally:
+                pass
+
         result: bool = False
         try:
-            # 出力するフォルダ
             folder_p: Path = Path(__file__).parent / "__stats_data_ids__"
-            folder_s: str = str(folder_p)
             folder_p.mkdir(parents=True, exist_ok=True)
-            pages_cache: list = [page async for page in page_generator]
-            total_count: int = sum(len(p) for p in pages_cache)
-            counter: int = 0
-            buffer: list = []
-            for page in pages_cache:
+            folder_s: str = str(folder_p)
+            file_index: int = 1
+            buffer: list[str] = []
+            async for page in page_generator:
                 for stat_id, info in page.items():
-                    counter += 1
-                    match data_type_key:
-                        case "xml":
-                            buffer.append(f"{stat_id}, {info.get('stat_name', '')}, {info.get('title', '')}")
-                        case "json":
-                            buffer.append(f"{stat_id}, {info.get('statistics_name', '')}, {info.get('title', '')}")
-                        case "csv":
-                            buffer.append(f"{stat_id}, {info.get('stat_name', '')}, {info.get('category', '')}")
-                        case _:
-                            raise Exception("データタイプが対応していません。")
-                    # 指定の件数ごとのデータを書き込む
-                    if counter % chunk_size == 0:
-                        # 出力するファイル
+                    col2, col3 = get_info_columns(info, data_type_key)
+                    buffer.append(f"{stat_id}, {col2}, {col3}")
+                    # chunkごとにファイルに保存する
+                    if len(buffer) >= chunk_size:
                         date: str = self.obj_of_dt2.convert_for_file_name()
-                        file_name: str = f"list_of_stats_data_ids_{date}.txt"
+                        file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.csv"
                         file_p: Path = folder_p / file_name
                         file_p.write_text("\n".join(buffer), encoding="utf-8")
                         buffer.clear()
-                    # 進捗通知
-                    if progress_callback and total_count > 0:
-                        pct = int(counter / total_count * 100)
-                        progress_callback(pct)
-            # 余りの件数のデータを書き込む
+                        file_index += 1
+            # 余りをファイルに保存する
             if buffer:
-                # 出力するファイル
                 date: str = self.obj_of_dt2.convert_for_file_name()
-                file_name: str = f"list_of_stats_data_ids_{date}.txt"
+                file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.csv"
                 file_p: Path = folder_p / file_name
                 file_p.write_text("\n".join(buffer), encoding="utf-8")
-                buffer.clear()
-            if progress_callback:
-                progress_callback(100)
         except Exception as e:
             self.log.debug(repr(e))
-            self.log.error(f"***{self.write_stat_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+            self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         except KeyboardInterrupt:
             raise
         else:
             result = True
             self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
-            self.log.info(f"***{self.write_stat_ids_to_file.__doc__} => 成功しました。***")
+            self.log.info(f"***{self.write_stats_data_ids_to_file.__doc__} => 成功しました。***")
         finally:
             pass
         return result
