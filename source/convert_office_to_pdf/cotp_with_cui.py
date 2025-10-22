@@ -115,8 +115,6 @@ def main() -> bool:
             pass
         if obj_with_cui.input_bool("終了しますか？"):
             break
-        else:
-            continue
     return result
 
 
