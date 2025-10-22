@@ -49,7 +49,7 @@ class CLTP_With_Cui:
                     case var if var in self.binary_choices["yes"]:
                         result = True
                     case var if var in self.binary_choices["no"]:
-                        continue
+                        pass
                     case _:
                         raise Exception("無効な入力です。")
             except Exception as e:
@@ -118,8 +118,6 @@ def main() -> bool:
             pass
         if obj_with_cui.input_bool("終了しますか？"):
             break
-        else:
-            continue
     return result
 
 
