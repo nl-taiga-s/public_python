@@ -319,7 +319,7 @@ def main() -> bool:
                     degrees: int = obj_with_cui.input_degrees()
                     obj_of_cls.rotate_page_clockwise(page, degrees)
                 case _:
-                    continue
+                    pass
         except Exception:
             print("***処理が失敗しました。***")
         except KeyboardInterrupt:
@@ -331,8 +331,6 @@ def main() -> bool:
             pass
         if obj_with_cui.input_bool("終了しますか？"):
             break
-        else:
-            continue
     return result
 
 
