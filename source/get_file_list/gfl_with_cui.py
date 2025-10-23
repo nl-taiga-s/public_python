@@ -105,12 +105,12 @@ def main() -> bool:
             obj_of_cls.pattern = obj_with_cui.input_text("ファイルの検索パターンを入力してください。")
             obj_of_cls.extract_by_pattern()
         except Exception:
-            print("***処理が失敗しました。***")
+            obj_of_lt.logger.critical("***処理が失敗しました。***")
         except KeyboardInterrupt:
             raise
         else:
             result = True
-            print("***処理が成功しました。***")
+            obj_of_lt.logger.info("***処理が成功しました。***")
         finally:
             pass
         if obj_with_cui.input_bool("終了しますか？"):
