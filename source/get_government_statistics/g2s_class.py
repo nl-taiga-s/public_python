@@ -13,7 +13,6 @@ from xml.etree.ElementTree import Element
 import clipboard
 import httpx
 import pandas as pd
-import pyperclip
 from httpx import AsyncClient, Client, Response, Timeout
 from pandas import DataFrame
 from tabulate import tabulate
@@ -134,12 +133,12 @@ class GetGovernmentStatistics:
                     page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                # clipboard.copy(res.text)
                 pass
 
         def parser_json(res: Response) -> tuple[dict, int]:
@@ -164,34 +163,47 @@ class GetGovernmentStatistics:
                     }
             except Exception as e:
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
                 raise
             else:
                 return page_dct, len(table_lst)
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
+                pass
 
         def parser_csv(res: Response) -> tuple[dict, int]:
             """CSVのデータを解析します"""
             page_dct: dict = {}
             row_count: int = 0
             try:
-                reader: DictReader[str] = DictReader(StringIO(res.text))
+                lines: list = res.text.splitlines()
+                # ヘッダー行を探す
+                start_idx: int = 0
+                for i, line in enumerate(lines):
+                    if "STAT_INF" in line:
+                        # 次の行
+                        start_idx = i + 1
+                        break
+                if start_idx == 0:
+                    raise Exception("CSVファイルにヘッダー行が見つかりません。")
+                csv_text: str = "\n".join(lines[start_idx:])
+                reader: DictReader[str] = DictReader(StringIO(csv_text))
                 for row in reader:
                     row_count += 1
                     stat_id: str = row.get("TABLE_INF", "")
                     stat_name: str = row.get("STAT_NAME", "")
                     stat_code: str = row.get("STAT_CODE", "")
-                    category: str = row.get("TABULATION_SUB_CATEGORY3", "")
-                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "category": category}
+                    title: str = row.get("TITLE", "")
+                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(res.text)
                 raise
             else:
                 return page_dct, row_count
             finally:
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
+                pass
 
         URL: str = ""
         try:
@@ -235,11 +247,11 @@ class GetGovernmentStatistics:
                         col2 = info.get("stat_name")
                         col3 = info.get("title")
                     case "json":
-                        col2 = info.get("statistics_name") or info.get("stat_name") or ""
-                        col3 = info.get("title") or ""
+                        col2 = info.get("statistics_name")
+                        col3 = info.get("title")
                     case "csv":
-                        col2 = info.get("stat_name") or ""
-                        col3 = info.get("category") or ""
+                        col2 = info.get("stat_name")
+                        col3 = info.get("title")
                     case _:
                         col2 = ""
                         col3 = ""
@@ -353,7 +365,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                clipboard.copy(res.text)
                 raise
             else:
                 return df
@@ -415,7 +427,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
+                clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
                 raise
             else:
                 return df
@@ -471,7 +483,7 @@ class GetGovernmentStatistics:
             except Exception as e:
                 self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
-                pyperclip.copy(res.text)
+                clipboard.copy(res.text)
                 raise
             else:
                 return df

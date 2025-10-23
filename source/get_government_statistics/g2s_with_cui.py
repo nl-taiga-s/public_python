@@ -178,8 +178,8 @@ async def main() -> bool:
     while True:
         try:
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_with_cui.dct_of_data_type)
-            # 統計表IDをテキストファイルに書き出す
             obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 開始しました。")
+            # 統計表IDをテキストファイルに書き出す
             await obj_of_cls.write_stats_data_ids_to_file(
                 page_generator=obj_of_cls.get_stats_data_ids(),
                 data_type_key=obj_of_cls.lst_of_data_type[obj_of_cls.KEY],
