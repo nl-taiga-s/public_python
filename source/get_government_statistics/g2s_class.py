@@ -240,7 +240,7 @@ class GetGovernmentStatistics:
         """統計表IDを指定の件数ごとにファイルへ保存します"""
 
         def get_info_columns(info: dict, data_type_key: str) -> tuple[str, str]:
-            """2列目・3列目を安全に取得します"""
+            """2列目・3列目を取得します"""
             try:
                 match data_type_key:
                     case "xml":
@@ -255,13 +255,18 @@ class GetGovernmentStatistics:
                     case _:
                         col2 = ""
                         col3 = ""
+                if col3 != "":
+                    # データクレンジング
+                    col3 = col3.replace("\u002c", "\u3001")
+                    col3 = col3.replace("\uff0c", "\u3001")
             except Exception as e:
                 self.log.error(f"***{get_info_columns.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
-                return col2, col3
+                pass
             finally:
                 pass
+            return col2, col3
 
         result: bool = False
         try:
@@ -274,7 +279,7 @@ class GetGovernmentStatistics:
             async for page in page_generator:
                 for stat_id, info in page.items():
                     col2, col3 = get_info_columns(info, data_type_key)
-                    buffer.append(f"{stat_id}, {col2}, {col3}")
+                    buffer.append(f"{stat_id},{col2},{col3}")
                     # chunkごとにファイルに保存する
                     if len(buffer) >= chunk_size:
                         date: str = self.obj_of_dt2.convert_for_file_name()
@@ -290,7 +295,6 @@ class GetGovernmentStatistics:
                 file_p: Path = folder_p / file_name
                 file_p.write_text("\n".join(buffer), encoding="utf-8")
         except Exception as e:
-            self.log.debug(repr(e))
             self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         except KeyboardInterrupt:
@@ -368,9 +372,10 @@ class GetGovernmentStatistics:
                 clipboard.copy(res.text)
                 raise
             else:
-                return df
+                pass
             finally:
                 pass
+            return df
 
         def with_json(client: Client) -> DataFrame:
             """JSONでデータを取得します"""
@@ -430,9 +435,10 @@ class GetGovernmentStatistics:
                 clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
                 raise
             else:
-                return df
+                pass
             finally:
                 pass
+            return df
 
         def with_csv(client: Client) -> DataFrame:
             """CSVでデータを取得します"""
@@ -486,9 +492,10 @@ class GetGovernmentStatistics:
                 clipboard.copy(res.text)
                 raise
             else:
-                return df
+                pass
             finally:
                 pass
+            return df
 
         df: Optional[DataFrame] = None
         try:
@@ -510,9 +517,9 @@ class GetGovernmentStatistics:
             raise
         else:
             self.log.info(f"***{self.get_data_from_api.__doc__} => 成功しました。***")
-            return df
         finally:
             pass
+        return df
 
     def filter_data(self, df: DataFrame) -> DataFrame:
         """データをフィルターにかけます"""
@@ -563,9 +570,9 @@ class GetGovernmentStatistics:
             raise
         else:
             self.log.info(f"***{self.filter_data.__doc__} => 成功しました。***")
-            return filtered_df
         finally:
             pass
+        return filtered_df
 
     def show_data(self, df: DataFrame) -> bool:
         """データを表示させます"""
@@ -592,6 +599,6 @@ class GetGovernmentStatistics:
         else:
             result = True
             self.log.info(f"***{self.show_data.__doc__} => 成功しました。***")
-            return result
         finally:
             pass
+        return result
