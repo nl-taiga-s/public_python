@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from source.common.common import LogTools, PathTools
@@ -28,7 +29,7 @@ class GFL_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -43,7 +44,7 @@ class GFL_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -66,7 +67,7 @@ class GFL_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -107,7 +108,7 @@ def main() -> bool:
         except Exception:
             obj_of_lt.logger.critical("***処理が失敗しました。***")
         except KeyboardInterrupt:
-            raise
+            sys.exit(0)
         else:
             result = True
             obj_of_lt.logger.info("***処理が成功しました。***")
