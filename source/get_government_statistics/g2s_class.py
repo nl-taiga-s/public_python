@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import sys
 import traceback
 import xml.etree.ElementTree as et
 from csv import DictReader
@@ -70,9 +71,9 @@ class GetGovernmentStatistics:
                 res.raise_for_status()
                 page_dct, count = parser(res)
             except Exception as e:
-                tb: str = traceback.format_exc()
-                self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{str(e)}\n{tb}")
-                raise
+                self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{str(e)}")
+            except KeyboardInterrupt:
+                sys.exit(0)
             else:
                 return page_dct, count
             finally:
@@ -114,6 +115,8 @@ class GetGovernmentStatistics:
                             break
                     except Exception as e:
                         self.log.error(f"***{fetch_all_pages.__doc__} => 失敗しました。***: \n{str(e)}")
+                    except KeyboardInterrupt:
+                        sys.exit(0)
                     else:
                         pass
                     finally:
@@ -137,7 +140,8 @@ class GetGovernmentStatistics:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 clipboard.copy(res.text)
-                raise
+            except KeyboardInterrupt:
+                sys.exit(0)
             else:
                 return page_dct, len(table_lst)
             finally:
@@ -167,7 +171,8 @@ class GetGovernmentStatistics:
                 self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
-                raise
+            except KeyboardInterrupt:
+                sys.exit(0)
             else:
                 return page_dct, len(table_lst)
             finally:
@@ -201,7 +206,8 @@ class GetGovernmentStatistics:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
                 clipboard.copy(res.text)
-                raise
+            except KeyboardInterrupt:
+                sys.exit(0)
             else:
                 return page_dct, row_count
             finally:
@@ -227,7 +233,8 @@ class GetGovernmentStatistics:
                     raise Exception("データタイプが対応していません。")
         except Exception as e:
             self.log.error(f"***{self.get_stats_data_ids.__doc__} => 失敗しました。***: \n{str(e)}")
-            raise
+        except KeyboardInterrupt:
+            sys.exit(0)
         else:
             self.log.info(f"***{self.get_stats_data_ids.__doc__} => 成功しました。***")
         finally:
@@ -263,7 +270,8 @@ class GetGovernmentStatistics:
                     col3 = col3.replace("\uff0c", "\u3001")
             except Exception as e:
                 self.log.error(f"***{get_info_columns.__doc__} => 失敗しました。***: \n{str(e)}")
-                raise
+            except KeyboardInterrupt:
+                sys.exit(0)
             else:
                 pass
             finally:
@@ -298,9 +306,8 @@ class GetGovernmentStatistics:
                 file_p.write_text("\n".join(buffer), encoding="utf-8")
         except Exception as e:
             self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
-            raise
         except KeyboardInterrupt:
-            raise
+            sys.exit(0)
         else:
             result = True
             self.log.info(f"***{self.write_stats_data_ids_to_file.__doc__} => 成功しました。***")
@@ -349,8 +356,10 @@ class GetGovernmentStatistics:
                 for element in root.findall(".//VALUE"):
                     row: dict = {}
                     for key, value in element.attrib.items():
-                        # CLASS_OBJに対応する場合は、日本語名に置換する
-                        row[key] = mapping[key].get(key, {}).get(value, value)
+                        if key in mapping:
+                            row[key] = mapping[key].get(value, value)
+                        else:
+                            row[key] = value
                     # VALUEのテキストを追加する
                     row["値"] = (element.text or "").strip()
                     rows.append(row)
@@ -572,10 +581,13 @@ class GetGovernmentStatistics:
                     self.log.info(tabulate(df.tail(self.DATA_COUNT_OF_SHOW), headers="keys", tablefmt="pipe", showindex=False))
                 case _:
                     raise Exception("その表示順はありません。")
+            self.log.info(f"統計表ID: {self.STATS_DATA_ID}")
             self.log.info(f"データの取得形式: {self.lst_of_data_type[self.KEY]} => {self.lst_of_data_type[self.DESCRIPTION]}")
             self.log.info(f"検索方式: {self.lst_of_match[self.KEY]} => {self.lst_of_match[self.DESCRIPTION]}")
             self.log.info(f"抽出するキーワード: {", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"}")
-            self.log.info(f"抽出方式: {self.lst_of_logic[self.KEY]} => {self.lst_of_logic[self.DESCRIPTION]}" if self.lst_of_logic else "なし")
+            self.log.info(
+                "抽出方式: " + (f"({self.lst_of_logic[self.KEY]} => {self.lst_of_logic[self.DESCRIPTION]}" if self.lst_of_logic else "なし")
+            )
             self.log.info(f"表示順: {self.order}")
             DATA_COUNT: int = len(df)
             if DATA_COUNT >= self.DATA_COUNT_OF_SHOW:

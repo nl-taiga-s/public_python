@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -60,7 +61,7 @@ class GS_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -76,7 +77,7 @@ class GS_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -99,7 +100,7 @@ class GS_With_Cui:
         except Exception as e:
             print(f"error: \n{str(e)}")
         except KeyboardInterrupt:
-            raise
+            sys.exit(0)
         else:
             pass
         finally:
@@ -123,7 +124,7 @@ class GS_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -146,7 +147,7 @@ class GS_With_Cui:
             except Exception as e:
                 print(f"error: \n{str(e)}")
             except KeyboardInterrupt:
-                raise
+                sys.exit(0)
             else:
                 break
             finally:
@@ -202,7 +203,7 @@ async def main() -> bool:
         except Exception:
             obj_of_lt.logger.critical("***処理が失敗しました。***")
         except KeyboardInterrupt:
-            raise
+            sys.exit(0)
         else:
             result = True
             obj_of_lt.logger.info("***処理が成功しました。***")
