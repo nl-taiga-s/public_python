@@ -590,10 +590,7 @@ class GetGovernmentStatistics:
             )
             self.log.info(f"表示順: {self.order}")
             DATA_COUNT: int = len(df)
-            if DATA_COUNT >= self.DATA_COUNT_OF_SHOW:
-                self.DATA_COUNT_OF_GET = self.DATA_COUNT_OF_SHOW
-            else:
-                self.DATA_COUNT_OF_GET = DATA_COUNT
+            self.DATA_COUNT_OF_GET = self.DATA_COUNT_OF_SHOW if DATA_COUNT >= self.DATA_COUNT_OF_SHOW else DATA_COUNT
             self.log.info(f"表示件数: {self.DATA_COUNT_OF_GET}")
         except Exception as e:
             self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{str(e)}")
