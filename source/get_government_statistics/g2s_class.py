@@ -333,28 +333,29 @@ class GetGovernmentStatistics:
                 self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsData"
                 # リクエストを送信する
                 res: Response = client.get(self.URL, params=self.params)
+                # 解析して、ルート要素を取得する
                 root: Element[str] = et.fromstring(res.text)
-                # CLASS_OBJをdict型の変数に格納する
+                # CLASS_OBJからコードと名称のマッピングを作成する
                 mapping: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
                     obj_id: str = obj.attrib["id"]
                     code_map: dict = {}
                     for cls in obj.findall("CLASS"):
+                        # codeをキー、nameを値とする辞書を作成する
                         code_map[cls.attrib["code"]] = cls.attrib.get("name", cls.attrib["code"])
                     mapping[obj_id] = code_map
-                # VALUEをlist型の変数に格納する
+                # VALUEを取得し、行ごとの辞書に変換する
                 rows: list = []
                 for element in root.findall(".//VALUE"):
                     row: dict = {}
                     for key, value in element.attrib.items():
-                        if key in mapping:
-                            row[key] = mapping[key].get(value, value)
-                        else:
-                            row[key] = value
+                        # CLASS_OBJに対応する場合は、日本語名に置換する
+                        row[key] = mapping[key].get(key, {}).get(value, value)
+                    # VALUEのテキストを追加する
                     row["値"] = (element.text or "").strip()
                     rows.append(row)
                 df: DataFrame = pd.DataFrame(rows)
-                # 列名をCLASS_OBJのname属性に置換する
+                # 列名を日本語に変換する
                 id2name: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
                     obj_id: str = obj.attrib["id"]
@@ -382,20 +383,13 @@ class GetGovernmentStatistics:
                 # リクエストを送信する
                 res: Response = client.get(self.URL, params=self.params)
                 data: Any = res.json()
-                # --- CLASS_INF と VALUE を取得 ---
+                # CLASS_OBJとVALUEを抽出する
                 class_inf: Any = data["GET_STATS_DATA"]["STATISTICAL_DATA"]["CLASS_INF"]["CLASS_OBJ"]
                 values: Any = data["GET_STATS_DATA"]["STATISTICAL_DATA"]["DATA_INF"]["VALUE"]
-                # --- 列名用のコード(@xxx) → 日本語(@name) の辞書 ---
+                # idと列名の対応表を作成する
                 col_name_map: dict = {obj["@id"]: obj["@name"] for obj in class_inf}
-                # "@unit" を "時間軸" の後に追加
-                new_col_map: dict = {}
-                for k, v in col_name_map.items():
-                    new_col_map[k] = v
-                    if k == "time":
-                        # "@time"（時間軸）の後
-                        new_col_map["unit"] = "単位"
-                col_name_map = new_col_map
-                # --- コード→日本語辞書を作成 ---
+                col_name_map["unit"] = "単位"
+                # CLASS_OBJ内のコードを日本語名に置換する辞書を作成する
                 code_to_name: dict = {}
                 for obj in class_inf:
                     cid: str = obj["@id"]
@@ -404,27 +398,24 @@ class GetGovernmentStatistics:
                         code_to_name[cid] = {c["@code"]: c["@name"] for c in cls}
                     else:
                         code_to_name[cid] = {cls["@code"]: cls["@name"]}
-                # --- VALUE 内のコードを日本語に置換 ---
+                # VALUEの各行を日本語に変換する
                 translated_rows: list = []
                 for value in values:
                     row: dict = {}
-                    for k, val in value.items():
+                    for k, v in value.items():
                         jp_col: str = ""
                         if k.startswith("@") and k[1:] in code_to_name:
-                            # 列名を日本語に、値もコードを日本語に置換
-                            jp_col = col_name_map.get(k[1:], k[1:])
-                            row[jp_col] = code_to_name[k[1:]].get(val, val)
+                            jp_col: Any = col_name_map.get(k[1:], k[1:])
+                            row[jp_col] = code_to_name[k[1:]].get(v, v)
                         elif k == "@unit":
-                            # "@unit" は単位列として追加
-                            jp_col = col_name_map.get("unit", "unit")
-                            row[jp_col] = val
+                            row["単位"] = v
                         elif k == "$":
-                            row["値"] = val
+                            row["値"] = v
                         else:
-                            row[k] = val
+                            row[k] = v
                     translated_rows.append(row)
                 df: DataFrame = pd.DataFrame(translated_rows)
-                # --- 値列を数値型に変換 ---
+                # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
@@ -444,7 +435,7 @@ class GetGovernmentStatistics:
                 # リクエストを送信する
                 res: Response = client.get(self.URL, params=self.params)
                 lines: list[str] = res.text.splitlines()
-                # VALUE行の位置を探す
+                # VALUE行の位置を検索する
                 value_idx: int = 0
                 for i, line in enumerate(lines):
                     if line.strip().replace('"', '') == "VALUE":
@@ -452,23 +443,24 @@ class GetGovernmentStatistics:
                         break
                 if value_idx == 0:
                     raise Exception("CSVに 'VALUE' 行が見つかりませんでした。")
-                # --- ヘッダー行 ---
+                # ヘッダー行を取得する
                 header_cols: list[str] = [h.strip('"') for h in lines[value_idx + 1].split(',')]
-                # --- データ本体をそのまま読み込む ---
+                # データ本体を文字列として抽出する
                 csv_body: str = "\n".join(lines[value_idx + 2 :])
                 df: DataFrame = pd.read_csv(StringIO(csv_body), header=None)
-                df.columns = header_cols  # 英語+日本語ペア含めて13列のまま
-                # --- 列名置換 ---
+                df.columns = header_cols
+                # 列名を日本語に置換し、不要な英語コード列を削除する
                 rename_map: dict = {}
                 drop_cols: list = []
                 i: int = 0
                 while i < len(header_cols):
                     eng: str = header_cols[i]
-                    if eng.endswith("_code") and i + 1 < len(header_cols):  # コード列
-                        drop_cols.append(eng)  # 英語コード列は削除
+                    if eng.endswith("_code") and i + 1 < len(header_cols):
+                        # 英語コード列は削除する
+                        drop_cols.append(eng)
                         i += 2
                         continue
-                    # 単独列の処理
+                    # 単独列を処理する
                     elif eng == "unit":
                         rename_map[eng] = "単位"
                     elif eng == "value":
@@ -476,11 +468,9 @@ class GetGovernmentStatistics:
                     else:
                         rename_map[eng] = eng
                     i += 1
-                # 列名をリネーム
                 df = df.rename(columns=rename_map)
-                # 英語コード列を削除
                 df = df.drop(columns=drop_cols)
-                # --- 値列を数値型に変換 ---
+                # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
