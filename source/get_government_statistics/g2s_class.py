@@ -44,18 +44,20 @@ class GetGovernmentStatistics:
         self.APP_ID: str = os.environ.get("first_appid_of_estat")
         # 統計表ID
         self.STATS_DATA_ID: str = ""
-        # 部分一致か完全一致か
+        # 検索方式
         self.lst_of_match: list = []
         # 先頭か末尾か
         self.order: str = ""
         # 抽出するキーワード
         self.lst_of_keyword: list = []
-        # OR抽出かAND抽出か
+        # 抽出方式
         self.lst_of_logic: list = []
+        # 取得したデータの件数
+        self.DATA_COUNT_OF_GET: int = 0
         # 表示するデータの件数
-        self.DATA_COUNT: int = 12
+        self.DATA_COUNT_OF_SHOW: int = 12
         # セッション管理のタイムアウト
-        self.TIMEOUT: Timeout = Timeout(60.0)
+        self.TIMEOUT: Timeout = Timeout(120.0)
 
     async def get_stats_data_ids(self) -> AsyncGenerator[dict]:
         """統計表IDの一覧を取得します"""
@@ -332,7 +334,7 @@ class GetGovernmentStatistics:
                 # リクエストを送信する
                 res: Response = client.get(self.URL, params=self.params)
                 root: Element[str] = et.fromstring(res.text)
-                # --- 1. CLASS_INFを辞書化 ---
+                # CLASS_OBJをdict型の変数に格納する
                 mapping: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
                     obj_id: str = obj.attrib["id"]
@@ -340,22 +342,19 @@ class GetGovernmentStatistics:
                     for cls in obj.findall("CLASS"):
                         code_map[cls.attrib["code"]] = cls.attrib.get("name", cls.attrib["code"])
                     mapping[obj_id] = code_map
-                # --- 2. VALUE要素を取り込む ---
+                # VALUEをlist型の変数に格納する
                 rows: list = []
-                for value in root.findall(".//VALUE"):
+                for element in root.findall(".//VALUE"):
                     row: dict = {}
-                    for key, value in value.attrib.items():
+                    for key, value in element.attrib.items():
                         if key in mapping:
                             row[key] = mapping[key].get(value, value)
                         else:
                             row[key] = value
-                    if isinstance(value, Element):
-                        row["値"] = (value.text or "").strip()
-                    else:
-                        row["値"] = str(value).strip()
+                    row["値"] = (element.text or "").strip()
                     rows.append(row)
                 df: DataFrame = pd.DataFrame(rows)
-                # --- 3. 列名をCLASS_OBJのname属性に置換 ---
+                # 列名をCLASS_OBJのname属性に置換する
                 id2name: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
                     obj_id: str = obj.attrib["id"]
@@ -363,18 +362,17 @@ class GetGovernmentStatistics:
                     id2name[obj_id] = obj_name
                 id2name["unit"] = "単位"
                 df.rename(columns=id2name, inplace=True)
-                # --- 値列を数値型に変換 ---
+                # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
                 raise
             else:
                 pass
             finally:
-                pass
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(res.text)
             return df
 
         def with_json(client: Client) -> DataFrame:
@@ -431,13 +429,12 @@ class GetGovernmentStatistics:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
                 raise
             else:
                 pass
             finally:
-                pass
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
             return df
 
         def with_csv(client: Client) -> DataFrame:
@@ -488,13 +485,12 @@ class GetGovernmentStatistics:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
                 self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
                 raise
             else:
                 pass
             finally:
-                pass
+                # デバッグ用(加工前のデータをクリップボードにコピーする)
+                clipboard.copy(res.text)
             return df
 
         df: Optional[DataFrame] = None
@@ -581,18 +577,22 @@ class GetGovernmentStatistics:
             self.log.info(self.show_data.__doc__)
             match self.order:
                 case "先頭":
-                    self.log.info(tabulate(df.head(self.DATA_COUNT), headers="keys", tablefmt="pipe", showindex=False))
+                    self.log.info(tabulate(df.head(self.DATA_COUNT_OF_SHOW), headers="keys", tablefmt="pipe", showindex=False))
                 case "末尾":
-                    self.log.info(tabulate(df.tail(self.DATA_COUNT), headers="keys", tablefmt="pipe", showindex=False))
+                    self.log.info(tabulate(df.tail(self.DATA_COUNT_OF_SHOW), headers="keys", tablefmt="pipe", showindex=False))
                 case _:
                     raise Exception("その表示順はありません。")
             self.log.info(f"データの取得形式: {self.lst_of_data_type[self.KEY]} => {self.lst_of_data_type[self.DESCRIPTION]}")
             self.log.info(f"検索方式: {self.lst_of_match[self.KEY]} => {self.lst_of_match[self.DESCRIPTION]}")
-            self.log.info(f"抽出するキーワード: {", ".join(map(str, self.lst_of_keyword))}")
-            if self.lst_of_logic:
-                self.log.info(f"抽出方式: {self.lst_of_logic[self.KEY]} => {self.lst_of_logic[self.DESCRIPTION]}")
+            self.log.info(f"抽出するキーワード: {", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"}")
+            self.log.info(f"抽出方式: {self.lst_of_logic[self.KEY]} => {self.lst_of_logic[self.DESCRIPTION]}" if self.lst_of_logic else "なし")
             self.log.info(f"表示順: {self.order}")
-            self.log.info(f"表示件数: {self.DATA_COUNT}")
+            DATA_COUNT: int = len(df)
+            if DATA_COUNT >= self.DATA_COUNT_OF_SHOW:
+                self.DATA_COUNT_OF_GET = self.DATA_COUNT_OF_SHOW
+            else:
+                self.DATA_COUNT_OF_GET = DATA_COUNT
+            self.log.info(f"表示件数: {self.DATA_COUNT_OF_GET}")
         except Exception as e:
             self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
