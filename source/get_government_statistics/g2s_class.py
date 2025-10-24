@@ -20,6 +20,9 @@ from tabulate import tabulate
 
 from source.common.common import DatetimeTools
 
+# クレジット表示
+# このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。
+
 
 class GetGovernmentStatistics:
     """政府の統計データを取得します"""

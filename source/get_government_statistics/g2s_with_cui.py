@@ -8,6 +8,9 @@ from pandas import DataFrame
 from source.common.common import LogTools, PathTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
+# クレジット表示
+# このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。
+
 
 class GS_With_Cui:
     def __init__(self):
