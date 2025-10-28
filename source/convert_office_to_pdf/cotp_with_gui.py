@@ -7,7 +7,7 @@ from typing import Any, Optional, Type
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
-from source.common.common import GUITools, LogTools, PathTools, PlatformTools
+from source.common.common import GUITools, LogTools, PathTools
 
 
 # QTextEdit にログを流すためのハンドラ
@@ -28,7 +28,6 @@ class MainApp_Of_COTP(QWidget):
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: Any = obj_of_cls(self.obj_of_lt.logger)
         self.setup_ui()
-        self.obj_of_pft: PlatformTools = PlatformTools()
         self.obj_of_pt: PathTools = PathTools()
         self.setup_log()
 
@@ -51,7 +50,7 @@ class MainApp_Of_COTP(QWidget):
         QMessageBox.critical(self, "エラー", msg)
 
     def setup_log(self) -> bool:
-        """ログを設定する"""
+        """ログを設定します"""
         result: bool = False
         exe_path: Optional[Path] = None
         try:
