@@ -13,3 +13,6 @@
 ### pdf_tools(PT)
 * You can edit pdf files.
 > ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1757468306/icon_of_pt_igi3yq.svg)
+### get_government_statistics
+* You can show government statistics.
+> ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1761634184/icon_of_g2s_d1g8pf.svg)
