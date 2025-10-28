@@ -19,22 +19,6 @@ class GS_With_Cui:
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
-        # 取得するデータ形式
-        self.dct_of_data_type: dict = {
-            "xml": "タグ構造のデータ",
-            "json": "キーと値のペアのデータ",
-            "csv": "カンマ区切りのデータ",
-        }
-        # 検索方式
-        self.dct_of_match: dict = {
-            "部分一致": "フィールドの値にキーワードが含まれている",
-            "完全一致": "フィールドの値がキーワードと完全に一致している",
-            "何もしない": "検索しない",
-        }
-        # 表示順
-        self.lst_of_order: list = ["先頭", "末尾"]
-        # 抽出方式
-        self.dct_of_logic: dict = {"OR抽出": "複数のキーワードのいずれかが含まれている", "AND抽出": "複数のキーワードの全てが含まれている"}
 
     def select_element(self, elements: Any) -> list:
         """要素を選択します"""
@@ -160,7 +144,7 @@ class GS_With_Cui:
 
 async def main() -> bool:
     """主要関数"""
-    # ログを設定する
+    # ログを設定します
     result: bool = False
     try:
         obj_of_pt: PathTools = PathTools()
@@ -182,7 +166,7 @@ async def main() -> bool:
     obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
-            obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_with_cui.dct_of_data_type)
+            obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui.input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 # 統計表IDをテキストファイルに書き出す
                 obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 開始しました。")
@@ -194,15 +178,13 @@ async def main() -> bool:
                 obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
-            obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_with_cui.dct_of_match)
+            obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_of_cls.dct_of_match)
             if obj_of_cls.lst_of_match[obj_of_cls.KEY] != "何もしない":
                 obj_of_cls.lst_of_keyword = obj_with_cui.input_lst_of_text("抽出するキーワードを入力してください。")
                 if len(obj_of_cls.lst_of_keyword) > 1:
-                    obj_of_cls.lst_of_logic = obj_with_cui.select_element(obj_with_cui.dct_of_logic)
+                    obj_of_cls.lst_of_logic = obj_with_cui.select_element(obj_of_cls.dct_of_logic)
                 df: DataFrame = obj_of_cls.filter_data(df)
-            order_lst: list = obj_with_cui.select_element(obj_with_cui.lst_of_order)
-            obj_of_cls.order = str(order_lst)
-            obj_of_cls.show_data(df)
+            obj_of_cls.show_table(df)
         except Exception:
             obj_of_lt.logger.critical("***処理が失敗しました。***")
         except KeyboardInterrupt:

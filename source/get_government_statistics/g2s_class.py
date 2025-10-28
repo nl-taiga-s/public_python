@@ -32,12 +32,32 @@ class GetGovernmentStatistics:
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
         self.obj_of_dt2: DatetimeTools = DatetimeTools()
-        # dict変数のキー番号
+        # 取得するデータ形式
+        self.dct_of_data_type: dict = {
+            "xml": "タグ構造のデータ",
+            "json": "キーと値のペアのデータ",
+            "csv": "カンマ区切りのデータ",
+        }
+        # 検索方式
+        self.dct_of_match: dict = {
+            "部分一致": "フィールドの値にキーワードが含まれている",
+            "完全一致": "フィールドの値がキーワードと完全に一致している",
+            "検索しない": "なし",
+        }
+        # 抽出方式(2つ以上のキーワードがある場合)
+        self.dct_of_logic: dict = {"OR抽出": "複数のキーワードのいずれかが含まれている", "AND抽出": "複数のキーワードの全てが含まれている"}
+        # list変数のキー番号
         self.KEY: int = 0
-        # dict変数の説明番号
+        # list変数の説明番号
         self.DESCRIPTION: int = 1
         # 取得するデータ形式
         self.lst_of_data_type: list = []
+        # 検索方式
+        self.lst_of_match: list = []
+        # 抽出するキーワード
+        self.lst_of_keyword: list = []
+        # 抽出方式
+        self.lst_of_logic: list = []
         # APIのURL
         self.URL: str = ""
         # APIのバージョン
@@ -48,20 +68,20 @@ class GetGovernmentStatistics:
         self.APP_ID: str = os.environ.get("first_appid_of_estat")
         # 統計表ID
         self.STATS_DATA_ID: str = ""
-        # 検索方式
-        self.lst_of_match: list = []
-        # 先頭か末尾か
-        self.order: str = ""
-        # 抽出するキーワード
-        self.lst_of_keyword: list = []
-        # 抽出方式
-        self.lst_of_logic: list = []
-        # 取得したデータの件数
-        self.DATA_COUNT_OF_GET: int = 0
-        # 表示するデータの件数
-        self.DATA_COUNT_OF_SHOW: int = 12
+        # dataframeの件数
+        self.DATA_COUNT: int = 0
         # セッション管理のタイムアウト
         self.TIMEOUT: Timeout = Timeout(120.0)
+        exe_path: Optional[Path] = None
+        # exe化されている場合とそれ以外を切り分ける
+        if getattr(sys, "frozen", False):
+            exe_path = Path(sys.executable)
+        else:
+            exe_path = Path(__file__)
+        # 統計表IDの一覧のCSVファイルを格納したフォルダ
+        self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
+        # 統計表IDの一覧のCSVファイルのヘッダー
+        self.header_of_ids: list = ["統計表ID", "統計名", "表題"]
 
     async def get_stats_data_ids(self) -> AsyncGenerator[dict]:
         """統計表IDの一覧を取得します"""
@@ -135,10 +155,9 @@ class GetGovernmentStatistics:
                     stat_id: str = (t.attrib.get("id", "") or "") if t is not None else ""
                     element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
                     stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name is not None else ""
-                    stat_code: str = (element_of_stat_name.attrib.get("code") or "") if element_of_stat_name is not None else ""
                     element_of_title: Optional[Element] = t.find("TITLE")
                     title: str = (element_of_title.text or "") if element_of_title is not None else ""
-                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
+                    page_dct[stat_id] = {"stat_name": stat_name, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
@@ -159,14 +178,9 @@ class GetGovernmentStatistics:
                 table_lst = [table_data] if isinstance(table_data, dict) else table_data
                 for t in table_lst:
                     stat_id: str = t.get("@id", "")
-                    element_of_stat_name: dict = t.get("STAT_NAME", {})
-                    stat_name: str = element_of_stat_name.get("$", "")
-                    stat_code: str = element_of_stat_name.get("@code", "")
                     statistics_name: str = t.get("STATISTICS_NAME", {})
                     title: str = t.get("TITLE", {})
                     page_dct[stat_id] = {
-                        "stat_name": stat_name,
-                        "stat_code": stat_code,
                         "statistics_name": statistics_name,
                         "title": title,
                     }
@@ -202,9 +216,8 @@ class GetGovernmentStatistics:
                     row_count += 1
                     stat_id: str = row.get("TABLE_INF", "")
                     stat_name: str = row.get("STAT_NAME", "")
-                    stat_code: str = row.get("STAT_CODE", "")
                     title: str = row.get("TITLE", "")
-                    page_dct[stat_id] = {"stat_name": stat_name, "stat_code": stat_code, "title": title}
+                    page_dct[stat_id] = {"stat_name": stat_name, "title": title}
             except Exception as e:
                 self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 # デバッグ用(加工前のデータをクリップボードにコピーする)
@@ -249,10 +262,12 @@ class GetGovernmentStatistics:
         data_type_key: str,
         chunk_size: int = 100,
     ) -> bool:
-        """統計表IDを指定の件数ごとにファイルへ保存します"""
+        """統計表IDの一覧をファイルへ保存します"""
 
         def get_info_columns(info: dict, data_type_key: str) -> tuple[str, str]:
             """2列目・3列目を取得します"""
+            col2: str = ""
+            col3: str = ""
             try:
                 match data_type_key:
                     case "xml":
@@ -265,8 +280,7 @@ class GetGovernmentStatistics:
                         col2 = info.get("stat_name")
                         col3 = info.get("title")
                     case _:
-                        col2 = ""
-                        col3 = ""
+                        pass
                 if col3 != "":
                     # データクレンジング
                     col3 = col3.replace("\u002c", "\u3001")
@@ -281,32 +295,42 @@ class GetGovernmentStatistics:
                 pass
             return col2, col3
 
+        def write_data_to_file(buffer: list[str]):
+            """データをファイルに書き込みます"""
+            EXTENSION: str = "csv"
+            try:
+                date: str = self.obj_of_dt2.convert_for_file_name()
+                file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.{EXTENSION}"
+                file_p: Path = self.folder_p_of_ids / file_name
+                file_p.write_text("\n".join(buffer), encoding="utf-8")
+            except Exception as e:
+                self.log.error(f"***{write_data_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+            except KeyboardInterrupt:
+                sys.exit(0)
+            else:
+                pass
+            finally:
+                pass
+
         result: bool = False
         try:
-            folder_p: Path = Path(__file__).parent / "__stats_data_ids__"
-            folder_p.mkdir(parents=True, exist_ok=True)
-            folder_s: str = str(folder_p)
+            self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
+            folder_s: str = str(self.folder_p_of_ids)
             self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
             file_index: int = 1
-            buffer: list[str] = []
+            buffer: list[str] = self.header_of_ids
             async for page in page_generator:
                 for stat_id, info in page.items():
                     col2, col3 = get_info_columns(info, data_type_key)
                     buffer.append(f"{stat_id},{col2},{col3}")
                     # chunkごとにファイルに保存する
                     if len(buffer) >= chunk_size:
-                        date: str = self.obj_of_dt2.convert_for_file_name()
-                        file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.csv"
-                        file_p: Path = folder_p / file_name
-                        file_p.write_text("\n".join(buffer), encoding="utf-8")
+                        write_data_to_file(buffer)
                         buffer.clear()
                         file_index += 1
             # 余りをファイルに保存する
             if buffer:
-                date: str = self.obj_of_dt2.convert_for_file_name()
-                file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.csv"
-                file_p: Path = folder_p / file_name
-                file_p.write_text("\n".join(buffer), encoding="utf-8")
+                write_data_to_file(buffer)
         except Exception as e:
             self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
@@ -572,35 +596,25 @@ class GetGovernmentStatistics:
             pass
         return filtered_df
 
-    def show_data(self, df: DataFrame) -> bool:
-        """データを表示させます"""
+    def show_table(self, df: DataFrame) -> bool:
+        """表を表示させます"""
         result: bool = False
         try:
-            self.log.info(self.show_data.__doc__)
-            match self.order:
-                case "先頭":
-                    self.log.info(tabulate(df.head(self.DATA_COUNT_OF_SHOW), headers="keys", tablefmt="pipe", showindex=False))
-                case "末尾":
-                    self.log.info(tabulate(df.tail(self.DATA_COUNT_OF_SHOW), headers="keys", tablefmt="pipe", showindex=False))
-                case _:
-                    raise Exception("その表示順はありません。")
-            self.log.info(f"統計表ID: {self.STATS_DATA_ID}")
-            self.log.info(f"データの取得形式: {self.lst_of_data_type[self.KEY]} => {self.lst_of_data_type[self.DESCRIPTION]}")
-            self.log.info(f"検索方式: {self.lst_of_match[self.KEY]} => {self.lst_of_match[self.DESCRIPTION]}")
-            self.log.info(f"抽出するキーワード: {", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"}")
-            self.log.info(
-                "抽出方式: " + (f"({self.lst_of_logic[self.KEY]} => {self.lst_of_logic[self.DESCRIPTION]}" if self.lst_of_logic else "なし")
-            )
-            self.log.info(f"表示順: {self.order}")
-            DATA_COUNT: int = len(df)
-            self.DATA_COUNT_OF_GET = self.DATA_COUNT_OF_SHOW if DATA_COUNT >= self.DATA_COUNT_OF_SHOW else DATA_COUNT
-            self.log.info(f"表示件数: {self.DATA_COUNT_OF_GET}")
+            self.log.info(self.show_table.__doc__)
+            self.log.info(tabulate(df, headers="keys", tablefmt="pipe", showindex=False))
+            self.log.info(f"統計表ID => {self.STATS_DATA_ID}")
+            self.log.info("データの取得形式 => " + ": ".join(self.lst_of_data_type))
+            self.log.info("検索方式 => " + ": ".join(self.lst_of_match))
+            self.log.info("抽出するキーワード => " + (", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"))
+            self.log.info("抽出方式 => " + (": ".join(self.lst_of_logic) if self.lst_of_logic else "なし"))
+            self.DATA_COUNT: int = len(df)
+            self.log.info(f"表示件数: {self.DATA_COUNT}")
         except Exception as e:
-            self.log.error(f"***{self.show_data.__doc__} => 失敗しました。***: \n{str(e)}")
+            self.log.error(f"***{self.show_table.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
-            self.log.info(f"***{self.show_data.__doc__} => 成功しました。***")
+            self.log.info(f"***{self.show_table.__doc__} => 成功しました。***")
         finally:
             pass
         return result
