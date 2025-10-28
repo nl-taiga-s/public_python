@@ -76,7 +76,7 @@ class MainApp_Of_PT(QMainWindow):
         QMessageBox.critical(self, "エラー", msg)
 
     def setup_log(self) -> bool:
-        """ログを設定する"""
+        """ログを設定します"""
         result: bool = False
         exe_path: Optional[Path] = None
         try:
@@ -88,7 +88,7 @@ class MainApp_Of_PT(QMainWindow):
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
             self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
-            text_handler = QTextEditHandler(self.log_area)
+            text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
@@ -119,8 +119,8 @@ class MainApp_Of_PT(QMainWindow):
             center_layout: QVBoxLayout = QVBoxLayout()
             center_layout.addWidget(QLabel("ビューワー"))
             center_scroll_area: QScrollArea = QScrollArea()
-            center_layout.addWidget(center_scroll_area)
             center_scroll_area.setWidgetResizable(True)
+            center_layout.addWidget(center_scroll_area)
             main_layout.addLayout(center_layout)
             # 仮想コンテナのウィジェットとレイアウト
             center_widget: QWidget = QWidget()
