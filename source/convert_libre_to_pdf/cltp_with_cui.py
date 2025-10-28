@@ -67,7 +67,7 @@ class CLTP_With_Cui:
 def main() -> bool:
     """主要関数"""
     result: bool = False
-    # ログを設定する
+    # ログを設定します
     try:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
