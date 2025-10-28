@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 import sys
 import traceback
 import xml.etree.ElementTree as et
@@ -80,6 +81,8 @@ class GetGovernmentStatistics:
             exe_path = Path(__file__)
         # 統計表IDの一覧のCSVファイルを格納したフォルダ
         self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
+        self.folder_s_of_ids: str = str(self.folder_p_of_ids)
+        self.log.info(f"統計表IDのリストを格納するフォルダ => {self.folder_s_of_ids}")
         # 統計表IDの一覧のCSVファイルのヘッダー
         self.header_of_ids: list = ["統計表ID", "統計名", "表題"]
 
@@ -315,8 +318,13 @@ class GetGovernmentStatistics:
         result: bool = False
         try:
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
-            folder_s: str = str(self.folder_p_of_ids)
-            self.log.info(f"統計表IDのリストを格納したフォルダ => {folder_s}")
+            # フォルダを空にする
+            if self.folder_p_of_ids.exists():
+                for element in self.folder_p_of_ids.iterdir():
+                    if element.is_dir():
+                        shutil.rmtree(element)
+                    else:
+                        element.unlink()
             file_index: int = 1
             buffer: list[str] = self.header_of_ids
             async for page in page_generator:

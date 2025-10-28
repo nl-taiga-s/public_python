@@ -1,12 +1,13 @@
+import asyncio
 import csv
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
+import pandas
 from pandas import DataFrame
-from PySide6.QtCore import QModelIndex
-from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QObject, Qt, QThread, Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -15,7 +16,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QScrollArea,
     QTableView,
     QTextEdit,
     QVBoxLayout,
@@ -37,6 +37,57 @@ class QTextEditHandler(logging.Handler):
         self.widget.append(msg)
 
 
+class DataFrameModel(QAbstractTableModel):
+    def __init__(self, df: DataFrame):
+        super().__init__()
+        self._df = df
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        return len(self._df)
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        return self._df.shape[1]
+
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            return str(self._df.iat[index.row(), index.column()])
+        return None
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole):
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal:
+            return str(self._df.columns[section])
+        return str(section + 1)
+
+
+class WorkerGetIds(QObject):
+    finished = Signal(bool)
+    error = Signal(str)
+
+    def __init__(self, obj_of_cls_for_work: GetGovernmentStatistics, data_type_key: str):
+        super().__init__()
+        self.obj_of_cls_for_work = obj_of_cls_for_work
+        self.data_type_key = data_type_key
+
+    def run(self):
+        try:
+            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(
+                self.obj_of_cls_for_work.write_stats_data_ids_to_file(
+                    page_generator=self.obj_of_cls_for_work.get_stats_data_ids(), data_type_key=self.data_type_key, chunk_size=100
+                )
+            )
+            loop.close()
+        except Exception as e:
+            self.error.emit(str(e))
+        else:
+            self.finished.emit(True)
+
+
 class MainApp_Of_G2S(QMainWindow):
     def __init__(self):
         """初期化します"""
@@ -56,25 +107,27 @@ class MainApp_Of_G2S(QMainWindow):
     def show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
+        self.obj_of_lt.logger.info(msg)
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        if success:
+            self.obj_of_lt.logger.info(f"{label}に成功しました。")
+        else:
+            self.obj_of_lt.logger.error(f"{label}に失敗しました。")
 
     def show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.critical(self, "エラー", msg)
+        self.obj_of_lt.logger.warning(msg)
 
     def setup_log(self) -> bool:
         """ログを設定します"""
         result: bool = False
-        exe_path: Optional[Path] = None
         try:
             # exe化されている場合とそれ以外を切り分ける
-            if getattr(sys, "frozen", False):
-                exe_path = Path(sys.executable)
-            else:
-                exe_path = Path(__file__)
+            exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
             self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
@@ -93,65 +146,43 @@ class MainApp_Of_G2S(QMainWindow):
         """User Interfaceを設定します"""
         result: bool = False
         try:
-            # タイトル
-            self.setWindowTitle("政府統計表示アプリ")
-            central: QWidget = QWidget()
+            self.setWindowTitle('政府統計表示アプリ')
+            central = QWidget()
             self.setCentralWidget(central)
-            # 主要
-            self.main_layout: QVBoxLayout = QVBoxLayout(central)
-            self.main_layout.addWidget(QLabel("統計表IDを選択してください。"))
-            # 上
-            self.top_layout: QHBoxLayout = QHBoxLayout()
-            self.main_layout.addLayout(self.top_layout)
-            # 左上
-            self.top_left_layout: QVBoxLayout = QVBoxLayout()
-            self.top_layout.addLayout(self.top_left_layout)
-            self.top_left_layout.addWidget(QLabel("統計表ID"))
-            self.show_list_of_ids(False)
-            # 右上
-            self.top_right_layout: QVBoxLayout = QVBoxLayout()
-            self.top_layout.addLayout(self.top_right_layout)
-            self.top_right_layout.addWidget(QLabel("ログ"))
-            self.log_area: QTextEdit = QTextEdit()
-            self.log_area.setReadOnly(True)
-            self.top_right_layout.addWidget(self.log_area)
-            # 下
-            self.bottom_layout: QVBoxLayout = QVBoxLayout()
-            self.main_layout.addLayout(self.bottom_layout)
-            self.bottom_layout.addWidget(QLabel("表"))
-            # 仮想コンテナ
-            bottom_container: QWidget = QWidget()
-            self.bottom_container_layout: QHBoxLayout = QHBoxLayout()
-            bottom_container.setLayout(self.bottom_container_layout)
-            bottom_scroll_area: QScrollArea = QScrollArea()
-            self.bottom_layout.addWidget(bottom_scroll_area)
-            bottom_scroll_area.setWidgetResizable(True)
-            bottom_scroll_area.setWidget(bottom_container)
-            # 統計表
-            self.table_area: QVBoxLayout = QVBoxLayout()
-            self.bottom_layout.addLayout(self.table_area)
-            # ボタン
-            button_area: QHBoxLayout = QHBoxLayout()
-            self.bottom_layout.addLayout(button_area)
-            self.data_type_combo: QComboBox = QComboBox()
+            main_layout = QVBoxLayout(central)
+            # データタイプ選択
+            self.data_type_combo = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_data_type.items():
-                self.data_type_combo.addItem(f"{key}: {desc}", userData=key)
-            # 初期値
+                self.data_type_combo.addItem(f"{key}: {desc}", key)
             self.data_type_combo.setCurrentIndex(0)
-            button_area.addWidget(self.data_type_combo)
-            get_btn: QPushButton = QPushButton("統計表IDの一覧を取得します")
-            button_area.addWidget(get_btn)
-            get_btn.clicked.connect(lambda: self.show_list_of_ids(True))
-            show_btn: QPushButton = QPushButton("統計表を表示する")
-            button_area.addWidget(show_btn)
-            show_btn.clicked.connect(self.show_statistical_table)
+            main_layout.addWidget(QLabel('統計表IDを選択してください。'))
+            main_layout.addWidget(self.data_type_combo)
+            # ボタン
+            button_layout = QHBoxLayout()
+            self.get_ids_btn = QPushButton('統計表IDの一覧を取得します')
+            self.get_ids_btn.clicked.connect(self.start_getting_ids)
+            self.show_table_btn = QPushButton('統計表を表示する')
+            self.show_table_btn.clicked.connect(self.show_statistical_table)
+            button_layout.addWidget(self.get_ids_btn)
+            button_layout.addWidget(self.show_table_btn)
+            main_layout.addLayout(button_layout)
+            # ログ
+            main_layout.addWidget(QLabel('ログ'))
+            self.log_area = QTextEdit()
+            self.log_area.setReadOnly(True)
+            main_layout.addWidget(self.log_area)
+            # 統計表表示エリア
+            self.table_view = QTableView()
+            main_layout.addWidget(self.table_view)
+            # 統計表IDリスト表示用
+            self.ids_table_view = QTableView()
+            main_layout.addWidget(QLabel('統計表ID一覧'))
+            main_layout.addWidget(self.ids_table_view)
             # クレジット
-            credit_area: QVBoxLayout = QVBoxLayout()
-            self.bottom_layout.addLayout(credit_area)
             credit_notation: QLabel = QLabel(
                 "クレジット表示\nこのサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。"
             )
-            credit_area.addWidget(credit_notation)
+            main_layout.addWidget(credit_notation)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -160,14 +191,20 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def get_data_type_from_combo(self) -> bool:
-        """コンボボックスからデータタイプを取得します"""
-        result: bool = False
+    def start_getting_ids(self):
+        """統計表IDの一覧の取得を開始します"""
         try:
-            index: int = self.data_type_combo.currentIndex()
-            key: str = self.data_type_combo.itemData(index)
-            desc: str = self.obj_of_cls.dct_of_data_type[key]
-            self.obj_of_cls.lst_of_data_type = [key, desc]
+            key = self.data_type_combo.currentData()
+            self.thread: QThread = QThread()
+            self.worker = WorkerGetIds(self.obj_of_cls, key)
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.run)
+            self.worker.finished.connect(lambda _: self.display_ids())
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.worker.error.connect(lambda msg: self.show_error(msg))
+            self.thread.start()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -176,60 +213,21 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def show_list_of_ids(self, get: bool) -> bool:
+    def display_ids(self) -> bool:
         """統計表IDの一覧を表示します"""
         result: bool = False
         try:
-            if get:
-                self.get_data_type_from_combo()
-                self.obj_of_cls.get_stats_data_ids()
-            # 仮想コンテナ
-            top_left_container: QWidget = QWidget()
-            self.top_left_container_layout: QHBoxLayout = QHBoxLayout()
-            top_left_container.setLayout(self.top_left_container_layout)
-            top_left_scroll_area: QScrollArea = QScrollArea()
-            self.top_left_layout.addWidget(top_left_scroll_area)
-            self.top_left_scroll_layout: QVBoxLayout = QVBoxLayout()
-            top_left_scroll_area.setWidgetResizable(True)
-            top_left_scroll_area.setWidget(top_left_container)
-            lst_of_ids: QTableView = QTableView()
-            self.top_left_container_layout.addWidget(lst_of_ids)
-            self.model: QStandardItemModel = QStandardItemModel()
-            # ヘッダーを追加する
-            self.model.setHorizontalHeaderLabels(self.obj_of_cls.header_of_ids)
-            # 検索パターン
             PATTERN: str = "*.csv"
+            model: DataFrameModel = DataFrameModel(DataFrame())
             for csv_file in self.obj_of_cls.folder_p_of_ids.glob(PATTERN):
-                with open(csv_file, newline="", encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    # ヘッダー行をスキップする
-                    next(reader, None)
-                    for row in reader:
-                        items: list = [QStandardItem(str(cell)) for cell in row]
-                        self.model.appendRow(items)
-            lst_of_ids.setModel(self.model)
-            lst_of_ids.resizeColumnsToContents()
-            lst_of_ids.clicked.connect(self.get_id_from_list)
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
-        else:
-            result = True
-        finally:
-            pass
-        return result
-
-    def get_id_from_list(self, index: QModelIndex) -> bool:
-        """一覧から統計表IDを取得します"""
-        result: bool = False
-        try:
-            if index is None:
-                raise Exception("指定した統計表IDを取得できませんでした。")
-            # 行番号
-            r: int = index.row()
-            # 統計表IDの列番号
-            c_of_id: int = 0
-            item_of_id: QStandardItem = self.model.item(r, c_of_id)
-            self.obj_of_cls.STATS_DATA_ID = item_of_id.text()
+                with open(csv_file, newline='', encoding='utf-8') as f:
+                    df = DataFrame(list(csv.reader(f)))
+                    if df.shape[0] > 1:
+                        # ヘッダーを除く
+                        df = df.iloc[1:, :]
+                    model._df = pandas.concat([model._df, df], ignore_index=True) if not model._df.empty else df
+            self.ids_table_view.setModel(model)
+            self.ids_table_view.resizeColumnsToContents()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -242,27 +240,16 @@ class MainApp_Of_G2S(QMainWindow):
         """統計表を表示させます"""
         result: bool = False
         try:
-            if self.obj_of_cls.STATS_DATA_ID == "":
+            index = self.ids_table_view.currentIndex()
+            if not index.isValid():
                 raise Exception("統計表IDが選択されていません。")
-            self.get_data_type_from_combo()
+            stats_id = self.ids_table_view.model()._df.iat[index.row(), 0]
+            self.obj_of_cls.STATS_DATA_ID = stats_id
+            self.obj_of_cls.lst_of_data_type = [self.data_type_combo.currentData(), '']
             df: DataFrame = self.obj_of_cls.get_data_from_api()
-            # 統計表IDごとに仮想コンテナでまとめる
-            element: QWidget = QWidget()
-            element_layout: QVBoxLayout = QVBoxLayout()
-            element.setLayout(element_layout)
-            stats_id: QLabel = QLabel(f"統計表ID: {self.obj_of_cls.STATS_DATA_ID}")
-            stats_table: QTableView = QTableView(self)
-            element_layout.addWidget(stats_id)
-            element_layout.addWidget(stats_table)
-            self.bottom_container_layout.addWidget(element)
-            model: QStandardItemModel = QStandardItemModel()
-            # ヘッダーを追加する
-            model.setHorizontalHeaderLabels(df.columns.tolist())
-            for r in df.itertuples(index=False):
-                items = [QStandardItem(str(v)) for v in r]
-                model.appendRow(items)
-            stats_table.setModel(model)
-            stats_table.resizeColumnsToContents()
+            model = DataFrameModel(df)
+            self.table_view.setModel(model)
+            self.table_view.resizeColumnsToContents()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
