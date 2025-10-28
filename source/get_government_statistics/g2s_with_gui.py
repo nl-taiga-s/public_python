@@ -107,16 +107,7 @@ class MainApp_Of_G2S(QMainWindow):
             self.top_left_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_left_layout)
             self.top_left_layout.addWidget(QLabel("統計表ID"))
-            # 仮想コンテナ
-            top_left_container: QWidget = QWidget()
-            self.top_left_container_layout: QHBoxLayout = QHBoxLayout()
-            top_left_container.setLayout(self.top_left_container_layout)
-            top_left_scroll_area: QScrollArea = QScrollArea()
-            self.top_left_layout.addWidget(top_left_scroll_area)
-            self.top_left_scroll_layout: QVBoxLayout = QVBoxLayout()
-            top_left_scroll_area.setWidgetResizable(True)
-            top_left_scroll_area.setWidget(top_left_container)
-            self.show_list_of_ids()
+            self.show_list_of_ids(False)
             # 右上
             self.top_right_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_right_layout)
@@ -148,6 +139,9 @@ class MainApp_Of_G2S(QMainWindow):
             # 初期値
             self.data_type_combo.setCurrentIndex(0)
             button_area.addWidget(self.data_type_combo)
+            get_btn: QPushButton = QPushButton("統計表IDの一覧を取得します")
+            button_area.addWidget(get_btn)
+            get_btn.clicked.connect(lambda: self.show_list_of_ids(True))
             show_btn: QPushButton = QPushButton("統計表を表示する")
             button_area.addWidget(show_btn)
             show_btn.clicked.connect(self.show_statistical_table)
@@ -166,10 +160,38 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def show_list_of_ids(self) -> bool:
+    def get_data_type_from_combo(self) -> bool:
+        """コンボボックスからデータタイプを取得します"""
+        result: bool = False
+        try:
+            index: int = self.data_type_combo.currentIndex()
+            key: str = self.data_type_combo.itemData(index)
+            desc: str = self.obj_of_cls.dct_of_data_type[key]
+            self.obj_of_cls.lst_of_data_type = [key, desc]
+        except Exception as e:
+            self.show_error(f"error: \n{str(e)}")
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def show_list_of_ids(self, get: bool) -> bool:
         """統計表IDの一覧を表示します"""
         result: bool = False
         try:
+            if get:
+                self.get_data_type_from_combo()
+                self.obj_of_cls.get_stats_data_ids()
+            # 仮想コンテナ
+            top_left_container: QWidget = QWidget()
+            self.top_left_container_layout: QHBoxLayout = QHBoxLayout()
+            top_left_container.setLayout(self.top_left_container_layout)
+            top_left_scroll_area: QScrollArea = QScrollArea()
+            self.top_left_layout.addWidget(top_left_scroll_area)
+            self.top_left_scroll_layout: QVBoxLayout = QVBoxLayout()
+            top_left_scroll_area.setWidgetResizable(True)
+            top_left_scroll_area.setWidget(top_left_container)
             lst_of_ids: QTableView = QTableView()
             self.top_left_container_layout.addWidget(lst_of_ids)
             self.model: QStandardItemModel = QStandardItemModel()
@@ -218,28 +240,11 @@ class MainApp_Of_G2S(QMainWindow):
 
     def show_statistical_table(self) -> bool:
         """統計表を表示させます"""
-
-        def get_data_type_from_combo() -> bool:
-            """コンボボックスからデータタイプを取得します"""
-            result: bool = False
-            try:
-                index: int = self.data_type_combo.currentIndex()
-                key: str = self.data_type_combo.itemData(index)
-                desc: str = self.obj_of_cls.dct_of_data_type[key]
-                self.obj_of_cls.lst_of_data_type = [key, desc]
-            except Exception as e:
-                self.show_error(f"error: \n{str(e)}")
-            else:
-                result = True
-            finally:
-                pass
-            return result
-
         result: bool = False
         try:
             if self.obj_of_cls.STATS_DATA_ID == "":
                 raise Exception("統計表IDが選択されていません。")
-            get_data_type_from_combo()
+            self.get_data_type_from_combo()
             df: DataFrame = self.obj_of_cls.get_data_from_api()
             # 統計表IDごとに仮想コンテナでまとめる
             element: QWidget = QWidget()
