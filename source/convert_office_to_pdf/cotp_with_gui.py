@@ -2,7 +2,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Optional, Type
+from typing import Any, Type
 
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
@@ -40,25 +40,27 @@ class MainApp_Of_COTP(QWidget):
     def show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
+        self.obj_of_lt.logger.info(msg)
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        if success:
+            self.obj_of_lt.logger.info(f"{label}に成功しました。")
+        else:
+            self.obj_of_lt.logger.error(f"{label}に失敗しました。")
 
     def show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.critical(self, "エラー", msg)
+        self.obj_of_lt.logger.warning(msg)
 
     def setup_log(self) -> bool:
         """ログを設定します"""
         result: bool = False
-        exe_path: Optional[Path] = None
         try:
             # exe化されている場合とそれ以外を切り分ける
-            if getattr(sys, "frozen", False):
-                exe_path = Path(sys.executable)
-            else:
-                exe_path = Path(__file__)
+            exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
             file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
             self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
