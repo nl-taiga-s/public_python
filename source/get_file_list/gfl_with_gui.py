@@ -53,7 +53,7 @@ class MainApp_Of_GFL(QWidget):
         QMessageBox.critical(self, "エラー", msg)
 
     def setup_log(self) -> bool:
-        """ログを設定する"""
+        """ログを設定します"""
         result: bool = False
         exe_path: Optional[Path] = None
         try:
