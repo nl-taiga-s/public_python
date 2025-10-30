@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -55,28 +56,12 @@ class GS_With_Cui:
                 pass
         return lst[num - 1]
 
-    def input_text(self, msg: str) -> str:
-        """文字列を入力します"""
-        text: str = ""
-        while True:
-            try:
-                text = input(f"{msg}: ").strip()
-            except Exception as e:
-                print(f"error: \n{str(e)}")
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                break
-            finally:
-                pass
-        return text
-
     def input_lst_of_text(self, msg: str) -> list:
         """複数の文字列を入力します"""
         lst: list = []
         try:
             while True:
-                text: str = self.input_text(msg)
+                text: str = input(msg).strip()
                 lst.append(text)
                 keep: bool = self.input_bool("入力する文字列は、まだありますか？")
                 if not keep:
@@ -166,16 +151,22 @@ async def main() -> bool:
     obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
+            if "first_appid_of_estat" in os.environ:
+                obj_of_cls.APP_ID = os.environ.get("first_appid_of_estat")
+            else:
+                obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
+                os.environ["first_appid_of_estat"] = obj_of_cls.APP_ID
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui.input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
+                obj_of_cls.lst_of_get_type = obj_with_cui.select_element(obj_of_cls.dct_of_get_type)
                 obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 開始しました。")
                 # 統計表IDをテキストファイルに書き出す
-                await obj_of_cls.write_stats_data_ids_to_file(
-                    page_generator=obj_of_cls.get_stats_data_ids(),
-                    data_type_key=obj_of_cls.lst_of_data_type[obj_of_cls.KEY],
-                    chunk_size=100,
-                )
-                obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
+                result = obj_of_cls.write_stats_data_ids_to_file(True)
+                if isinstance(result, asyncio.Task):
+                    # 非同期の場合
+                    await result
+                elif result:
+                    obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
             obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_of_cls.dct_of_match)

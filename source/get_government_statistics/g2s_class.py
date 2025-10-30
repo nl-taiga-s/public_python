@@ -1,28 +1,21 @@
 import asyncio
 import json
-import os
 import shutil
 import sys
-import traceback
 import xml.etree.ElementTree as et
 from csv import DictReader
 from io import StringIO
 from logging import Logger
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 from xml.etree.ElementTree import Element
 
 import clipboard
 import httpx
 import pandas as pd
-from httpx import AsyncClient, Client, Response, Timeout
+from httpx import Client, Response
 from pandas import DataFrame
 from tabulate import tabulate
-
-from source.common.common import DatetimeTools
-
-# クレジット表示
-# このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。
 
 
 class GetGovernmentStatistics:
@@ -32,7 +25,11 @@ class GetGovernmentStatistics:
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
-        self.obj_of_dt2: DatetimeTools = DatetimeTools()
+        # 統計表IDの一覧を取得する方法
+        self.dct_of_get_type: dict = {
+            "非同期": "処理の実行中に待ち時間が発生しても、次の処理に進める方式",
+            "同期": "処理の実行中に待ち時間が発生しても、その処理の完了まで次に進まない方式",
+        }
         # 取得するデータ形式
         self.dct_of_data_type: dict = {
             "xml": "タグ構造のデータ",
@@ -51,6 +48,8 @@ class GetGovernmentStatistics:
         self.KEY: int = 0
         # list変数の説明番号
         self.DESCRIPTION: int = 1
+        # 統計表IDの一覧を取得する方法
+        self.lst_of_get_type: list = []
         # 取得するデータ形式
         self.lst_of_data_type: list = []
         # 検索方式
@@ -59,293 +58,284 @@ class GetGovernmentStatistics:
         self.lst_of_keyword: list = []
         # 抽出方式
         self.lst_of_logic: list = []
-        # APIのURL
-        self.URL: str = ""
-        # APIのバージョン
-        self.VERSION: float = 3.0
-        # APIのURLのパラメータ
-        self.params: dict = {}
-        # アプリケーションIDを取得して、環境変数で指定しておく
-        self.APP_ID: str = os.environ.get("first_appid_of_estat")
-        # 統計表ID
-        self.STATS_DATA_ID: str = ""
-        # dataframeの件数
-        self.DATA_COUNT: int = 0
-        # セッション管理のタイムアウト
-        self.TIMEOUT: Timeout = Timeout(120.0)
-        exe_path: Optional[Path] = None
         # exe化されている場合とそれ以外を切り分ける
-        if getattr(sys, "frozen", False):
-            exe_path = Path(sys.executable)
-        else:
-            exe_path = Path(__file__)
+        exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
         # 統計表IDの一覧のCSVファイルを格納したフォルダ
         self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
         self.folder_s_of_ids: str = str(self.folder_p_of_ids)
         self.log.info(f"統計表IDのリストを格納するフォルダ => {self.folder_s_of_ids}")
         # 統計表IDの一覧のCSVファイルのヘッダー
-        self.header_of_ids: list = ["統計表ID", "統計名", "表題"]
+        self.header_of_ids_l: list = ["統計表ID", "統計名", "表題"]
+        self.header_of_ids_s: str = ",".join(self.header_of_ids_l)
+        # APIのバージョン
+        self.VERSION: float = 3.0
+        # アプリケーションID
+        self.APP_ID: str = ""
+        # 統計表ID
+        self.STATS_DATA_ID: str = ""
+        # dataframeの件数
+        self.DATA_COUNT: int = 0
 
-    async def get_stats_data_ids(self) -> AsyncGenerator[dict]:
-        """統計表IDの一覧を取得します"""
-
-        async def fetch_page(client: AsyncClient, url: str, params: dict, parser: Callable[[Response], tuple[dict, int]]) -> tuple[dict, int]:
-            """1ページ分を取得します"""
-            try:
-                res: Response = await client.get(url, params=params)
-                res.encoding = "utf-8"
-                res.raise_for_status()
-                page_dct, count = parser(res)
-            except Exception as e:
-                self.log.error(f"***{fetch_page.__doc__} => 失敗しました。***: \n{str(e)}")
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                return page_dct, count
-            finally:
-                pass
-
-        async def fetch_all_pages(
-            url: str,
-            parser: Callable[[Response], tuple[dict, int]],
-            page_limit: int = 100,  # 1回のリクエストで取得する件数
-            concurrency: int = 5,  # 非同期で処理する並列数
-        ) -> AsyncGenerator[dict]:
-            """共通処理でページごとに取得します"""
-            # タイムアウト時間を設定する
-            async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
-                start: int = 1
-                while True:
-                    try:
-                        tasks: List[Coroutine[Any, Any, Tuple[Dict[Any, Any], int]]] = [
-                            fetch_page(
-                                client,
-                                url,
-                                {"appId": self.APP_ID, "lang": "J", "limit": page_limit, "startPosition": start + i * page_limit},
-                                parser,
-                            )
-                            for i in range(concurrency)
-                        ]
-                        results = cast(List[Union[Tuple[Dict[Any, Any], int], BaseException]], await asyncio.gather(*tasks, return_exceptions=True))
-                        stop: bool = True
-                        for res in results:
-                            if isinstance(res, BaseException):
-                                tb: str = traceback.format_exc()
-                                self.log.error(f"タスクで例外発生: \n{str(res)}\n{tb}")
-                                continue
-                            page_dct, count = res
-                            if count > 0:
-                                yield page_dct
-                                stop = False
-                        if stop:
-                            break
-                    except Exception as e:
-                        self.log.error(f"***{fetch_all_pages.__doc__} => 失敗しました。***: \n{str(e)}")
-                    except KeyboardInterrupt:
-                        sys.exit(0)
-                    else:
-                        pass
-                    finally:
-                        start += page_limit * concurrency
-
-        def parser_xml(res: Response) -> tuple[dict, int]:
-            """XMLのデータを解析します"""
-            page_dct: dict = {}
-            try:
-                root: Element[str] = et.fromstring(res.text)
-                table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
-                for t in table_lst:
-                    stat_id: str = (t.attrib.get("id", "") or "") if t is not None else ""
-                    element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
-                    stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name is not None else ""
-                    element_of_title: Optional[Element] = t.find("TITLE")
-                    title: str = (element_of_title.text or "") if element_of_title is not None else ""
-                    page_dct[stat_id] = {"stat_name": stat_name, "title": title}
-            except Exception as e:
-                self.log.error(f"***{parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                return page_dct, len(table_lst)
-            finally:
-                pass
-
-        def parser_json(res: Response) -> tuple[dict, int]:
-            """JSONのデータを解析します"""
-            page_dct: dict = {}
-            try:
-                data: Any = res.json()
-                table_data: Any = data["GET_STATS_LIST"]["DATALIST_INF"]["TABLE_INF"]
-                table_lst = [table_data] if isinstance(table_data, dict) else table_data
-                for t in table_lst:
-                    stat_id: str = t.get("@id", "")
-                    statistics_name: str = t.get("STATISTICS_NAME", {})
-                    title: str = t.get("TITLE", {})
-                    page_dct[stat_id] = {
-                        "statistics_name": statistics_name,
-                        "title": title,
-                    }
-            except Exception as e:
-                self.log.error(f"***{parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                return page_dct, len(table_lst)
-            finally:
-                pass
-
-        def parser_csv(res: Response) -> tuple[dict, int]:
-            """CSVのデータを解析します"""
-            page_dct: dict = {}
-            row_count: int = 0
-            try:
-                lines: list = res.text.splitlines()
-                # ヘッダー行を探す
-                start_idx: int = 0
-                for i, line in enumerate(lines):
-                    if "STAT_INF" in line:
-                        # 次の行
-                        start_idx = i + 1
-                        break
-                if start_idx == 0:
-                    raise Exception("CSVファイルにヘッダー行が見つかりません。")
-                csv_text: str = "\n".join(lines[start_idx:])
-                reader: DictReader[str] = DictReader(StringIO(csv_text))
-                for row in reader:
-                    row_count += 1
-                    stat_id: str = row.get("TABLE_INF", "")
-                    stat_name: str = row.get("STAT_NAME", "")
-                    title: str = row.get("TITLE", "")
-                    page_dct[stat_id] = {"stat_name": stat_name, "title": title}
-            except Exception as e:
-                self.log.error(f"***{parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
-                # デバッグ用(加工前のデータをクリップボードにコピーする)
-                clipboard.copy(res.text)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                return page_dct, row_count
-            finally:
-                pass
-
-        URL: str = ""
+    def _parser_xml(self, res: Response) -> tuple[dict, int]:
+        """XMLのデータを解析します(同期版と非同期版で共通)"""
+        page_dct: dict = {}
         try:
-            # データタイプに応じてジェネレータを返す
-            match self.lst_of_data_type[self.KEY]:
-                case "xml":
-                    URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsList"
-                    async for dct in fetch_all_pages(URL, parser_xml):
-                        yield dct
-                case "json":
-                    URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsList"
-                    async for dct in fetch_all_pages(URL, parser_json):
-                        yield dct
-                case "csv":
-                    URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsList"
-                    async for dct in fetch_all_pages(URL, parser_csv):
-                        yield dct
-                case _:
-                    raise Exception("データタイプが対応していません。")
+            root: Element[str] = et.fromstring(res.text)
+            table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
+            for t in table_lst:
+                stat_id: str = (t.attrib.get("id", "") or "") if t is not None else ""
+                element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
+                stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name is not None else ""
+                element_of_title: Optional[Element] = t.find("TITLE")
+                title: str = (element_of_title.text or "") if element_of_title is not None else ""
+                page_dct[stat_id] = {"stat_name": stat_name, "title": title}
         except Exception as e:
-            self.log.error(f"***{self.get_stats_data_ids.__doc__} => 失敗しました。***: \n{str(e)}")
+            self.log.error(f"***{self.parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+            # デバッグ用(加工前のデータをクリップボードにコピーする)
+            clipboard.copy(res.text)
         except KeyboardInterrupt:
             sys.exit(0)
         else:
-            self.log.info(f"***{self.get_stats_data_ids.__doc__} => 成功しました。***")
+            pass
+        finally:
+            pass
+        return page_dct, len(table_lst)
+
+    def _parser_json(self, res: Response) -> tuple[dict, int]:
+        """JSONのデータを解析します(同期版と非同期版で共通)"""
+        page_dct: dict = {}
+        try:
+            data: Any = res.json()
+            table_data: Any = data["GET_STATS_LIST"]["DATALIST_INF"]["TABLE_INF"]
+            table_lst = [table_data] if isinstance(table_data, dict) else table_data
+            for t in table_lst:
+                stat_id: str = t.get("@id", "")
+                statistics_name: str = t.get("STATISTICS_NAME", {})
+                title: str = t.get("TITLE", {})
+                page_dct[stat_id] = {
+                    "statistics_name": statistics_name,
+                    "title": title,
+                }
+        except Exception as e:
+            self.log.error(f"***{self.parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
+            # デバッグ用(加工前のデータをクリップボードにコピーする)
+            clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            pass
+        finally:
+            pass
+        return page_dct, len(table_lst)
+
+    def _parser_csv(self, res: Response) -> tuple[dict, int]:
+        """CSVのデータを解析します(同期版と非同期版で共通)"""
+        page_dct: dict = {}
+        row_count: int = 0
+        try:
+            lines: list = res.text.splitlines()
+            # ヘッダー行を探す
+            start_idx: int = 0
+            for i, line in enumerate(lines):
+                if "STAT_INF" in line:
+                    # 次の行
+                    start_idx = i + 1
+                    break
+            if start_idx == 0:
+                raise Exception("CSVファイルにヘッダー行が見つかりません。")
+            csv_text: str = "\n".join(lines[start_idx:])
+            reader: DictReader[str] = DictReader(StringIO(csv_text))
+            for row in reader:
+                row_count += 1
+                stat_id: str = row.get("TABLE_INF", "")
+                stat_name: str = row.get("STAT_NAME", "")
+                title: str = row.get("TITLE", "")
+                page_dct[stat_id] = {"stat_name": stat_name, "title": title}
+        except Exception as e:
+            self.log.error(f"***{self.parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+            # デバッグ用(加工前のデータをクリップボードにコピーする)
+            clipboard.copy(res.text)
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            pass
+        finally:
+            pass
+        return page_dct, row_count
+
+    def _get_stats_data_ids_with_sync(self, dct_of_ids_url: dict) -> List[Dict[str, dict]]:
+        """ページを取得します(同期版)"""
+        try:
+            data_type: str = self.lst_of_data_type[self.KEY]
+            parser_map: dict = {"xml": self._parser_xml, "json": self._parser_json, "csv": self._parser_csv}
+            parser: Any = parser_map.get(data_type)
+            if not parser:
+                raise Exception("データタイプが対応していません")
+            url: str = dct_of_ids_url[data_type]
+            results: list = []
+            start: int = 1
+            limit: int = 100
+            with httpx.Client(timeout=120.0) as client:
+                while True:
+                    params: dict = {"appId": self.APP_ID, "lang": "J", "limit": limit, "startPosition": start}
+                    res: Response = client.get(url, params=params)
+                    res.encoding = "utf-8"
+                    res.raise_for_status()
+                    page_dct, count = parser(res)
+                    if count == 0:
+                        break
+                    results.append(page_dct)
+                    start += limit
+        except Exception as e:
+            self.log.error(f"***{self.get_stats_data_ids_with_sync.__doc__} => 失敗しました。***: \n{str(e)}")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            pass
+        finally:
+            pass
+        return results
+
+    async def _get_stats_data_ids_with_async(self, dct_of_ids_url: dict) -> AsyncGenerator[Dict[str, dict], None]:
+        """ページを取得します(非同期版)"""
+        try:
+            data_type: str = self.lst_of_data_type[self.KEY]
+            parser_map: dict = {"xml": self._parser_xml, "json": self._parser_json, "csv": self._parser_csv}
+            parser: Any = parser_map.get(data_type)
+            if not parser:
+                raise Exception("データタイプが対応していません")
+            url: str = dct_of_ids_url[data_type]
+            start: int = 1
+            limit: int = 100
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                while True:
+                    params: dict = {"appId": self.APP_ID, "lang": "J", "limit": limit, "startPosition": start}
+                    res: Response = await client.get(url, params=params)
+                    res.encoding = "utf-8"
+                    res.raise_for_status()
+                    page_dct, count = parser(res)
+                    if count == 0:
+                        break
+                    yield page_dct
+                    start += limit
+        except Exception as e:
+            self.log.error(f"***{self.get_stats_data_ids_with_async.__doc__} => 失敗しました。***: \n{str(e)}")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            pass
         finally:
             pass
 
-    async def write_stats_data_ids_to_file(
-        self,
-        page_generator: AsyncGenerator[dict],
-        data_type_key: str,
-        chunk_size: int = 100,
-    ) -> bool:
-        """統計表IDの一覧をファイルへ保存します"""
-
-        def get_info_columns(info: dict, data_type_key: str) -> tuple[str, str]:
-            """2列目・3列目を取得します"""
-            col2: str = ""
-            col3: str = ""
-            try:
-                match data_type_key:
-                    case "xml":
-                        col2 = info.get("stat_name")
-                        col3 = info.get("title")
-                    case "json":
-                        col2 = info.get("statistics_name")
-                        col3 = info.get("title")
-                    case "csv":
-                        col2 = info.get("stat_name")
-                        col3 = info.get("title")
-                    case _:
-                        pass
-                if col3 != "":
-                    # データクレンジング
-                    col3 = col3.replace("\u002c", "\u3001")
-                    col3 = col3.replace("\uff0c", "\u3001")
-            except Exception as e:
-                self.log.error(f"***{get_info_columns.__doc__} => 失敗しました。***: \n{str(e)}")
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                pass
-            finally:
-                pass
-            return col2, col3
-
-        def write_data_to_file(buffer: list[str]):
-            """データをファイルに書き込みます"""
-            EXTENSION: str = "csv"
-            try:
-                date: str = self.obj_of_dt2.convert_for_file_name()
-                file_name: str = f"list_of_stats_data_ids_{date}_{file_index}.{EXTENSION}"
-                file_p: Path = self.folder_p_of_ids / file_name
-                file_p.write_text("\n".join(buffer), encoding="utf-8")
-            except Exception as e:
-                self.log.error(f"***{write_data_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                pass
-            finally:
-                pass
-
-        result: bool = False
+    def write_stats_data_ids_to_file(self, chunk_size: int = 100) -> Union[bool, None]:
+        """統計表IDの一覧をCSVファイルに書き込みます (同期版と非同期版を切り替える)"""
         try:
-            self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
-            # フォルダを空にする
-            if self.folder_p_of_ids.exists():
-                for element in self.folder_p_of_ids.iterdir():
-                    if element.is_dir():
-                        shutil.rmtree(element)
+            # 統計表IDの一覧のURL
+            dct_of_ids_url: dict = {
+                "xml": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsList",
+                "json": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsList",
+                "csv": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsList",
+            }
+            match self.lst_of_get_type[self.KEY]:
+                case "非同期":
+                    try:
+                        loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        # ループがない場合
+                        return self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
                     else:
-                        element.unlink()
-            file_index: int = 1
-            buffer: list[str] = self.header_of_ids
-            async for page in page_generator:
-                for stat_id, info in page.items():
-                    col2, col3 = get_info_columns(info, data_type_key)
-                    buffer.append(f"{stat_id},{col2},{col3}")
-                    # chunkごとにファイルに保存する
-                    if len(buffer) >= chunk_size:
-                        write_data_to_file(buffer)
-                        buffer.clear()
-                        file_index += 1
-            # 余りをファイルに保存する
-            if buffer:
-                write_data_to_file(buffer)
+                        # ループがある場合
+                        return loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
+                case "同期":
+                    return self._write_stats_data_ids_to_file_with_sync(chunk_size, dct_of_ids_url)
+                case _:
+                    raise Exception("そのような取得方法は、ありません。")
         except Exception as e:
             self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
             sys.exit(0)
+        finally:
+            pass
+
+    def _write_stats_data_ids_to_file_with_sync(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
+        """統計表IDの一覧をCSVファイルに書き込みます(同期版)"""
+        result: bool = False
+        try:
+            self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
+            # フォルダの中を空にする
+            for e in self.folder_p_of_ids.iterdir():
+                if e.is_dir():
+                    shutil.rmtree(e)
+                else:
+                    e.unlink()
+            pages: list = self._get_stats_data_ids_with_sync(dct_of_ids_url)
+            buffer: list = [self.header_of_ids_s]
+            file_index: int = 1
+            for page in pages:
+                for stat_id, info in page.items():
+                    col2: str = info.get("stat_name", info.get("statistics_name", ""))
+                    col3: str = info.get("title", "")
+                    if col3:
+                        # データクレンジング
+                        col3 = col3.replace("\u002c", "\u3001").replace("\uff0c", "\u3001")
+                    buffer.append(f"{stat_id},{col2},{col3}")
+                    if len(buffer) >= chunk_size:
+                        file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
+                        file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                        buffer.clear()
+                        buffer.append(self.header_of_ids_s)
+                        file_index += 1
+            if len(buffer) > 1:
+                file_p_of_ids = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
+                file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+        except Exception as e:
+            self.log.error(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 失敗しました。***: \n{str(e)}")
+        except KeyboardInterrupt:
+            sys.exit(0)
         else:
             result = True
-            self.log.info(f"***{self.write_stats_data_ids_to_file.__doc__} => 成功しました。***")
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。***")
+        finally:
+            pass
+        return result
+
+    async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
+        """統計表IDの一覧をCSVファイルに書き込みます(非同期版)"""
+        result: bool = False
+        try:
+            self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
+            # フォルダの中を空にする
+            for e in self.folder_p_of_ids.iterdir():
+                if e.is_dir():
+                    shutil.rmtree(e)
+                else:
+                    e.unlink()
+            buffer: list = [self.header_of_ids_s]
+            file_index: int = 1
+            async for page in self._get_stats_data_ids_with_async(dct_of_ids_url):
+                for stat_id, info in page.items():
+                    col2: str = info.get("stat_name", info.get("statistics_name", ""))
+                    col3: str = info.get("title", "")
+                    if col3:
+                        # データクレンジング
+                        col3 = col3.replace("\u002c", "\u3001").replace("\uff0c", "\u3001")
+                    buffer.append(f"{stat_id},{col2},{col3}")
+                    if len(buffer) >= chunk_size:
+                        file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
+                        file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                        buffer.clear()
+                        buffer.append(self.header_of_ids_s)
+                        file_index += 1
+            if len(buffer) > 1:
+                file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
+                file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+        except Exception as e:
+            self.log.error(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 失敗しました。***: \n{str(e)}")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            result = True
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 成功しました。***")
         finally:
             pass
         return result
@@ -369,12 +359,12 @@ class GetGovernmentStatistics:
             }
             return params
 
-        def with_xml(client: Client) -> DataFrame:
+        def _with_xml(client: Client, dct_of_params: dict) -> DataFrame:
             """XMLでデータを取得します"""
             try:
-                self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsData"
+                id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsData"
                 # リクエストを送信する
-                res: Response = client.get(self.URL, params=self.params)
+                res: Response = client.get(id_url, params=dct_of_params)
                 # 解析して、ルート要素を取得する
                 root: Element[str] = et.fromstring(res.text)
                 # CLASS_OBJからコードと名称のマッピングを作成する
@@ -411,7 +401,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+                self.log.error(f"***{_with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 pass
@@ -420,12 +410,12 @@ class GetGovernmentStatistics:
                 clipboard.copy(res.text)
             return df
 
-        def with_json(client: Client) -> DataFrame:
+        def _with_json(client: Client, dct_of_params: dict) -> DataFrame:
             """JSONでデータを取得します"""
             try:
-                self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsData"
+                id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsData"
                 # リクエストを送信する
-                res: Response = client.get(self.URL, params=self.params)
+                res: Response = client.get(id_url, params=dct_of_params)
                 data: Any = res.json()
                 # CLASS_OBJとVALUEを抽出する
                 class_inf: Any = data["GET_STATS_DATA"]["STATISTICAL_DATA"]["CLASS_INF"]["CLASS_OBJ"]
@@ -463,7 +453,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_json.__doc__} => 失敗しました。***: \n{str(e)}")
+                self.log.error(f"***{_with_json.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 pass
@@ -472,12 +462,12 @@ class GetGovernmentStatistics:
                 clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
             return df
 
-        def with_csv(client: Client) -> DataFrame:
+        def _with_csv(client: Client, dct_of_params: dict) -> DataFrame:
             """CSVでデータを取得します"""
             try:
-                self.URL = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsData"
+                id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsData"
                 # リクエストを送信する
-                res: Response = client.get(self.URL, params=self.params)
+                res: Response = client.get(id_url, params=dct_of_params)
                 lines: list[str] = res.text.splitlines()
                 # VALUE行の位置を検索する
                 value_idx: int = 0
@@ -518,7 +508,7 @@ class GetGovernmentStatistics:
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
             except Exception as e:
-                self.log.error(f"***{with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+                self.log.error(f"***{_with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
                 raise
             else:
                 pass
@@ -530,16 +520,16 @@ class GetGovernmentStatistics:
         df: Optional[DataFrame] = None
         try:
             self.log.info(self.get_data_from_api.__doc__)
-            self.params = get_params_of_url()
+            dct_of_params: dict = get_params_of_url()
             # セッションを管理する
-            with httpx.Client(timeout=self.TIMEOUT) as client:
+            with httpx.Client(timeout=120.0) as client:
                 match self.lst_of_data_type[self.KEY]:
                     case "xml":
-                        df = with_xml(client)
+                        df = _with_xml(client, dct_of_params)
                     case "json":
-                        df = with_json(client)
+                        df = _with_json(client, dct_of_params)
                     case "csv":
-                        df = with_csv(client)
+                        df = _with_csv(client, dct_of_params)
                     case _:
                         raise Exception("データタイプが対応していません。")
         except Exception as e:
