@@ -47,16 +47,16 @@ class MainApp_Of_CLTP(QWidget):
 
     def show_result(self, label: str, success: bool):
         """結果を表示します"""
-        QMessageBox.information(self, "結果", f"{label}に{'成功' if success else '失敗'}しました。")
+        QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
-            self.obj_of_lt.logger.info(f"{label}に成功しました。")
+            self.obj_of_lt.logger.info(f"{label} => 成功しました。")
         else:
-            self.obj_of_lt.logger.error(f"{label}に失敗しました。")
+            self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
     def show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.critical(self, "エラー", msg)
-        self.obj_of_lt.logger.warning(msg)
+        self.obj_of_lt.logger.critical(msg)
 
     def setup_log(self) -> bool:
         """ログを設定します"""
