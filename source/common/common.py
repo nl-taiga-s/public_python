@@ -6,7 +6,7 @@ from logging import FileHandler, Formatter, Logger, StreamHandler
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 
@@ -63,6 +63,23 @@ class LogTools:
         finally:
             pass
         return result
+
+
+class QtSafeLogger(QObject):
+    sig_info = Signal(str)
+    sig_error = Signal(str)
+
+    def __init__(self, base_logger: logging.Logger):
+        super().__init__()
+        self.logger: Logger = base_logger
+
+    def info(self, msg: str):
+        self.logger.info(msg)
+        self.sig_info.emit(msg)
+
+    def error(self, msg: str):
+        self.logger.error(msg)
+        self.sig_error.emit(msg)
 
 
 class PlatformTools:
