@@ -151,11 +151,11 @@ async def main() -> bool:
     obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
-            if "first_appid_of_estat" in os.environ:
-                obj_of_cls.APP_ID = os.environ.get("first_appid_of_estat")
+            if obj_of_cls.ENV_NAME_OF_APP_ID in os.environ:
+                obj_of_cls.APP_ID = os.environ.get(obj_of_cls.ENV_NAME_OF_APP_ID)
             else:
                 obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
-                os.environ["first_appid_of_estat"] = obj_of_cls.APP_ID
+                os.environ[obj_of_cls.ENV_NAME_OF_APP_ID] = obj_of_cls.APP_ID
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui.input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 obj_of_cls.lst_of_get_type = obj_with_cui.select_element(obj_of_cls.dct_of_get_type)
@@ -169,12 +169,12 @@ async def main() -> bool:
                     obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
             df: DataFrame = obj_of_cls.get_data_from_api()
-            obj_of_cls.lst_of_match = obj_with_cui.select_element(obj_of_cls.dct_of_match)
-            if obj_of_cls.lst_of_match[obj_of_cls.KEY] != "何もしない":
+            obj_of_cls.lst_of_match_type = obj_with_cui.select_element(obj_of_cls.dct_of_match_type)
+            if obj_of_cls.lst_of_match_type[obj_of_cls.KEY] != "検索しない":
                 obj_of_cls.lst_of_keyword = obj_with_cui.input_lst_of_text("抽出するキーワードを入力してください。")
                 if len(obj_of_cls.lst_of_keyword) > 1:
-                    obj_of_cls.lst_of_logic = obj_with_cui.select_element(obj_of_cls.dct_of_logic)
-                df: DataFrame = obj_of_cls.filter_data(df)
+                    obj_of_cls.lst_of_logic_type = obj_with_cui.select_element(obj_of_cls.dct_of_logic_type)
+                df = obj_of_cls.filter_data(df)
             obj_of_cls.show_table(df)
         except Exception:
             obj_of_lt.logger.critical("***処理が失敗しました。***")
