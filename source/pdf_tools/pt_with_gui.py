@@ -109,17 +109,23 @@ class MainApp_Of_PT(QMainWindow):
             self.setWindowTitle("PDF編集アプリ")
             central: QWidget = QWidget()
             self.setCentralWidget(central)
+            base_layout: QVBoxLayout = QVBoxLayout(central)
+            # 各要素のタイトル
+            element_title_area: QHBoxLayout = QHBoxLayout()
+            base_layout.addLayout(element_title_area)
+            element_title_area.addWidget(QLabel("機能"))
+            element_title_area.addWidget(QLabel("ビューワー"))
+            element_title_area.addWidget(QLabel("ログ"))
             # 主要
-            main_layout: QHBoxLayout = QHBoxLayout(central)
+            main_layout: QHBoxLayout = QHBoxLayout()
+            base_layout.addLayout(main_layout)
             # 左側
             left_layout: QVBoxLayout = QVBoxLayout()
-            left_layout.addWidget(QLabel("機能"))
             left_func_area: QVBoxLayout = QVBoxLayout()
             left_layout.addLayout(left_func_area)
             main_layout.addLayout(left_layout)
             # 中央
             center_layout: QVBoxLayout = QVBoxLayout()
-            center_layout.addWidget(QLabel("ビューワー"))
             center_scroll_area: QScrollArea = QScrollArea()
             center_scroll_area.setWidgetResizable(True)
             center_layout.addWidget(center_scroll_area)
@@ -132,7 +138,6 @@ class MainApp_Of_PT(QMainWindow):
             # 右側
             right_layout: QVBoxLayout = QVBoxLayout()
             main_layout.addLayout(right_layout)
-            right_layout.addWidget(QLabel("ログ"))
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
             right_layout.addWidget(self.log_area)
