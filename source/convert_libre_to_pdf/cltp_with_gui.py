@@ -55,8 +55,8 @@ class MainApp_Of_CLTP(QWidget):
 
     def show_error(self, msg: str):
         """エラーを表示します"""
-        QMessageBox.critical(self, "エラー", msg)
-        self.obj_of_lt.logger.critical(msg)
+        QMessageBox.warning(self, "エラー", msg)
+        self.obj_of_lt.logger.warning(msg)
 
     def setup_log(self) -> bool:
         """ログを設定します"""
