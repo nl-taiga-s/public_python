@@ -401,7 +401,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             pass
         finally:
-            pass
+            self.obj_of_cls.show_table(df)
         return result
 
 
