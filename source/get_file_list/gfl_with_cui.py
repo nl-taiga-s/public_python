@@ -36,21 +36,6 @@ class GFL_With_Cui:
                 pass
         return folder_s
 
-    def input_text(self, msg: str) -> str:
-        """文字列を入力します"""
-        while True:
-            try:
-                text: str = input(f"{msg}: ").strip()
-            except Exception as e:
-                print(f"error: \n{str(e)}")
-            except KeyboardInterrupt:
-                sys.exit(0)
-            else:
-                break
-            finally:
-                pass
-        return text
-
     def input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         result: bool = False
@@ -103,7 +88,7 @@ def main() -> bool:
             obj_of_cls.folder_path = obj_with_cui.input_folder_path()
             obj_of_cls.recursive = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
             obj_of_cls.search_recursively()
-            obj_of_cls.pattern = obj_with_cui.input_text("ファイルの検索パターンを入力してください。")
+            obj_of_cls.pattern = input("ファイルの検索パターンを入力してください。")
             obj_of_cls.extract_by_pattern()
         except Exception:
             obj_of_lt.logger.critical("***処理が失敗しました。***")
