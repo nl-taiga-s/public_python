@@ -399,9 +399,9 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            pass
-        finally:
             self.obj_of_cls.show_table(df)
+        finally:
+            pass
         return result
 
 
