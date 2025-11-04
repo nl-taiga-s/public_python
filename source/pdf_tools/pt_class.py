@@ -58,9 +58,7 @@ class PdfTools:
             self.metadata_of_reader = self.reader.metadata
             self.num_of_pages = len(self.reader.pages)
             self.creation_date = self.metadata_of_reader.get("/CreationDate")
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.read_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -80,9 +78,7 @@ class PdfTools:
             self.writer.encrypt(password, algorithm="AES-256")
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.encrypt.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -103,9 +99,7 @@ class PdfTools:
             self.writer = PdfWriter(clone_from=self.reader)
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.decrypt.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -123,9 +117,7 @@ class PdfTools:
             for key, _ in self.fields:
                 value: Any = getattr(self.metadata_of_reader, key, None)
                 self.log.info(f"{key.capitalize().replace("_", " ")}: {value or None}")
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.get_metadata.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -145,9 +137,7 @@ class PdfTools:
             self.writer.add_metadata(metadata_of_writer)
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.write_metadata.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -185,12 +175,10 @@ class PdfTools:
             self.read_file(file_s)
             # マージされたファイルにメタデータの作成日を付与する
             self.add_creation_date_in_metadata()
-        except Exception as e:
+        except Exception:
             if is_encrypted_lst:
                 self.log.error("暗号化されたファイルの一覧です。: ")
                 self.log.error("\n".join(is_encrypted_lst))
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.merge.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
@@ -232,8 +220,6 @@ class PdfTools:
             # ページを抽出したファイルにメタデータの作成日を付与する
             self.add_creation_date_in_metadata()
         except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.extract_pages.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
@@ -278,8 +264,6 @@ class PdfTools:
             # ページを削除したファイルにメタデータの作成日を付与する
             self.add_creation_date_in_metadata()
         except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.delete_pages.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
@@ -308,8 +292,6 @@ class PdfTools:
                     lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
             self.log.info("\n".join(lst_of_text_in_pages))
         except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.extract_text.__doc__} => 失敗しました。***: \n{str(e)}")
             raise
         else:
             result = True
@@ -332,9 +314,7 @@ class PdfTools:
                     self.writer.pages[p].rotate(degrees)
             with open(self.file_path, "wb") as f:
                 self.writer.write(f)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.rotate_page_clockwise.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -356,9 +336,7 @@ class PdfTools:
                     self.metadata_of_writer[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.UTC_OF_JP)
                     break
             self.write_metadata(self.metadata_of_writer)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.add_creation_date_in_metadata.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True

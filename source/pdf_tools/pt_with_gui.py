@@ -342,7 +342,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("暗号化", result)
+            self.show_result(self.encrypt_pdf.__doc__, result)
         return result
 
     def decrypt_pdf(self) -> bool:
@@ -359,7 +359,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("復号化", result)
+            self.show_result(self.decrypt_pdf.__doc__, result)
         return result
 
     def show_metadata(self) -> bool:
@@ -377,7 +377,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("メタデータの表示", result)
+            pass
         return result
 
     def write_metadata(self) -> bool:
@@ -403,7 +403,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("メタデータの書き込み", result)
+            pass
         return result
 
     def merge_pdfs(self) -> bool:
@@ -422,7 +422,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("マージ", result)
+            pass
         return result
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -445,7 +445,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("ページの抽出", result)
+            pass
         return result
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -468,7 +468,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("ページの削除", result)
+            pass
         return result
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -491,7 +491,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result("テキストの抽出", result)
+            pass
         return result
 
     def rotate_page(self, spin: QSpinBox) -> bool:
@@ -516,7 +516,7 @@ class MainApp_Of_PT(QMainWindow):
             images: list = self.get_images(self.obj_of_cls.file_path)
             self.setup_second_ui(images)
         finally:
-            self.show_result("ページの回転", result)
+            pass
         return result
 
 

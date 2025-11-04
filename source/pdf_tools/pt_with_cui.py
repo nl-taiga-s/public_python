@@ -45,8 +45,8 @@ class PT_With_Cui:
                 num: int = int(choice)
                 if 1 > num or num > len(self.MENU):
                     raise Exception("入力した番号が範囲外です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -70,8 +70,8 @@ class PT_With_Cui:
                     raise Exception("ファイル以外は入力しないでください。")
                 if file_p.suffix.lower() != ext:
                     raise Exception(f"{ext}ファイル以外は入力しないでください。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -94,8 +94,8 @@ class PT_With_Cui:
                         break
                     else:
                         print("ファイルが何も入力されていません。")
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -113,8 +113,8 @@ class PT_With_Cui:
                     raise Exception("パスワードが未入力です。")
                 if not re.fullmatch(r"[A-Za-z0-9_-]+", pw):
                     raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -137,8 +137,8 @@ class PT_With_Cui:
                         case _:
                             value: str = input(f"{key_of_r.capitalize().replace("_", " ")}: ").strip()
                             obj_of_cls.metadata_of_writer[key_of_w] = value
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -161,8 +161,8 @@ class PT_With_Cui:
                 ep: int = int(end_page)
                 if bp < 1 or ep > num_of_pages or bp > ep:
                     raise Exception("指定のページ範囲が不正です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -183,8 +183,8 @@ class PT_With_Cui:
                 p: int = int(page)
                 if p < 1 or p > num_of_pages:
                     raise Exception("指定のページ範囲が不正です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -207,8 +207,8 @@ class PT_With_Cui:
                 n = int(num)
                 if 1 > n or n > len(self.DEGREES):
                     raise Exception("入力した番号が範囲外です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -230,8 +230,8 @@ class PT_With_Cui:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -321,8 +321,8 @@ def main() -> bool:
                     obj_of_cls.rotate_page_clockwise(page, degrees)
                 case _:
                     pass
-        except Exception:
-            obj_of_lt.logger.critical("***処理が失敗しました。***")
+        except Exception as e:
+            obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
             sys.exit(0)
         else:
