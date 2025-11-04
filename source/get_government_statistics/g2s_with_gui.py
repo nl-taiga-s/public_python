@@ -192,9 +192,7 @@ class MainApp_Of_G2S(QMainWindow):
             # クレジット
             credit_area: QVBoxLayout = QVBoxLayout()
             self.main_layout.addLayout(credit_area)
-            credit_notation: QLabel = QLabel(
-                "クレジット表示\nこのサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。"
-            )
+            credit_notation: QLabel = QLabel(self.obj_of_cls.credit_text)
             credit_area.addWidget(credit_notation)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -215,8 +213,8 @@ class MainApp_Of_G2S(QMainWindow):
                     raise Exception("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/")
                 self.obj_of_cls.APP_ID = self.app_id_text.text()
                 os.environ[self.obj_of_cls.ENV_NAME_OF_APP_ID] = self.obj_of_cls.APP_ID
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             result = True
         finally:
@@ -225,9 +223,16 @@ class MainApp_Of_G2S(QMainWindow):
 
     def get_lst(self, combo: QComboBox, dct: dict) -> list:
         """リストを取得します"""
-        index: int = combo.currentIndex()
-        key: str = combo.itemData(index)
-        desc: str = dct[key]
+        try:
+            index: int = combo.currentIndex()
+            key: str = combo.itemData(index)
+            desc: str = dct[key]
+        except Exception:
+            raise
+        else:
+            pass
+        finally:
+            pass
         return [key, desc]
 
     def get_keyword(self, ptxtedit: QPlainTextEdit) -> list:
@@ -248,8 +253,8 @@ class MainApp_Of_G2S(QMainWindow):
                         sub_layout = item.layout()
                         if sub_layout is not None:
                             self.clear_layout(sub_layout)
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             result = True
         finally:
@@ -269,12 +274,12 @@ class MainApp_Of_G2S(QMainWindow):
             result: bool = False
             try:
                 asyncio.run(self.obj_of_cls.write_stats_data_ids_to_file())
-            except Exception as e:
-                self.worker_signals.error.emit(str(e))
+            except Exception:
+                raise
             else:
                 result = True
             finally:
-                self.worker_signals.finished.emit(result, _run_getting_ids_with_async.__doc__)
+                pass
             return result
 
         result: bool = False
@@ -331,7 +336,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.show_lst_of_ids.__doc__, result)
         return result
 
     def get_id_from_lst(self, index: QModelIndex) -> bool:

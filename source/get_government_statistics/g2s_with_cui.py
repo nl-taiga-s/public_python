@@ -9,9 +9,6 @@ from pandas import DataFrame
 from source.common.common import LogTools, PathTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
-# クレジット表示
-# このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。
-
 
 class GS_With_Cui:
     def __init__(self):
@@ -46,8 +43,8 @@ class GS_With_Cui:
                 num: int = int(text)
                 if num < 1 or num > len(lst):
                     raise Exception("入力した番号が範囲外です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -69,8 +66,8 @@ class GS_With_Cui:
                         break
                     else:
                         print("文字列が何も入力されていません。")
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -93,8 +90,8 @@ class GS_With_Cui:
                     raise Exception("数字を入力してください。")
                 if len(text) != DIGIT:
                     raise Exception(f"{DIGIT}桁で入力してください。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -116,8 +113,8 @@ class GS_With_Cui:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -176,8 +173,8 @@ async def main() -> bool:
                     obj_of_cls.lst_of_logic_type = obj_with_cui.select_element(obj_of_cls.dct_of_logic_type)
                 df = obj_of_cls.filter_data(df)
             obj_of_cls.show_table(df)
-        except Exception:
-            obj_of_lt.logger.critical("***処理が失敗しました。***")
+        except Exception as e:
+            obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
             sys.exit(0)
         else:

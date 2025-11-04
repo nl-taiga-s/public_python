@@ -25,6 +25,12 @@ class GetGovernmentStatistics:
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
+        self.credit_text: str = (
+            "クレジット表示\n"
+            "このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、"
+            "サービスの内容は国によって保証されたものではありません。"
+        )
+        self.log.info(self.credit_text)
         # 統計表IDの一覧を取得する方法
         self.dct_of_get_type: dict = {
             "非同期": "処理の実行中に待ち時間が発生しても、次の処理に進める方法",
@@ -43,7 +49,10 @@ class GetGovernmentStatistics:
             "完全一致": "フィールドの値がキーワードと完全に一致している",
         }
         # 抽出方法(2つ以上のキーワードがある場合)
-        self.dct_of_logic_type: dict = {"OR抽出": "複数のキーワードのいずれかが含まれている", "AND抽出": "複数のキーワードの全てが含まれている"}
+        self.dct_of_logic_type: dict = {
+            "OR抽出": "複数のキーワードのいずれかが含まれている",
+            "AND抽出": "複数のキーワードの全てが含まれている",
+        }
         # list変数のキー番号
         self.KEY: int = 0
         # list変数の説明番号
@@ -95,10 +104,10 @@ class GetGovernmentStatistics:
                 element_of_title: Optional[Element] = t.find("TITLE")
                 title: str = (element_of_title.text or "") if element_of_title is not None else ""
                 page_dct[stat_id] = {"stat_name": stat_name, "title": title}
-        except Exception as e:
-            self.log.error(f"***{self.parser_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(res.text)
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -122,10 +131,10 @@ class GetGovernmentStatistics:
                     "statistics_name": statistics_name,
                     "title": title,
                 }
-        except Exception as e:
-            self.log.error(f"***{self.parser_json.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -157,10 +166,10 @@ class GetGovernmentStatistics:
                 stat_name: str = row.get("STAT_NAME", "")
                 title: str = row.get("TITLE", "")
                 page_dct[stat_id] = {"stat_name": stat_name, "title": title}
-        except Exception as e:
-            self.log.error(f"***{self.parser_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(res.text)
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -173,7 +182,11 @@ class GetGovernmentStatistics:
         """ページを取得します(同期版)"""
         try:
             data_type: str = self.lst_of_data_type[self.KEY]
-            parser_map: dict = {"xml": self._parser_xml, "json": self._parser_json, "csv": self._parser_csv}
+            parser_map: dict = {
+                "xml": self._parser_xml,
+                "json": self._parser_json,
+                "csv": self._parser_csv,
+            }
             parser: Any = parser_map.get(data_type)
             if not parser:
                 raise Exception("データタイプが対応していません")
@@ -183,7 +196,12 @@ class GetGovernmentStatistics:
             limit: int = 100
             with httpx.Client(timeout=120.0) as client:
                 while True:
-                    params: dict = {"appId": self.APP_ID, "lang": "J", "limit": limit, "startPosition": start}
+                    params: dict = {
+                        "appId": self.APP_ID,
+                        "lang": "J",
+                        "limit": limit,
+                        "startPosition": start,
+                    }
                     res: Response = client.get(url, params=params)
                     res.encoding = "utf-8"
                     res.raise_for_status()
@@ -192,8 +210,8 @@ class GetGovernmentStatistics:
                         break
                     results.append(page_dct)
                     start += limit
-        except Exception as e:
-            self.log.error(f"***{self.get_stats_data_ids_with_sync.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -206,7 +224,11 @@ class GetGovernmentStatistics:
         """ページを取得します(非同期版)"""
         try:
             data_type: str = self.lst_of_data_type[self.KEY]
-            parser_map: dict = {"xml": self._parser_xml, "json": self._parser_json, "csv": self._parser_csv}
+            parser_map: dict = {
+                "xml": self._parser_xml,
+                "json": self._parser_json,
+                "csv": self._parser_csv,
+            }
             parser: Any = parser_map.get(data_type)
             if not parser:
                 raise Exception("データタイプが対応していません")
@@ -215,7 +237,12 @@ class GetGovernmentStatistics:
             limit: int = 100
             async with httpx.AsyncClient(timeout=120.0) as client:
                 while True:
-                    params: dict = {"appId": self.APP_ID, "lang": "J", "limit": limit, "startPosition": start}
+                    params: dict = {
+                        "appId": self.APP_ID,
+                        "lang": "J",
+                        "limit": limit,
+                        "startPosition": start,
+                    }
                     res: Response = await client.get(url, params=params)
                     res.encoding = "utf-8"
                     res.raise_for_status()
@@ -224,8 +251,8 @@ class GetGovernmentStatistics:
                         break
                     yield page_dct
                     start += limit
-        except Exception as e:
-            self.log.error(f"***{self.get_stats_data_ids_with_async.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
@@ -256,8 +283,8 @@ class GetGovernmentStatistics:
                     return self._write_stats_data_ids_to_file_with_sync(chunk_size, dct_of_ids_url)
                 case _:
                     raise Exception("そのような取得方法は、ありません。")
-        except Exception as e:
-            self.log.error(f"***{self.write_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         finally:
@@ -269,13 +296,12 @@ class GetGovernmentStatistics:
         try:
             file_p_of_ids = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
             file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
-        except Exception as e:
-            self.log.error(f"***{self._common_process_for_writing_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
             result = True
-            self.log.info(f"***{self._common_process_for_writing_stats_data_ids_to_file.__doc__} => 成功しました。***")
         finally:
             pass
         return result
@@ -284,6 +310,7 @@ class GetGovernmentStatistics:
         """統計表IDの一覧をCSVファイルに書き込みます(同期版)"""
         result: bool = False
         try:
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 開始します。")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -308,21 +335,22 @@ class GetGovernmentStatistics:
                         file_index += 1
             if len(buffer) > 1:
                 self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
-        except Exception as e:
-            self.log.error(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
             result = True
             self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。***")
         finally:
-            pass
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 終了します。")
         return result
 
     async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
         """統計表IDの一覧をCSVファイルに書き込みます(非同期版)"""
         result: bool = False
         try:
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 開始します。")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -347,15 +375,15 @@ class GetGovernmentStatistics:
                         file_index += 1
             if len(buffer) > 1:
                 self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
-        except Exception as e:
-            self.log.error(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
+            raise
         except KeyboardInterrupt:
             sys.exit(0)
         else:
             result = True
             self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 成功しました。***")
         finally:
-            pass
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 終了します。")
         return result
 
     def get_data_from_api(self) -> DataFrame:
@@ -418,8 +446,7 @@ class GetGovernmentStatistics:
                 # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
-            except Exception as e:
-                self.log.error(f"***{_with_xml.__doc__} => 失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 pass
@@ -470,8 +497,7 @@ class GetGovernmentStatistics:
                 # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
-            except Exception as e:
-                self.log.error(f"***{_with_json.__doc__} => 失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 pass
@@ -490,13 +516,13 @@ class GetGovernmentStatistics:
                 # VALUE行の位置を検索する
                 value_idx: int = 0
                 for i, line in enumerate(lines):
-                    if line.strip().replace('"', '') == "VALUE":
+                    if line.strip().replace('"', "") == "VALUE":
                         value_idx = i
                         break
                 if value_idx == 0:
                     raise Exception("CSVに 'VALUE' 行が見つかりませんでした。")
                 # ヘッダー行を取得する
-                header_cols: list[str] = [h.strip('"') for h in lines[value_idx + 1].split(',')]
+                header_cols: list[str] = [h.strip('"') for h in lines[value_idx + 1].split(",")]
                 # データ本体を文字列として抽出する
                 csv_body: str = "\n".join(lines[value_idx + 2 :])
                 df: DataFrame = pd.read_csv(StringIO(csv_body), header=None)
@@ -525,8 +551,7 @@ class GetGovernmentStatistics:
                 # 値列を数値型に変換する
                 if "値" in df.columns:
                     df["値"] = pd.to_numeric(df["値"], errors="coerce")
-            except Exception as e:
-                self.log.error(f"***{_with_csv.__doc__} => 失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 pass
@@ -550,8 +575,7 @@ class GetGovernmentStatistics:
                         df = _with_csv(client, dct_of_params)
                     case _:
                         raise Exception("データタイプが対応していません。")
-        except Exception as e:
-            self.log.error(f"***{self.get_data_from_api.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             self.log.info(f"***{self.get_data_from_api.__doc__} => 成功しました。***")
@@ -570,13 +594,23 @@ class GetGovernmentStatistics:
                     if len(self.lst_of_keyword) == 1:
                         # 単一キーワード
                         kw: str = str(self.lst_of_keyword[0])
-                        filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(kw, case=False, na=False).any(), axis=1)]
+                        filtered_df = df[
+                            df.apply(
+                                lambda row: row.astype(str).str.contains(kw, case=False, na=False).any(),
+                                axis=1,
+                            )
+                        ]
                     else:
                         # 複数キーワード
                         match self.lst_of_logic_type[self.KEY]:
                             case "OR抽出":
                                 pattern: str = "|".join(map(str, self.lst_of_keyword))
-                                filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(pattern, case=False, na=False).any(), axis=1)]
+                                filtered_df = df[
+                                    df.apply(
+                                        lambda row: row.astype(str).str.contains(pattern, case=False, na=False).any(),
+                                        axis=1,
+                                    )
+                                ]
                             case "AND抽出":
                                 filtered_df = df[
                                     df.apply(
@@ -596,15 +630,24 @@ class GetGovernmentStatistics:
                         # 複数キーワード
                         match self.lst_of_logic_type[self.KEY]:
                             case "OR抽出":
-                                filtered_df = df[df.apply(lambda row: row.astype(str).isin(self.lst_of_keyword).any(), axis=1)]
+                                filtered_df = df[
+                                    df.apply(
+                                        lambda row: row.astype(str).isin(self.lst_of_keyword).any(),
+                                        axis=1,
+                                    )
+                                ]
                             case "AND抽出":
-                                filtered_df = df[df.apply(lambda row: all(row.astype(str).eq(k).any() for k in self.lst_of_keyword), axis=1)]
+                                filtered_df = df[
+                                    df.apply(
+                                        lambda row: all(row.astype(str).eq(k).any() for k in self.lst_of_keyword),
+                                        axis=1,
+                                    )
+                                ]
                             case _:
                                 raise Exception("その抽出方法はありません。")
                 case _:
                     raise Exception("その検索方法はありません。")
-        except Exception as e:
-            self.log.error(f"***{self.filter_data.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             self.log.info(f"***{self.filter_data.__doc__} => 成功しました。***")
@@ -625,8 +668,7 @@ class GetGovernmentStatistics:
             self.log.info("抽出方法 => " + (": ".join(self.lst_of_logic_type) if self.lst_of_logic_type else "なし"))
             self.DATA_COUNT: int = len(df)
             self.log.info(f"表示件数: {self.DATA_COUNT}")
-        except Exception as e:
-            self.log.error(f"***{self.show_table.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
