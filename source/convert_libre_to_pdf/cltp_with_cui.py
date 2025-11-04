@@ -30,8 +30,8 @@ class CLTP_With_Cui:
                     raise Exception("存在しません。")
                 if not folder_from_p.is_dir() or not folder_to_p.is_dir():
                     raise Exception("フォルダではありません。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -53,8 +53,8 @@ class CLTP_With_Cui:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
-            except Exception as e:
-                print(f"error: \n{str(e)}")
+            except Exception:
+                raise
             except KeyboardInterrupt:
                 sys.exit(0)
             else:
@@ -108,8 +108,8 @@ def main() -> bool:
                 if obj_of_cls.complete:
                     break
                 obj_of_cls.move_to_next_file()
-        except Exception:
-            obj_of_lt.logger.critical("***処理が失敗しました。***")
+        except Exception as e:
+            obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
             sys.exit(0)
         else:
