@@ -263,6 +263,23 @@ class GetGovernmentStatistics:
         finally:
             pass
 
+    def _common_process_for_writing_stats_data_ids_to_file(self, file_index: int, buffer: list) -> bool:
+        """ファイルに書き込む共通処理"""
+        result: bool = False
+        try:
+            file_p_of_ids = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
+            file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+        except Exception as e:
+            self.log.error(f"***{self._common_process_for_writing_stats_data_ids_to_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        else:
+            result = True
+            self.log.info(f"***{self._common_process_for_writing_stats_data_ids_to_file.__doc__} => 成功しました。***")
+        finally:
+            pass
+        return result
+
     def _write_stats_data_ids_to_file_with_sync(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
         """統計表IDの一覧をCSVファイルに書き込みます(同期版)"""
         result: bool = False
@@ -274,10 +291,9 @@ class GetGovernmentStatistics:
                     shutil.rmtree(e)
                 else:
                     e.unlink()
-            pages: list = self._get_stats_data_ids_with_sync(dct_of_ids_url)
             buffer: list = [self.header_of_ids_s]
             file_index: int = 1
-            for page in pages:
+            for page in self._get_stats_data_ids_with_sync(dct_of_ids_url):
                 for stat_id, info in page.items():
                     col2: str = info.get("stat_name", info.get("statistics_name", ""))
                     col3: str = info.get("title", "")
@@ -286,14 +302,12 @@ class GetGovernmentStatistics:
                         col3 = col3.replace("\u002c", "\u3001").replace("\uff0c", "\u3001")
                     buffer.append(f"{stat_id},{col2},{col3}")
                     if len(buffer) >= chunk_size:
-                        file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
-                        file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                        self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
             if len(buffer) > 1:
-                file_p_of_ids = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
-                file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
         except Exception as e:
             self.log.error(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
@@ -327,14 +341,12 @@ class GetGovernmentStatistics:
                         col3 = col3.replace("\u002c", "\u3001").replace("\uff0c", "\u3001")
                     buffer.append(f"{stat_id},{col2},{col3}")
                     if len(buffer) >= chunk_size:
-                        file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
-                        file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                        self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
             if len(buffer) > 1:
-                file_p_of_ids: Path = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
-                file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
+                self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
         except Exception as e:
             self.log.error(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
