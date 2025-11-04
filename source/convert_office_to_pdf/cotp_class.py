@@ -66,9 +66,7 @@ class ConvertOfficeToPDF:
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
             self.set_file_path()
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.create_file_lst.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -88,9 +86,7 @@ class ConvertOfficeToPDF:
             file_name_no_ext: str = current_file_from_p.stem
             current_file_to_p: Path = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
             self.current_file_path_to = str(current_file_to_p)
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.set_file_path.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -107,9 +103,7 @@ class ConvertOfficeToPDF:
             else:
                 self.p -= 1
             self.set_file_path()
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.move_to_previous_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -126,9 +120,7 @@ class ConvertOfficeToPDF:
             else:
                 self.p += 1
             self.set_file_path()
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.move_to_next_file.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -149,9 +141,7 @@ class ConvertOfficeToPDF:
                 obj: object = CreateObject("Excel.Application")
                 f: object = obj.Workbooks.Open(self.current_file_path_from, ReadOnly=False)
                 f.ExportAsFixedFormat(Filename=self.current_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
-            except Exception as e:
-                self.log.debug(repr(e))
-                self.log.error(f"***失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 result = True
@@ -177,9 +167,7 @@ class ConvertOfficeToPDF:
                     OutputFileName=self.current_file_path_to,
                     ExportFormat=PDF_NUMBER_OF_WORD,
                 )
-            except Exception as e:
-                self.log.debug(repr(e))
-                self.log.error(f"***失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 result = True
@@ -205,9 +193,7 @@ class ConvertOfficeToPDF:
                     Path=self.current_file_path_to,
                     FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
                 )
-            except Exception as e:
-                self.log.debug(repr(e))
-                self.log.error(f"***失敗しました。***: \n{str(e)}")
+            except Exception:
                 raise
             else:
                 result = True
@@ -240,9 +226,7 @@ class ConvertOfficeToPDF:
                     self.log.info("全てのファイルの変換が完了しました。")
                 else:
                     raise Exception("一部のファイルの変換が失敗しました。")
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"error: \n{str(e)}")
+        except Exception:
             raise
         else:
             pass

@@ -216,7 +216,7 @@ class MainApp_Of_COTP(QWidget):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.convert_file.__doc__, result)
         return result
 
 
