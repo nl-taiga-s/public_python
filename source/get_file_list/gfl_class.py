@@ -43,9 +43,7 @@ class GetFileList:
             self.num_of_f_before = len(self.lst_file_before)
             self.log.info(f"{self.num_of_f_before}件のファイルがあります。")
             self.log.info("\n".join(self.lst_file_before))
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.search_recursively.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -68,9 +66,7 @@ class GetFileList:
             self.num_of_f_after = len(self.lst_file_after)
             self.log.info(f"{self.num_of_f_after}件のファイルが抽出されました。")
             self.log.info("\n".join(self.lst_file_after))
-        except Exception as e:
-            self.log.debug(repr(e))
-            self.log.error(f"***{self.extract_by_pattern.__doc__} => 失敗しました。***: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True

@@ -175,7 +175,7 @@ class MainApp_Of_GFL(QWidget):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.search_files.__doc__, result)
         return result
 
 
