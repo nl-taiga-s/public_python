@@ -36,8 +36,7 @@ class LogTools:
             self.file_formatter: Formatter = logging.Formatter(self.STR_OF_FILE_FORMATTER)
             self.file_handler.setFormatter(self.file_formatter)
             self.logger.addHandler(self.file_handler)
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -55,8 +54,7 @@ class LogTools:
             self.stream_formatter: Formatter = logging.Formatter(self.STR_OF_STREAM_FORMATTER)
             self.stream_handler.setFormatter(self.stream_formatter)
             self.logger.addHandler(self.stream_handler)
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
             raise
         else:
             result = True
@@ -96,8 +94,7 @@ class PlatformTools:
                     content: str = f.read().lower()
                     if "microsoft" in content or "wsl" in content:
                         result = True
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
             raise
         else:
             pass
@@ -157,8 +154,7 @@ class PathTools:
             folder_of_log_p.mkdir(parents=True, exist_ok=True)
             # ログファイル名
             file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
-        except Exception as e:
-            print(f"error: \n{str(e)}")
+        except Exception:
             raise
         else:
             file_p = folder_of_log_p / file_name_of_log
