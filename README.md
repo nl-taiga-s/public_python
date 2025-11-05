@@ -15,4 +15,4 @@
 > ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1757468306/icon_of_pt_igi3yq.svg)
 ### get_government_statistics(G2S)
 * You can get and see government statistics.
-> ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1761634184/icon_of_g2s_d1g8pf.svg)
+> ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1762310098/icon_of_g2s_hp3j8b.svg)
