@@ -13,6 +13,7 @@ from xml.etree.ElementTree import Element
 import clipboard
 import httpx
 import pandas as pd
+from common.common import DatetimeTools
 from httpx import Client, Response
 from pandas import DataFrame
 from tabulate import tabulate
@@ -25,6 +26,7 @@ class GetGovernmentStatistics:
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
+        self.obj_of_dt2: DatetimeTools = DatetimeTools()
         self.credit_text: str = (
             "クレジット表示\n"
             "このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、"
@@ -67,12 +69,6 @@ class GetGovernmentStatistics:
         self.lst_of_keyword: list = []
         # 抽出方法
         self.lst_of_logic_type: list = []
-        # exe化されている場合とそれ以外を切り分ける
-        exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-        # 統計表IDの一覧のCSVファイルを格納したフォルダ
-        self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
-        self.folder_s_of_ids: str = str(self.folder_p_of_ids)
-        self.log.info(f"統計表IDのリストを格納するフォルダ => {self.folder_s_of_ids}")
         # 統計表IDの一覧のCSVファイルのヘッダー
         self.header_of_ids_l: list = ["統計表ID", "統計名", "表題"]
         self.header_of_ids_s: str = ",".join(self.header_of_ids_l)
@@ -90,6 +86,18 @@ class GetGovernmentStatistics:
         self.DATA_COUNT: int = 0
         # アプリケーションIDの環境変数名
         self.ENV_NAME_OF_APP_ID: str = "first_appid_of_estat"
+        # 指定の統計表のデータフレーム
+        self.df: DataFrame = None
+        # exe化されている場合とそれ以外を切り分ける
+        exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
+        # 統計表IDの一覧のCSVファイルを格納したフォルダ
+        self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
+        self.folder_s_of_ids: str = str(self.folder_p_of_ids)
+        self.log.info(f"統計表IDのリストを格納するフォルダ => {self.folder_s_of_ids}")
+        # 指定の統計表をCSVファイルに出力する際のフォルダ
+        self.folder_p_of_table: Path = exe_path.parent / "__output__"
+        self.folder_s_of_table: str = str(self.folder_p_of_table)
+        self.log.info(f"指定の統計表を出力する際のフォルダ => {self.folder_s_of_table}")
 
     def _parser_xml(self, res: Response) -> tuple[dict, int]:
         """XMLのデータを解析します(同期版と非同期版で共通)"""
@@ -310,7 +318,7 @@ class GetGovernmentStatistics:
         """統計表IDの一覧をCSVファイルに書き込みます(同期版)"""
         result: bool = False
         try:
-            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 開始します。")
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 開始します。***")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -343,14 +351,14 @@ class GetGovernmentStatistics:
             result = True
             self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。***")
         finally:
-            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 終了します。")
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 終了します。***")
         return result
 
     async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
         """統計表IDの一覧をCSVファイルに書き込みます(非同期版)"""
         result: bool = False
         try:
-            self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 開始します。")
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 開始します。***")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -383,11 +391,11 @@ class GetGovernmentStatistics:
             result = True
             self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 成功しました。***")
         finally:
-            self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 終了します。")
+            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 終了します。***")
         return result
 
-    def get_data_from_api(self) -> DataFrame:
-        """APIからデータを取得します"""
+    def get_df_from_api(self) -> bool:
+        """APIからデータフレームを取得します"""
 
         def get_params_of_url() -> dict:
             """APIのURLのパラメータを取得します"""
@@ -560,42 +568,42 @@ class GetGovernmentStatistics:
                 clipboard.copy(res.text)
             return df
 
-        df: Optional[DataFrame] = None
+        result: bool = False
         try:
-            self.log.info(self.get_data_from_api.__doc__)
             dct_of_params: dict = get_params_of_url()
             # セッションを管理する
             with httpx.Client(timeout=120.0) as client:
                 match self.lst_of_data_type[self.KEY]:
                     case "xml":
-                        df = _with_xml(client, dct_of_params)
+                        self.df = _with_xml(client, dct_of_params)
                     case "json":
-                        df = _with_json(client, dct_of_params)
+                        self.df = _with_json(client, dct_of_params)
                     case "csv":
-                        df = _with_csv(client, dct_of_params)
+                        self.df = _with_csv(client, dct_of_params)
                     case _:
                         raise Exception("データタイプが対応していません。")
         except Exception:
             raise
         else:
-            self.log.info(f"***{self.get_data_from_api.__doc__} => 成功しました。***")
+            result = True
+            self.log.info(f"***{self.get_df_from_api.__doc__} => 成功しました。***")
         finally:
             pass
-        return df
+        return result
 
-    def filter_data(self, df: DataFrame) -> DataFrame:
-        """データをフィルターにかけます"""
-        filtered_df: Optional[DataFrame] = None
+    def filter_df(self) -> bool:
+        """データフレームをフィルターにかけます"""
+        result: bool = False
+        tmp: DataFrame = None
         try:
-            self.log.info(self.filter_data.__doc__)
             match self.lst_of_match_type[self.KEY]:
                 case "部分一致":
                     # 全列で部分一致検索する
                     if len(self.lst_of_keyword) == 1:
                         # 単一キーワード
                         kw: str = str(self.lst_of_keyword[0])
-                        filtered_df = df[
-                            df.apply(
+                        tmp = self.df[
+                            self.df.apply(
                                 lambda row: row.astype(str).str.contains(kw, case=False, na=False).any(),
                                 axis=1,
                             )
@@ -605,15 +613,15 @@ class GetGovernmentStatistics:
                         match self.lst_of_logic_type[self.KEY]:
                             case "OR抽出":
                                 pattern: str = "|".join(map(str, self.lst_of_keyword))
-                                filtered_df = df[
-                                    df.apply(
+                                tmp = self.df[
+                                    self.df.apply(
                                         lambda row: row.astype(str).str.contains(pattern, case=False, na=False).any(),
                                         axis=1,
                                     )
                                 ]
                             case "AND抽出":
-                                filtered_df = df[
-                                    df.apply(
+                                tmp = self.df[
+                                    self.df.apply(
                                         lambda row: all(row.astype(str).str.contains(k, case=False, na=False).any() for k in self.lst_of_keyword),
                                         axis=1,
                                     )
@@ -625,20 +633,20 @@ class GetGovernmentStatistics:
                     if len(self.lst_of_keyword) == 1:
                         # 単一キーワード
                         kw: str = str(self.lst_of_keyword[0])
-                        filtered_df = df[df.apply(lambda row: row.astype(str).eq(kw).any(), axis=1)]
+                        tmp = self.df[self.df.apply(lambda row: row.astype(str).eq(kw).any(), axis=1)]
                     else:
                         # 複数キーワード
                         match self.lst_of_logic_type[self.KEY]:
                             case "OR抽出":
-                                filtered_df = df[
-                                    df.apply(
+                                tmp = self.df[
+                                    self.df.apply(
                                         lambda row: row.astype(str).isin(self.lst_of_keyword).any(),
                                         axis=1,
                                     )
                                 ]
                             case "AND抽出":
-                                filtered_df = df[
-                                    df.apply(
+                                tmp = self.df[
+                                    self.df.apply(
                                         lambda row: all(row.astype(str).eq(k).any() for k in self.lst_of_keyword),
                                         axis=1,
                                     )
@@ -650,29 +658,47 @@ class GetGovernmentStatistics:
         except Exception:
             raise
         else:
-            self.log.info(f"***{self.filter_data.__doc__} => 成功しました。***")
+            result = True
+            self.df = tmp
+            self.log.info(f"***{self.filter_df.__doc__} => 成功しました。***")
         finally:
             pass
-        return filtered_df
+        return result
 
-    def show_table(self, df: DataFrame) -> bool:
-        """表を表示させます"""
+    def show_df(self) -> bool:
+        """指定のデータフレームを表示します"""
         result: bool = False
         try:
-            self.log.info(self.show_table.__doc__)
-            self.log.info(tabulate(df, headers="keys", tablefmt="pipe", showindex=False))
+            self.log.info(tabulate(self.df, headers="keys", tablefmt="pipe", showindex=False))
             self.log.info(f"統計表ID => {self.STATS_DATA_ID}")
             self.log.info("データの取得形式 => " + ": ".join(self.lst_of_data_type))
             self.log.info("検索方法 => " + ": ".join(self.lst_of_match_type))
             self.log.info("抽出するキーワード => " + (", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"))
             self.log.info("抽出方法 => " + (": ".join(self.lst_of_logic_type) if self.lst_of_logic_type else "なし"))
-            self.DATA_COUNT: int = len(df)
+            self.DATA_COUNT: int = len(self.df)
             self.log.info(f"表示件数: {self.DATA_COUNT}")
         except Exception:
             raise
         else:
             result = True
-            self.log.info(f"***{self.show_table.__doc__} => 成功しました。***")
+            self.log.info(f"***{self.show_df.__doc__} => 成功しました。***")
+        finally:
+            pass
+        return result
+
+    def output_df_to_csv(self) -> bool:
+        """指定のデータフレームをcsvファイルに出力します"""
+        result: bool = False
+        try:
+            self.folder_p_of_table.mkdir(parents=True, exist_ok=True)
+            file_p_of_table: Path = self.folder_p_of_table / f"stats_table_of_{self.obj_of_dt2.convert_for_file_name()}.csv"
+            file_s_of_table: str = str(file_p_of_table)
+            self.df.to_csv(file_s_of_table, index=False, encoding="utf-8")
+        except Exception:
+            raise
+        else:
+            result = True
+            self.log.info(f"***{self.output_df_to_csv.__doc__} => 成功しました。***")
         finally:
             pass
         return result

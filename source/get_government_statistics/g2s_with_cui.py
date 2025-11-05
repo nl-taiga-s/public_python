@@ -4,8 +4,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from pandas import DataFrame
-
 from source.common.common import LogTools, PathTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
@@ -156,23 +154,22 @@ async def main() -> bool:
             obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui.input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 obj_of_cls.lst_of_get_type = obj_with_cui.select_element(obj_of_cls.dct_of_get_type)
-                obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 開始しました。")
                 # 統計表IDをテキストファイルに書き出す
                 result = obj_of_cls.write_stats_data_ids_to_file(True)
                 if isinstance(result, asyncio.Task):
                     # 非同期の場合
                     await result
-                elif result:
-                    obj_of_lt.logger.info(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 終了しました。")
             obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
-            df: DataFrame = obj_of_cls.get_data_from_api()
+            obj_of_cls.get_df_from_api()
             obj_of_cls.lst_of_match_type = obj_with_cui.select_element(obj_of_cls.dct_of_match_type)
             if obj_of_cls.lst_of_match_type[obj_of_cls.KEY] != "検索しない":
                 obj_of_cls.lst_of_keyword = obj_with_cui.input_lst_of_text("抽出するキーワードを入力してください。")
                 if len(obj_of_cls.lst_of_keyword) > 1:
                     obj_of_cls.lst_of_logic_type = obj_with_cui.select_element(obj_of_cls.dct_of_logic_type)
-                df = obj_of_cls.filter_data(df)
-            obj_of_cls.show_table(df)
+                obj_of_cls.filter_df()
+            obj_of_cls.show_df()
+            if obj_with_cui.input_bool(f"{obj_of_cls.output_df_to_csv.__doc__} => 行いますか？"):
+                obj_of_cls.output_df_to_csv()
         except Exception as e:
             obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:

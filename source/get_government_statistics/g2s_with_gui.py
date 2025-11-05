@@ -6,8 +6,7 @@ import sys
 import threading
 from pathlib import Path
 
-from pandas import DataFrame
-from PySide6.QtCore import QModelIndex, QObject, Signal
+from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QApplication,
@@ -29,12 +28,6 @@ from PySide6.QtWidgets import (
 
 from source.common.common import GUITools, LogTools, PathTools, QtSafeLogger
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
-
-
-class WorkerSignals(QObject):
-    finished: Signal = Signal(bool, str)
-    info: Signal = Signal(str)
-    error: Signal = Signal(str)
 
 
 # QTextEdit にログを流すためのハンドラ
@@ -188,7 +181,11 @@ class MainApp_Of_G2S(QMainWindow):
             # 指定の統計表を表示する
             show_btn: QPushButton = QPushButton("統計表を表示する")
             func_area.addRow(show_btn)
-            show_btn.clicked.connect(self.show_statistical_table)
+            show_btn.clicked.connect(self.show_table)
+            # 指定の統計表をCSVファイルに出力する
+            output_btn: QPushButton = QPushButton("統計表を出力する")
+            func_area.addRow(output_btn)
+            output_btn.clicked.connect(self.output_table_to_csv)
             # クレジット
             credit_area: QVBoxLayout = QVBoxLayout()
             self.main_layout.addLayout(credit_area)
@@ -263,11 +260,6 @@ class MainApp_Of_G2S(QMainWindow):
 
     def show_lst_of_ids(self, get: bool) -> bool:
         """統計表IDの一覧を表示します"""
-
-        self.worker_signals = WorkerSignals()
-        self.worker_signals.finished.connect(lambda success, label: self.show_result(label, success))
-        self.worker_signals.error.connect(lambda msg: self.show_error(msg))
-        self.worker_signals.info.connect(lambda msg: self.show_info(msg))
 
         def _run_getting_ids_with_async() -> bool:
             """バックグラウンドスレッドで非同期の処理をします"""
@@ -365,8 +357,8 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def show_statistical_table(self) -> bool:
-        """統計表を表示させます"""
+    def show_table(self) -> bool:
+        """指定の統計表を表示します"""
         result: bool = False
         try:
             self.clear_layout(self.bottom_container_layout)
@@ -374,7 +366,7 @@ class MainApp_Of_G2S(QMainWindow):
                 raise Exception("統計表IDが選択されていません。")
             self.get_app_id()
             self.obj_of_cls.lst_of_data_type = self.get_lst(self.data_type_combo, self.obj_of_cls.dct_of_data_type)
-            df: DataFrame = self.obj_of_cls.get_data_from_api()
+            self.obj_of_cls.get_df_from_api()
             self.obj_of_cls.lst_of_match_type = self.get_lst(self.match_type_combo, self.obj_of_cls.dct_of_match_type)
             if self.obj_of_cls.lst_of_match_type[self.obj_of_cls.KEY] != "検索しない":
                 self.obj_of_cls.lst_of_keyword = self.get_keyword(self.keyword_text)
@@ -382,7 +374,7 @@ class MainApp_Of_G2S(QMainWindow):
                     raise Exception("キーワードが入力されていません。")
                 if len(self.obj_of_cls.lst_of_keyword) > 1:
                     self.obj_of_cls.lst_of_logic_type = self.get_lst(self.logic_type_combo, self.obj_of_cls.dct_of_logic_type)
-                df = self.obj_of_cls.filter_data(df)
+                self.obj_of_cls.filter_df()
             # 統計表IDごとに仮想コンテナでまとめる
             element: QWidget = QWidget()
             element_layout: QVBoxLayout = QVBoxLayout()
@@ -395,8 +387,8 @@ class MainApp_Of_G2S(QMainWindow):
             self.bottom_container_layout.addWidget(element)
             model: QStandardItemModel = QStandardItemModel()
             # ヘッダーを追加する
-            model.setHorizontalHeaderLabels(df.columns.tolist())
-            for r in df.itertuples(index=False):
+            model.setHorizontalHeaderLabels(self.obj_of_cls.df.columns.tolist())
+            for r in self.obj_of_cls.df.itertuples(index=False):
                 items = [QStandardItem(str(v)) for v in r]
                 model.appendRow(items)
             stats_table.setModel(model)
@@ -404,9 +396,24 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            self.obj_of_cls.show_table(df)
+            self.obj_of_cls.show_df()
         finally:
             pass
+        return result
+
+    def output_table_to_csv(self) -> bool:
+        """指定の統計表をCSVファイルに出力します"""
+        result: bool = False
+        try:
+            if self.obj_of_cls.df is None:
+                raise Exception("統計表を表示してください。")
+            self.obj_of_cls.output_df_to_csv()
+        except Exception as e:
+            self.show_error(f"error: \n{str(e)}")
+        else:
+            result = True
+        finally:
+            self.show_result(self.output_df_to_csv.__doc__, result)
         return result
 
 
