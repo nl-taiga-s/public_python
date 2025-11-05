@@ -88,7 +88,7 @@ def main() -> bool:
             obj_of_cls.folder_path = obj_with_cui.input_folder_path()
             obj_of_cls.recursive = obj_with_cui.input_bool("フォルダを再帰的に検索しますか？")
             obj_of_cls.search_recursively()
-            obj_of_cls.pattern = input("ファイルの検索パターンを入力してください。")
+            obj_of_cls.pattern = input("ファイルの検索パターンを入力してください。: ")
             obj_of_cls.extract_by_pattern()
         except Exception as e:
             obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
