@@ -6,10 +6,12 @@ import sys
 import threading
 from pathlib import Path
 
+import pandas
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QHBoxLayout,
@@ -26,7 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import GUITools, LogTools, PathTools, QtSafeLogger
+from source.common.common import GUITools, LogTools, PathTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
 
@@ -46,8 +48,7 @@ class MainApp_Of_G2S(QMainWindow):
         """初期化します"""
         super().__init__()
         self.obj_of_lt: LogTools = LogTools()
-        self.qt_logger: QtSafeLogger = QtSafeLogger(self.obj_of_lt.logger)
-        self.obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(self.qt_logger)
+        self.obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(self.obj_of_lt.logger)
         self.setup_ui()
         self.obj_of_pt: PathTools = PathTools()
         self.setup_log()
@@ -116,7 +117,7 @@ class MainApp_Of_G2S(QMainWindow):
             # 左上
             self.top_left_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_left_layout)
-            self.show_lst_of_ids(False)
+            self.show_lst_of_ids()
             # 右上
             self.top_right_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_right_layout)
@@ -159,6 +160,11 @@ class MainApp_Of_G2S(QMainWindow):
                 self.get_type_combo.addItem(f"{key}: {desc}", userData=key)
             self.get_type_combo.setCurrentIndex(0)
             func_area.addRow(QLabel("取得方法: "), self.get_type_combo)
+            # フィルターにかけるかどうか
+            self.filter_check: QCheckBox = QCheckBox("フィルターの有無")
+            self.filter_check.setChecked(False)
+            func_area.addRow(self.filter_check)
+            self.filter_check.toggled.connect(self.on_toggled)
             # 統計表IDの一覧を取得して表示する
             get_btn: QPushButton = QPushButton("統計表IDの一覧を取得して表示する")
             func_area.addRow(get_btn)
@@ -232,6 +238,56 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return [key, desc]
 
+    def on_toggled(self, status: bool):
+        """フィルターの有無を取得する"""
+        self.obj_of_cls.filter = status
+
+    def check_first_form(self, get: bool = False) -> bool:
+        """1番目のフォームの入力を確認します"""
+        result: bool = False
+        try:
+            self.get_app_id()
+            self.obj_of_cls.lst_of_data_type = self.get_lst(self.data_type_combo, self.obj_of_cls.dct_of_data_type)
+            if not self.obj_of_cls.lst_of_data_type:
+                raise Exception("データ形式を選択してください。")
+            if get:
+                self.obj_of_cls.lst_of_get_type = self.get_lst(self.get_type_combo, self.obj_of_cls.dct_of_get_type)
+                if not self.obj_of_cls.lst_of_get_type:
+                    raise Exception("取得する方法を選択してください。")
+            else:
+                if self.obj_of_cls.STATS_DATA_ID == "":
+                    raise Exception("統計表IDを選択してください。")
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def check_second_form(self) -> bool:
+        """2番目のフォームの入力を確認します"""
+        result: bool = False
+        try:
+            self.obj_of_cls.lst_of_match_type = self.get_lst(self.match_type_combo, self.obj_of_cls.dct_of_match_type)
+            if not self.obj_of_cls.lst_of_match_type:
+                raise Exception("検索方法を選択してください。")
+            if self.obj_of_cls.lst_of_match_type[self.obj_of_cls.KEY] != "検索しない":
+                self.obj_of_cls.lst_of_keyword = self.get_keyword(self.keyword_text)
+                if not self.obj_of_cls.lst_of_keyword:
+                    raise Exception("キーワードを入力してください。")
+                if len(self.obj_of_cls.lst_of_keyword) > 1:
+                    self.obj_of_cls.lst_of_logic_type = self.get_lst(self.logic_type_combo, self.obj_of_cls.dct_of_logic_type)
+                    if not self.obj_of_cls.lst_of_logic_type:
+                        raise Exception("抽出方法を選択してください。")
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
     def get_keyword(self, ptxtedit: QPlainTextEdit) -> list:
         """キーワードを取得します"""
         return [line.strip() for line in ptxtedit.toPlainText().splitlines() if line.strip()]
@@ -258,7 +314,7 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def show_lst_of_ids(self, get: bool) -> bool:
+    def show_lst_of_ids(self, get: bool = False) -> bool:
         """統計表IDの一覧を表示します"""
 
         def _run_getting_ids_with_async() -> bool:
@@ -278,10 +334,8 @@ class MainApp_Of_G2S(QMainWindow):
         try:
             self.clear_layout(self.top_left_layout)
             if get:
-                self.get_app_id()
-                self.obj_of_cls.lst_of_data_type = self.get_lst(self.data_type_combo, self.obj_of_cls.dct_of_data_type)
-                self.obj_of_cls.lst_of_get_type = self.get_lst(self.get_type_combo, self.obj_of_cls.dct_of_get_type)
                 try:
+                    self.check_first_form(get)
                     match self.obj_of_cls.lst_of_get_type[self.obj_of_cls.KEY]:
                         case "非同期":
                             # asyncioをGUIイベントループと安全に共存させる
@@ -312,14 +366,26 @@ class MainApp_Of_G2S(QMainWindow):
             self.model.setHorizontalHeaderLabels(self.obj_of_cls.header_of_ids_l)
             # 検索パターン
             PATTERN: str = "*.csv"
-            for csv_file in self.obj_of_cls.folder_p_of_ids.glob(PATTERN):
-                with open(csv_file, newline="", encoding="utf-8") as f:
-                    reader = csv.reader(f)
+            if self.obj_of_cls.filter:
+                self.check_second_form()
+                for csv_file in self.obj_of_cls.folder_p_of_ids.glob(PATTERN):
+                    reader = pandas.read_csv(str(csv_file), chunksize=1)
                     # ヘッダー行をスキップする
                     next(reader, None)
-                    for row in reader:
-                        items: list = [QStandardItem(str(cell)) for cell in row]
-                        self.model.appendRow(items)
+                    for chunk in reader:
+                        df = self.obj_of_cls.filter_df(chunk)
+                        for _, row in df.iterrows():
+                            items: list = [QStandardItem(str(v)) for v in row]
+                            self.model.appendRow(items)
+            else:
+                for csv_file in self.obj_of_cls.folder_p_of_ids.glob(PATTERN):
+                    with open(csv_file, newline="", encoding="utf-8") as f:
+                        reader = csv.reader(f)
+                        # ヘッダー行をスキップする
+                        next(reader, None)
+                        for row in reader:
+                            items: list = [QStandardItem(str(cell)) for cell in row]
+                            self.model.appendRow(items)
             lst_of_ids.setModel(self.model)
             lst_of_ids.resizeColumnsToContents()
             lst_of_ids.clicked.connect(self.get_id_from_lst)
@@ -328,7 +394,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result(self.show_lst_of_ids.__doc__, result)
+            pass
         return result
 
     def get_id_from_lst(self, index: QModelIndex) -> bool:
@@ -362,19 +428,11 @@ class MainApp_Of_G2S(QMainWindow):
         result: bool = False
         try:
             self.clear_layout(self.bottom_container_layout)
-            if self.obj_of_cls.STATS_DATA_ID == "":
-                raise Exception("統計表IDが選択されていません。")
-            self.get_app_id()
-            self.obj_of_cls.lst_of_data_type = self.get_lst(self.data_type_combo, self.obj_of_cls.dct_of_data_type)
-            self.obj_of_cls.get_df_from_api()
-            self.obj_of_cls.lst_of_match_type = self.get_lst(self.match_type_combo, self.obj_of_cls.dct_of_match_type)
-            if self.obj_of_cls.lst_of_match_type[self.obj_of_cls.KEY] != "検索しない":
-                self.obj_of_cls.lst_of_keyword = self.get_keyword(self.keyword_text)
-                if not self.obj_of_cls.lst_of_keyword:
-                    raise Exception("キーワードが入力されていません。")
-                if len(self.obj_of_cls.lst_of_keyword) > 1:
-                    self.obj_of_cls.lst_of_logic_type = self.get_lst(self.logic_type_combo, self.obj_of_cls.dct_of_logic_type)
-                self.obj_of_cls.filter_df()
+            self.check_first_form()
+            self.obj_of_cls.get_table_from_api()
+            if self.obj_of_cls.filter:
+                self.check_second_form()
+                self.obj_of_cls.filter_df(self.obj_of_cls.df)
             # 統計表IDごとに仮想コンテナでまとめる
             element: QWidget = QWidget()
             element_layout: QVBoxLayout = QVBoxLayout()
@@ -396,7 +454,7 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            self.obj_of_cls.show_df()
+            self.obj_of_cls.show_table()
         finally:
             pass
         return result
@@ -407,13 +465,13 @@ class MainApp_Of_G2S(QMainWindow):
         try:
             if self.obj_of_cls.df is None:
                 raise Exception("統計表を表示してください。")
-            self.obj_of_cls.output_df_to_csv()
+            self.obj_of_cls.output_table_to_csv()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.output_df_to_csv.__doc__, result)
+            self.show_result(self.output_table_to_csv.__doc__, result)
         return result
 
 
