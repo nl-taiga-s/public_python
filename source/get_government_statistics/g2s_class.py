@@ -70,8 +70,6 @@ class GetGovernmentStatistics:
         self.lst_of_keyword: list = []
         # 抽出方法
         self.lst_of_logic_type: list = []
-        # フィルターをかけるかどうか
-        self.filter: bool = False
         # 統計表IDの一覧のCSVファイルのヘッダー
         self.header_of_ids_l: list = ["統計表ID", "統計名", "表題"]
         self.header_of_ids_s: str = ",".join(self.header_of_ids_l)
@@ -400,7 +398,7 @@ class GetGovernmentStatistics:
     def get_table_from_api(self) -> bool:
         """APIから指定の統計表を取得します"""
 
-        def get_params_of_url() -> dict:
+        def _get_params_of_url() -> dict:
             """APIのURLのパラメータを取得します"""
             params: dict = {
                 "appId": self.APP_ID,  # アプリケーションID
@@ -573,7 +571,7 @@ class GetGovernmentStatistics:
 
         result: bool = False
         try:
-            dct_of_params: dict = get_params_of_url()
+            dct_of_params: dict = _get_params_of_url()
             # セッションを管理する
             with httpx.Client(timeout=120.0) as client:
                 match self.lst_of_data_type[self.KEY]:
@@ -691,7 +689,8 @@ class GetGovernmentStatistics:
         result: bool = False
         try:
             self.folder_p_of_table.mkdir(parents=True, exist_ok=True)
-            file_p_of_table: Path = self.folder_p_of_table / f"stats_table_{self.obj_of_dt2.convert_for_file_name()}.csv"
+            dt: str = self.obj_of_dt2._convert_for_file_name()
+            file_p_of_table: Path = self.folder_p_of_table / f"stats_table_{self.STATS_DATA_ID}_{dt}.csv"
             file_s_of_table: str = str(file_p_of_table)
             self.df.to_csv(file_s_of_table, index=False, encoding="utf-8")
         except Exception:

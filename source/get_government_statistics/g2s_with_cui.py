@@ -16,7 +16,7 @@ class GS_With_Cui:
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
 
-    def select_element(self, elements: Any) -> list:
+    def _select_element(self, elements: Any) -> list:
         """要素を選択します"""
         lst: list = []
         while True:
@@ -51,14 +51,14 @@ class GS_With_Cui:
                 pass
         return lst[num - 1]
 
-    def input_lst_of_text(self, msg: str) -> list:
+    def _input_lst_of_text(self, msg: str) -> list:
         """複数の文字列を入力します"""
         lst: list = []
         try:
             while True:
                 text: str = input(msg).strip()
                 lst.append(text)
-                keep: bool = self.input_bool("入力する文字列は、まだありますか？")
+                keep: bool = self._input_bool("入力する文字列は、まだありますか？")
                 if not keep:
                     if lst:
                         break
@@ -74,7 +74,7 @@ class GS_With_Cui:
             pass
         return lst
 
-    def input_stats_data_id(self) -> str:
+    def _input_stats_data_id(self) -> str:
         """統計表IDを入力します"""
         text: str = ""
         # 桁
@@ -98,7 +98,7 @@ class GS_With_Cui:
                 pass
         return text
 
-    def input_bool(self, msg: str) -> bool:
+    def _input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         result: bool = False
         while True:
@@ -130,10 +130,10 @@ async def main() -> bool:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
         file_of_exe_p: Path = Path(__file__)
-        file_of_log_p: Path = obj_of_pt.get_file_path_of_log(file_of_exe_p)
+        file_of_log_p: Path = obj_of_pt._get_file_path_of_log(file_of_exe_p)
         obj_of_lt.file_path_of_log = str(file_of_log_p)
-        obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
-        obj_of_lt.setup_stream_handler()
+        obj_of_lt._setup_file_handler(obj_of_lt.file_path_of_log)
+        obj_of_lt._setup_stream_handler()
     except Exception as e:
         print(f"error: \n{str(e)}")
         return result
@@ -151,25 +151,25 @@ async def main() -> bool:
             else:
                 obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
                 os.environ[obj_of_cls.ENV_NAME_OF_APP_ID] = obj_of_cls.APP_ID
-            obj_of_cls.lst_of_data_type = obj_with_cui.select_element(obj_of_cls.dct_of_data_type)
-            if obj_with_cui.input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
-                obj_of_cls.lst_of_get_type = obj_with_cui.select_element(obj_of_cls.dct_of_get_type)
+            obj_of_cls.lst_of_data_type = obj_with_cui._select_element(obj_of_cls.dct_of_data_type)
+            if obj_with_cui._input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
+                obj_of_cls.lst_of_get_type = obj_with_cui._select_element(obj_of_cls.dct_of_get_type)
                 # 統計表IDをテキストファイルに書き出す
                 result = obj_of_cls.write_stats_data_ids_to_file(True)
                 if isinstance(result, asyncio.Task):
                     # 非同期の場合
                     await result
-            obj_of_cls.STATS_DATA_ID = obj_with_cui.input_stats_data_id()
+            obj_of_cls.STATS_DATA_ID = obj_with_cui._input_stats_data_id()
             obj_of_cls.get_table_from_api()
-            obj_of_cls.lst_of_match_type = obj_with_cui.select_element(obj_of_cls.dct_of_match_type)
-            obj_of_cls.filter = obj_with_cui.input_bool("フィルターをかけますか？")
+            obj_of_cls.lst_of_match_type = obj_with_cui._select_element(obj_of_cls.dct_of_match_type)
+            obj_of_cls.filter = obj_with_cui._input_bool("フィルターをかけますか？")
             if obj_of_cls.filter:
-                obj_of_cls.lst_of_keyword = obj_with_cui.input_lst_of_text("抽出するキーワードを入力してください。")
+                obj_of_cls.lst_of_keyword = obj_with_cui._input_lst_of_text("抽出するキーワードを入力してください。")
                 if len(obj_of_cls.lst_of_keyword) > 1:
-                    obj_of_cls.lst_of_logic_type = obj_with_cui.select_element(obj_of_cls.dct_of_logic_type)
+                    obj_of_cls.lst_of_logic_type = obj_with_cui._select_element(obj_of_cls.dct_of_logic_type)
                 obj_of_cls.df = obj_of_cls.filter_df(obj_of_cls.df)
             obj_of_cls.show_table()
-            if obj_with_cui.input_bool(f"{obj_of_cls.output_table_to_csv.__doc__} => 行いますか？"):
+            if obj_with_cui._input_bool(f"{obj_of_cls.output_table_to_csv.__doc__} => 行いますか？"):
                 obj_of_cls.output_table_to_csv()
         except Exception as e:
             obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
@@ -180,7 +180,7 @@ async def main() -> bool:
             obj_of_lt.logger.info("***処理が成功しました。***")
         finally:
             pass
-        if obj_with_cui.input_bool("終了しますか？"):
+        if obj_with_cui._input_bool("終了しますか？"):
             break
     return result
 
