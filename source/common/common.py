@@ -26,7 +26,7 @@ class LogTools:
         self.logger: Logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-    def setup_file_handler(self, file_path: str) -> bool:
+    def _setup_file_handler(self, file_path: str) -> bool:
         """FileHandlerを設定します"""
         result: bool = False
         try:
@@ -44,7 +44,7 @@ class LogTools:
             pass
         return result
 
-    def setup_stream_handler(self) -> bool:
+    def _setup_stream_handler(self) -> bool:
         """StreamHandlerを設定します"""
         result: bool = False
         try:
@@ -71,11 +71,11 @@ class QtSafeLogger(QObject):
         super().__init__()
         self.logger: Logger = base_logger
 
-    def info(self, msg: str):
+    def _info(self, msg: str):
         self.logger.info(msg)
         self.sig_info.emit(msg)
 
-    def error(self, msg: str):
+    def _error(self, msg: str):
         self.logger.error(msg)
         self.sig_error.emit(msg)
 
@@ -85,7 +85,7 @@ class PlatformTools:
         """初期化します"""
         pass
 
-    def is_wsl(self) -> bool:
+    def _is_wsl(self) -> bool:
         """WSL環境かどうか判定します"""
         result: bool = False
         try:
@@ -108,7 +108,7 @@ class DatetimeTools:
         """初期化します"""
         self.dt: datetime.datetime = None
 
-    def convert_dt_to_str(self, dt: datetime.datetime | None = None) -> str:
+    def _convert_dt_to_str(self, dt: datetime.datetime | None = None) -> str:
         """datetime型からstr型に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -116,7 +116,7 @@ class DatetimeTools:
         # datetime型 => str型
         return dt.strftime("%Y-%m-%d_%H:%M:%S")
 
-    def convert_for_file_name(self, dt: datetime.datetime | None = None) -> str:
+    def _convert_for_file_name(self, dt: datetime.datetime | None = None) -> str:
         """ファイル名用に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -124,7 +124,7 @@ class DatetimeTools:
         # datetime型 => str型
         return dt.strftime("%Y%m%d_%H%M%S")
 
-    def convert_for_metadata_in_pdf(self, utc: str, dt: datetime.datetime | None = None) -> str:
+    def _convert_for_metadata_in_pdf(self, utc: str, dt: datetime.datetime | None = None) -> str:
         """pdfのメタデータ用に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -142,7 +142,7 @@ class PathTools:
         """初期化します"""
         self.obj_of_dt2: DatetimeTools = DatetimeTools()
 
-    def get_file_path_of_log(self, base_path: Path) -> Path:
+    def _get_file_path_of_log(self, base_path: Path) -> Path:
         """ログファイルのパスを取得します"""
         file_p: Optional[Path] = None
         try:
@@ -153,7 +153,7 @@ class PathTools:
             # ログフォルダが存在しない場合は作成します
             folder_of_log_p.mkdir(parents=True, exist_ok=True)
             # ログファイル名
-            file_name_of_log = f"log_{self.obj_of_dt2.convert_for_file_name()}.log"
+            file_name_of_log = f"log_{self.obj_of_dt2._convert_for_file_name()}.log"
         except Exception:
             raise
         else:
@@ -168,8 +168,8 @@ class GUITools:
         """初期化します"""
         self.parent: QWidget = parent
 
-    def show_error(self, msg: str):
-        """エラーのウィンドウを表示します"""
+    def _show_start_up_error(self, msg: str):
+        """起動エラーのウィンドウを表示します"""
         box: QMessageBox = QMessageBox(self.parent)
         box.setIcon(QMessageBox.Icon.Critical)
         box.setWindowTitle("エラー")
