@@ -12,7 +12,7 @@ class COTP_With_Cui:
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
 
-    def input_folder_path(self) -> list:
+    def _input_folder_path(self) -> list:
         """フォルダのパスを入力します"""
         while True:
             try:
@@ -38,7 +38,7 @@ class COTP_With_Cui:
                 pass
         return [folder_from_s, folder_to_s]
 
-    def input_bool(self, msg: str) -> bool:
+    def _input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
         result: bool = False
         while True:
@@ -70,10 +70,10 @@ def main() -> bool:
         obj_of_pt: PathTools = PathTools()
         obj_of_lt: LogTools = LogTools()
         file_of_exe_p: Path = Path(__file__)
-        file_of_log_p: Path = obj_of_pt.get_file_path_of_log(file_of_exe_p)
+        file_of_log_p: Path = obj_of_pt._get_file_path_of_log(file_of_exe_p)
         obj_of_lt.file_path_of_log = str(file_of_log_p)
-        obj_of_lt.setup_file_handler(obj_of_lt.file_path_of_log)
-        obj_of_lt.setup_stream_handler()
+        obj_of_lt._setup_file_handler(obj_of_lt.file_path_of_log)
+        obj_of_lt._setup_stream_handler()
     except Exception as e:
         print(f"error: \n{str(e)}")
         return result
@@ -98,7 +98,7 @@ def main() -> bool:
     while True:
         result = False
         try:
-            obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui.input_folder_path()
+            obj_of_cls.folder_path_from, obj_of_cls.folder_path_to = obj_with_cui._input_folder_path()
             obj_of_cls.create_file_lst()
             for _ in range(obj_of_cls.number_of_f):
                 obj_of_cls.handle_file()
@@ -114,7 +114,7 @@ def main() -> bool:
             obj_of_lt.logger.info("***処理が成功しました。***")
         finally:
             pass
-        if obj_with_cui.input_bool("終了しますか？"):
+        if obj_with_cui._input_bool("終了しますか？"):
             break
     return result
 

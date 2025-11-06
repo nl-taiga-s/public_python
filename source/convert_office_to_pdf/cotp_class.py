@@ -65,7 +65,7 @@ class ConvertOfficeToPDF:
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
-            self.set_file_path()
+            self._set_file_path()
         except Exception:
             raise
         else:
@@ -77,7 +77,7 @@ class ConvertOfficeToPDF:
             pass
         return result
 
-    def set_file_path(self) -> bool:
+    def _set_file_path(self) -> bool:
         """ファイルパスを設定します"""
         result: bool = False
         try:
@@ -102,7 +102,7 @@ class ConvertOfficeToPDF:
                 self.p = self.number_of_f - 1
             else:
                 self.p -= 1
-            self.set_file_path()
+            self._set_file_path()
         except Exception:
             raise
         else:
@@ -119,7 +119,7 @@ class ConvertOfficeToPDF:
                 self.p = 0
             else:
                 self.p += 1
-            self.set_file_path()
+            self._set_file_path()
         except Exception:
             raise
         else:
@@ -131,11 +131,11 @@ class ConvertOfficeToPDF:
     def handle_file(self) -> bool:
         """ファイルの種類を判定して、各処理を実行します"""
 
-        def with_excel() -> bool:
+        def _with_excel() -> bool:
             """ExcelをPDFに変換します"""
             result: bool = False
             PDF_NUMBER_OF_EXCEL: int = 0
-            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {with_excel.__doc__}: ")
+            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_excel.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
                 obj: object = CreateObject("Excel.Application")
@@ -154,11 +154,11 @@ class ConvertOfficeToPDF:
                 obj.Quit()
             return result
 
-        def with_word() -> bool:
+        def _with_word() -> bool:
             """WordをPDFに変換します"""
             result: bool = False
             PDF_NUMBER_OF_WORD: int = 17
-            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {with_word.__doc__}: ")
+            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_word.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
                 obj: object = CreateObject("Word.Application")
@@ -180,11 +180,11 @@ class ConvertOfficeToPDF:
                 obj.Quit()
             return result
 
-        def with_powerpoint() -> bool:
+        def _with_powerpoint() -> bool:
             """PowerPointをPDFに変換します"""
             result: bool = False
             PDF_NUMBER_OF_POWERPOINT: int = 2
-            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {with_powerpoint.__doc__}: ")
+            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_powerpoint.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
                 obj: object = CreateObject("PowerPoint.Application")
@@ -212,11 +212,11 @@ class ConvertOfficeToPDF:
             ext: str = current_file_from_p.suffix.lower()
             match ext:
                 case var if var in self.file_types["excel"]:
-                    result = with_excel()
+                    result = _with_excel()
                 case var if var in self.file_types["word"]:
-                    result = with_word()
+                    result = _with_word()
                 case var if var in self.file_types["powerpoint"]:
-                    result = with_powerpoint()
+                    result = _with_powerpoint()
             self.count += 1
             if result:
                 self.success += 1
