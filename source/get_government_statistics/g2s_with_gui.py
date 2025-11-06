@@ -441,16 +441,15 @@ class MainApp_Of_G2S(QMainWindow):
             # 検索パターン
             PATTERN: str = "*.csv"
             csv_files = self.obj_of_cls.folder_p_of_ids.glob(PATTERN)
-            if not any(csv_files):
-                raise Exception("統計表IDの一覧を取得してください。")
-            for csv_file in csv_files:
-                with open(csv_file, newline="", encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    # ヘッダー行をスキップする
-                    next(reader, None)
-                    for row in reader:
-                        items: list = [QStandardItem(str(cell)) for cell in row]
-                        self.model.appendRow(items)
+            if any(csv_files):
+                for csv_file in csv_files:
+                    with open(csv_file, newline="", encoding="utf-8") as f:
+                        reader = csv.reader(f)
+                        # ヘッダー行をスキップする
+                        next(reader, None)
+                        for row in reader:
+                            items: list = [QStandardItem(str(cell)) for cell in row]
+                            self.model.appendRow(items)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
