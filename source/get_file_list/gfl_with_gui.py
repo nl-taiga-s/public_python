@@ -5,7 +5,18 @@ import sys
 from pathlib import Path
 
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QCheckBox, QFileDialog, QLabel, QLineEdit, QMessageBox, QPushButton, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QFileDialog,
+    QFormLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QTextEdit,
+    QWidget,
+)
 
 from source.common.common import GUITools, LogTools, PathTools, PlatformTools
 from source.get_file_list.gfl_class import GetFileList
@@ -28,10 +39,10 @@ class MainApp_Of_GFL(QWidget):
         super().__init__()
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: GetFileList = GetFileList(self.obj_of_lt.logger)
-        self.setup_ui()
+        self._setup_ui()
         self.obj_of_pt: PathTools = PathTools()
         self.obj_of_pft: PlatformTools = PlatformTools()
-        self.setup_log()
+        self._setup_log()
 
     def closeEvent(self, event):
         """終了します"""
@@ -57,15 +68,15 @@ class MainApp_Of_GFL(QWidget):
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
 
-    def setup_log(self) -> bool:
+    def _setup_log(self) -> bool:
         """ログを設定します"""
         result: bool = False
         try:
             # exe化されている場合とそれ以外を切り分ける
             exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            file_of_log_p: Path = self.obj_of_pt._get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
@@ -77,37 +88,34 @@ class MainApp_Of_GFL(QWidget):
             pass
         return result
 
-    def setup_ui(self) -> bool:
+    def _setup_ui(self) -> bool:
         """User Interfaceを設定します"""
         result: bool = False
         try:
             # タイトル
             self.setWindowTitle("ファイル検索アプリ")
-            # ウィジェット
+            layout: QFormLayout = QFormLayout()
+            self.setLayout(layout)
             self.folder_label: QLabel = QLabel("フォルダが未選択")
+            layout.addRow(self.folder_label)
             select_folder_btn: QPushButton = QPushButton("フォルダを選択")
+            layout.addRow(select_folder_btn)
+            select_folder_btn.clicked.connect(lambda: self.select_folder(False))
             self.recursive_checkbox: QCheckBox = QCheckBox("サブフォルダも含めて検索（再帰）")
+            layout.addRow(self.recursive_checkbox)
+            layout.addRow(QLabel("検索パターン:"))
             self.pattern_input: QLineEdit = QLineEdit()
             self.pattern_input.setPlaceholderText("検索パターンを入力...")
+            layout.addRow(self.pattern_input)
             open_folder_btn: QPushButton = QPushButton("フォルダを開く")
-            search_btn: QPushButton = QPushButton("検索実行")
-            self.log_area: QTextEdit = QTextEdit()
-            # レイアウト
-            layout: QVBoxLayout = QVBoxLayout()
-            layout.addWidget(self.folder_label)
-            layout.addWidget(select_folder_btn)
-            layout.addWidget(self.recursive_checkbox)
-            layout.addWidget(QLabel("検索パターン:"))
-            layout.addWidget(self.pattern_input)
-            layout.addWidget(open_folder_btn)
-            layout.addWidget(search_btn)
-            layout.addWidget(QLabel("検索結果:"))
-            layout.addWidget(self.log_area)
-            self.setLayout(layout)
-            # シグナル接続
-            select_folder_btn.clicked.connect(lambda: self.select_folder(False))
+            layout.addRow(open_folder_btn)
             open_folder_btn.clicked.connect(self.open_explorer)
+            search_btn: QPushButton = QPushButton("検索実行")
+            layout.addRow(search_btn)
             search_btn.clicked.connect(self.search_files)
+            layout.addRow(QLabel("検索結果:"))
+            self.log_area: QTextEdit = QTextEdit()
+            layout.addRow(self.log_area)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -148,7 +156,7 @@ class MainApp_Of_GFL(QWidget):
                 raise Exception("フォルダを選択してください。")
             if platform.system().lower() == "windows":
                 subprocess.run(["explorer", self.obj_of_cls.folder_path], shell=False)
-            elif self.obj_of_pft.is_wsl():
+            elif self.obj_of_pft._is_wsl():
                 # Windowsのパスに変換（/mnt/c/... 形式）
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER_OF_WSL, wsl_path])
@@ -195,7 +203,7 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
