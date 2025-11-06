@@ -667,7 +667,7 @@ class GetGovernmentStatistics:
         """指定の統計表を表示します"""
         result: bool = False
         try:
-            self.log.info(tabulate(self.df, headers="keys", tablefmt="pipe", showindex=False))
+            self.log.info(tabulate(self.df, headers="keys", tablefmt="github", showindex=False))
             self.log.info(f"統計表ID => {self.STATS_DATA_ID}")
             self.log.info("データの取得形式 => " + ": ".join(self.lst_of_data_type))
             self.log.info("検索方法 => " + ": ".join(self.lst_of_match_type))
