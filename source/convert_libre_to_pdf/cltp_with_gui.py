@@ -6,7 +6,18 @@ import sys
 from pathlib import Path
 
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QListWidget, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QFormLayout,
+    QLabel,
+    QListWidget,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QTextEdit,
+    QWidget,
+)
 
 from source.common.common import GUITools, LogTools, PathTools, PlatformTools
 from source.convert_libre_to_pdf.cltp_class import ConvertLibreToPDF
@@ -29,10 +40,10 @@ class MainApp_Of_CLTP(QWidget):
         super().__init__()
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: ConvertLibreToPDF = ConvertLibreToPDF(self.obj_of_lt.logger)
-        self.setup_ui()
+        self._setup_ui()
         self.obj_of_pft: PlatformTools = PlatformTools()
         self.obj_of_pt: PathTools = PathTools()
-        self.setup_log()
+        self._setup_log()
 
     def closeEvent(self, event):
         """終了します"""
@@ -58,15 +69,15 @@ class MainApp_Of_CLTP(QWidget):
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
 
-    def setup_log(self) -> bool:
+    def _setup_log(self) -> bool:
         """ログを設定します"""
         result: bool = False
         try:
             # exe化されている場合とそれ以外を切り分ける
             exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            file_of_log_p: Path = self.obj_of_pt._get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
@@ -78,46 +89,43 @@ class MainApp_Of_CLTP(QWidget):
             pass
         return result
 
-    def setup_ui(self) -> bool:
+    def _setup_ui(self) -> bool:
         """User Interfaceを設定します"""
         result: bool = False
         try:
             # タイトル
             self.setWindowTitle("Officeファイル => PDF 一括変換アプリ with LibreOffice")
-            # ウィジェット
+            layout: QFormLayout = QFormLayout()
+            self.setLayout(layout)
             self.label_from: QLabel = QLabel("変換元フォルダ: 未選択")
+            layout.addRow(self.label_from)
             btn_select_from: QPushButton = QPushButton("変換元フォルダを選択")
+            layout.addRow(btn_select_from)
+            btn_select_from.clicked.connect(self.select_folder_from)
             btn_open_from: QPushButton = QPushButton("変換元フォルダを開く")
+            layout.addRow(btn_open_from)
+            btn_open_from.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_from))
             self.label_to: QLabel = QLabel("変換先フォルダ: 未選択")
+            layout.addRow(self.label_to)
             btn_select_to: QPushButton = QPushButton("変換先フォルダを選択")
+            layout.addRow(btn_select_to)
+            btn_select_to.clicked.connect(self.select_folder_to)
             btn_open_to: QPushButton = QPushButton("変換先フォルダを開く")
+            layout.addRow(btn_open_to)
+            btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
+            layout.addRow(QLabel("変換対象ファイル一覧: "))
             self.file_lst_widget: QListWidget = QListWidget()
+            layout.addRow(self.file_lst_widget)
+            layout.addRow(QLabel("進行状況: "))
             self.progress_bar: QProgressBar = QProgressBar()
+            layout.addRow(self.progress_bar)
             btn_convert: QPushButton = QPushButton("一括変換を実行します")
+            layout.addRow(btn_convert)
+            btn_convert.clicked.connect(self.convert_file)
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
-            # レイアウト
-            layout: QVBoxLayout = QVBoxLayout()
-            layout.addWidget(self.label_from)
-            layout.addWidget(btn_select_from)
-            layout.addWidget(btn_open_from)
-            layout.addWidget(self.label_to)
-            layout.addWidget(btn_select_to)
-            layout.addWidget(btn_open_to)
-            layout.addWidget(QLabel("変換対象ファイル一覧: "))
-            layout.addWidget(self.file_lst_widget)
-            layout.addWidget(QLabel("進行状況: "))
-            layout.addWidget(self.progress_bar)
-            layout.addWidget(btn_convert)
-            layout.addWidget(QLabel("ログ: "))
-            layout.addWidget(self.log_area)
-            self.setLayout(layout)
-            # シグナル接続
-            btn_select_from.clicked.connect(self.select_folder_from)
-            btn_open_from.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_from))
-            btn_select_to.clicked.connect(self.select_folder_to)
-            btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
-            btn_convert.clicked.connect(self.convert_file)
+            layout.addRow(QLabel("ログ: "))
+            layout.addRow(self.log_area)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -173,7 +181,7 @@ class MainApp_Of_CLTP(QWidget):
                 raise Exception("フォルダを選択してください。")
             if platform.system().lower() == "windows":
                 subprocess.run(["explorer", folder_path], shell=False)
-            elif self.obj_of_pft.is_wsl():
+            elif self.obj_of_pft._is_wsl():
                 # Windowsのパスに変換（/mnt/c/... 形式）
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER_OF_WSL, wsl_path])
@@ -249,9 +257,9 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except ImportError as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:
