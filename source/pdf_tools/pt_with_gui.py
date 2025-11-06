@@ -377,7 +377,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.show_metadata.__doc__, result)
         return result
 
     def write_metadata(self) -> bool:
@@ -403,7 +403,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.write_metadata.__doc__, result)
         return result
 
     def merge_pdfs(self) -> bool:
@@ -422,7 +422,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.merge_pdfs.__doc__, result)
         return result
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -445,7 +445,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.extract_pages.__doc__, result)
         return result
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -468,7 +468,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.delete_pages.__doc__, result)
         return result
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -491,7 +491,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.extract_text.__doc__, result)
         return result
 
     def rotate_page(self, spin: QSpinBox) -> bool:
@@ -516,7 +516,7 @@ class MainApp_Of_PT(QMainWindow):
             images: list = self._get_images(self.obj_of_cls.file_path)
             self._setup_second_ui(images)
         finally:
-            pass
+            self.show_result(self.rotate_page.__doc__, result)
         return result
 
 
