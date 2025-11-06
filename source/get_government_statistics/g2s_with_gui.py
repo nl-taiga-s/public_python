@@ -116,7 +116,7 @@ class MainApp_Of_G2S(QMainWindow):
             # 左上
             self.top_left_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_left_layout)
-            self.show_lst_of_ids()
+            self._setup_second_ui()
             # 右上
             self.top_right_layout: QVBoxLayout = QVBoxLayout()
             self.top_layout.addLayout(self.top_right_layout)
@@ -169,7 +169,7 @@ class MainApp_Of_G2S(QMainWindow):
             # 統計表IDの一覧を表示する
             show_ids_btn: QPushButton = QPushButton("統計表IDの一覧を表示する")
             func_area.addRow(show_ids_btn)
-            show_ids_btn.clicked.connect(lambda: self.show_lst_of_ids(True))
+            show_ids_btn.clicked.connect(self.show_lst_of_ids)
             # 統計表IDの一覧をフィルターにかける
             filter_ids_btn: QPushButton = QPushButton("統計表IDの一覧をフィルターにかける")
             func_area.addRow(filter_ids_btn)
@@ -432,7 +432,7 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def show_lst_of_ids(self, get: bool = False) -> bool:
+    def show_lst_of_ids(self) -> bool:
         """統計表IDの一覧を表示します"""
         result: bool = False
         try:
@@ -441,15 +441,16 @@ class MainApp_Of_G2S(QMainWindow):
             # 検索パターン
             PATTERN: str = "*.csv"
             csv_files = self.obj_of_cls.folder_p_of_ids.glob(PATTERN)
-            if any(csv_files):
-                for csv_file in csv_files:
-                    with open(csv_file, newline="", encoding="utf-8") as f:
-                        reader = csv.reader(f)
-                        # ヘッダー行をスキップする
-                        next(reader, None)
-                        for row in reader:
-                            items: list = [QStandardItem(str(cell)) for cell in row]
-                            self.model.appendRow(items)
+            if not any(csv_files):
+                raise Exception("統計表IDの一覧を取得してください。")
+            for csv_file in csv_files:
+                with open(csv_file, newline="", encoding="utf-8") as f:
+                    reader = csv.reader(f)
+                    # ヘッダー行をスキップする
+                    next(reader, None)
+                    for row in reader:
+                        items: list = [QStandardItem(str(cell)) for cell in row]
+                        self.model.appendRow(items)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
