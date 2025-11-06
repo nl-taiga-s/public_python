@@ -44,10 +44,10 @@ class MainApp_Of_PT(QMainWindow):
         super().__init__()
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: PdfTools = PdfTools(self.obj_of_lt.logger)
-        self.setup_first_ui()
+        self._setup_first_ui()
         self.obj_of_pt: PathTools = PathTools()
         self.obj_of_dt2: DatetimeTools = DatetimeTools()
-        self.setup_log()
+        self._setup_log()
 
     def closeEvent(self, event):
         """終了します"""
@@ -81,15 +81,15 @@ class MainApp_Of_PT(QMainWindow):
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
 
-    def setup_log(self) -> bool:
+    def _setup_log(self) -> bool:
         """ログを設定します"""
         result: bool = False
         try:
             # exe化されている場合とそれ以外を切り分ける
             exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-            file_of_log_p: Path = self.obj_of_pt.get_file_path_of_log(exe_path)
+            file_of_log_p: Path = self.obj_of_pt._get_file_path_of_log(exe_path)
             self.obj_of_lt.file_path_of_log = str(file_of_log_p)
-            self.obj_of_lt.setup_file_handler(self.obj_of_lt.file_path_of_log)
+            self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
@@ -101,8 +101,8 @@ class MainApp_Of_PT(QMainWindow):
             pass
         return result
 
-    def setup_first_ui(self) -> bool:
-        """1回目のUser Interfaceを設定します"""
+    def _setup_first_ui(self) -> bool:
+        """1番目のUser Interfaceを設定します"""
         result: bool = False
         try:
             # タイトル
@@ -242,7 +242,7 @@ class MainApp_Of_PT(QMainWindow):
             pass
         return result
 
-    def get_images(self, file_path: str) -> list:
+    def _get_images(self, file_path: str) -> list:
         """ビューワーに表示するファイルの各ページの画像を取得します"""
         output_files: list = []
         try:
@@ -264,8 +264,8 @@ class MainApp_Of_PT(QMainWindow):
             pass
         return output_files
 
-    def setup_second_ui(self, images: list) -> bool:
-        """2回目のUser Interfaceを設定します"""
+    def _setup_second_ui(self, images: list) -> bool:
+        """2番目のUser Interfaceを設定します"""
         result: bool = False
         try:
             # 既存のレイアウトをクリア（再表示に対応）
@@ -318,8 +318,8 @@ class MainApp_Of_PT(QMainWindow):
             self.file_input.setText(self.obj_of_cls.file_path)
             # 読み込む
             self.obj_of_cls.read_file()
-            images: list = self.get_images(self.obj_of_cls.file_path)
-            self.setup_second_ui(images)
+            images: list = self._get_images(self.obj_of_cls.file_path)
+            self._setup_second_ui(images)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -394,7 +394,7 @@ class MainApp_Of_PT(QMainWindow):
                     case "creation_date":
                         self.widget_of_metadata[key] = self.obj_of_cls.creation_date
                     case "modification_date":
-                        self.widget_of_metadata[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
+                        self.widget_of_metadata[key] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
                     case _:
                         self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
             self.obj_of_cls.write_metadata(self.widget_of_metadata)
@@ -513,8 +513,8 @@ class MainApp_Of_PT(QMainWindow):
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
-            images: list = self.get_images(self.obj_of_cls.file_path)
-            self.setup_second_ui(images)
+            images: list = self._get_images(self.obj_of_cls.file_path)
+            self._setup_second_ui(images)
         finally:
             pass
         return result
@@ -536,7 +536,7 @@ def main() -> bool:
         window.showMaximized()
         sys.exit(app.exec())
     except Exception as e:
-        obj_of_gt.show_error(f"error: \n{str(e)}")
+        obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     else:
         result = True
     finally:

@@ -156,7 +156,7 @@ class PdfTools:
             is_encrypted_lst: list = []
             first_file_p: Path = Path(pdfs[0])
             folder_p: Path = first_file_p.parent
-            dt: str = self.obj_of_dt2.convert_for_file_name()
+            dt: str = self.obj_of_dt2._convert_for_file_name()
             file_name_s: str = f"merged_file_{dt}.pdf"
             file_p: Path = folder_p / file_name_s
             file_s: str = str(file_p)
@@ -174,7 +174,7 @@ class PdfTools:
             # マージされたファイルを読み込む
             self.read_file(file_s)
             # マージされたファイルにメタデータの作成日を付与する
-            self.add_creation_date_in_metadata()
+            self._add_creation_date_in_metadata()
         except Exception:
             if is_encrypted_lst:
                 self.log.error("暗号化されたファイルの一覧です。: ")
@@ -209,7 +209,7 @@ class PdfTools:
                     self.writer.add_page(self.reader.pages[i])
             file_of_exe_p: Path = Path(self.file_path)
             folder_p: Path = file_of_exe_p.parent
-            dt: str = self.obj_of_dt2.convert_for_file_name()
+            dt: str = self.obj_of_dt2._convert_for_file_name()
             file_name_s: str = f"edited_file_{dt}.pdf"
             file_p: Path = folder_p / file_name_s
             file_s: str = str(file_p)
@@ -218,7 +218,7 @@ class PdfTools:
             # マージされたファイルを読み込む
             self.read_file(file_s)
             # ページを抽出したファイルにメタデータの作成日を付与する
-            self.add_creation_date_in_metadata()
+            self._add_creation_date_in_metadata()
         except Exception as e:
             raise
         else:
@@ -253,7 +253,7 @@ class PdfTools:
                 self.writer.add_page(self.reader.pages[i])
             file_of_exe_p: Path = Path(self.file_path)
             folder_p: Path = file_of_exe_p.parent
-            dt: str = self.obj_of_dt2.convert_for_file_name()
+            dt: str = self.obj_of_dt2._convert_for_file_name()
             file_name_s: str = f"edited_file_{dt}.pdf"
             file_p: Path = folder_p / file_name_s
             file_s: str = str(file_p)
@@ -262,7 +262,7 @@ class PdfTools:
             # マージされたファイルを読み込む
             self.read_file(file_s)
             # ページを削除したファイルにメタデータの作成日を付与する
-            self.add_creation_date_in_metadata()
+            self._add_creation_date_in_metadata()
         except Exception as e:
             raise
         else:
@@ -325,7 +325,7 @@ class PdfTools:
             pass
         return result
 
-    def add_creation_date_in_metadata(self) -> bool:
+    def _add_creation_date_in_metadata(self) -> bool:
         """メタデータの作成日を追加します"""
         result: bool = False
         try:
@@ -333,14 +333,14 @@ class PdfTools:
             self.metadata_of_writer = {}
             for value, key in self.fields:
                 if value == "creation_date":
-                    self.metadata_of_writer[key] = self.obj_of_dt2.convert_for_metadata_in_pdf(self.UTC_OF_JP)
+                    self.metadata_of_writer[key] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.UTC_OF_JP)
                     break
             self.write_metadata(self.metadata_of_writer)
         except Exception:
             raise
         else:
             result = True
-            self.log.info(f"***{self.add_creation_date_in_metadata.__doc__} => 成功しました。***")
+            self.log.info(f"***{self._add_creation_date_in_metadata.__doc__} => 成功しました。***")
         finally:
             pass
         return result
