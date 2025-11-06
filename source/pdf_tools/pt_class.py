@@ -114,6 +114,8 @@ class PdfTools:
         result: bool = False
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             for key, _ in self.fields:
                 value: Any = getattr(self.metadata_of_reader, key, None)
                 self.log.info(f"{key.capitalize().replace("_", " ")}: {value or None}")
@@ -131,6 +133,8 @@ class PdfTools:
         result: bool = False
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             self.writer = PdfWriter()
             for page in self.reader.pages:
                 self.writer.add_page(page)
@@ -196,6 +200,8 @@ class PdfTools:
         """ページを抽出します"""
         result: bool = False
         try:
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             # ファイルパスを退避させる
             file_path_of_tmp: str = self.file_path
             b: int = begin_page - 1
@@ -239,6 +245,8 @@ class PdfTools:
         """ページを削除します"""
         result: bool = False
         try:
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             # ファイルパスを退避させる
             file_path_of_tmp: str = self.file_path
             b: int = begin_page - 1
@@ -284,6 +292,8 @@ class PdfTools:
         result: bool = False
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             lst_of_text_in_pages: list = []
             b: int = begin_page - 1
             e: int = end_page - 1
@@ -307,6 +317,8 @@ class PdfTools:
         result: bool = False
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
+            if self.encrypted:
+                raise Exception("暗号化されています。")
             self.writer = PdfWriter()
             for p in range(self.num_of_pages):
                 self.writer.add_page(self.reader.pages[p])
