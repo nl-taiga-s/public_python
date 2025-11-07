@@ -583,6 +583,7 @@ class GetGovernmentStatistics:
                         self.df = _with_csv(client, dct_of_params)
                     case _:
                         raise Exception("データタイプが対応していません。")
+            self.DATA_COUNT = len(self.df)
         except Exception:
             raise
         else:
@@ -655,6 +656,7 @@ class GetGovernmentStatistics:
                                 raise Exception("その抽出方法はありません。")
                 case _:
                     raise Exception("その検索方法はありません。")
+            self.DATA_COUNT = len(filtered_df)
         except Exception:
             raise
         else:
@@ -673,7 +675,6 @@ class GetGovernmentStatistics:
             self.log.info("検索方法 => " + ": ".join(self.lst_of_match_type))
             self.log.info("抽出するキーワード => " + (", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"))
             self.log.info("抽出方法 => " + (": ".join(self.lst_of_logic_type) if self.lst_of_logic_type else "なし"))
-            self.DATA_COUNT: int = len(self.df)
             self.log.info(f"表示件数: {self.DATA_COUNT}")
         except Exception:
             raise

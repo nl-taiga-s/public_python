@@ -159,9 +159,6 @@ class MainApp_Of_G2S(QMainWindow):
                 self.get_type_combo.addItem(f"{key}: {desc}", userData=key)
             self.get_type_combo.setCurrentIndex(0)
             func_area.addRow(QLabel("取得方法: "), self.get_type_combo)
-            # フィルターのキーワード
-            self.keyword_text: QPlainTextEdit = QPlainTextEdit()
-            func_area.addRow(QLabel("フィルターのキーワード\n(1行につき、1つのキーワード): "), self.keyword_text)
             # 統計表IDの一覧を取得する
             get_ids_btn: QPushButton = QPushButton("統計表IDの一覧を取得する")
             func_area.addRow(get_ids_btn)
@@ -174,6 +171,9 @@ class MainApp_Of_G2S(QMainWindow):
             filter_ids_btn: QPushButton = QPushButton("統計表IDの一覧をフィルターにかける")
             func_area.addRow(filter_ids_btn)
             filter_ids_btn.clicked.connect(self.filter_lst_of_ids)
+            # フィルターのキーワード
+            self.keyword_text: QPlainTextEdit = QPlainTextEdit()
+            func_area.addRow(QLabel("フィルターのキーワード\n(1行につき、1つのキーワード): "), self.keyword_text)
             # 検索方法
             self.match_type_combo: QComboBox = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_match_type.items():
@@ -226,8 +226,7 @@ class MainApp_Of_G2S(QMainWindow):
             c_of_stat_name: int = 1
             # 表題
             c_of_title: int = 2
-            # 統計表IDは、10桁に補正する
-            self.obj_of_cls.STATS_DATA_ID = self.model.item(r, c_of_id).text().zfill(10)
+            self.obj_of_cls.STATS_DATA_ID = self.model.item(r, c_of_id).text()
             self.obj_of_cls.STAT_NAME = self.model.item(r, c_of_stat_name).text()
             self.obj_of_cls.TITLE = self.model.item(r, c_of_title).text()
         except Exception as e:
@@ -429,7 +428,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.get_lst_of_ids.__doc__, result)
         return result
 
     def show_lst_of_ids(self) -> bool:
@@ -457,7 +456,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_result(self.show_lst_of_ids.__doc__, result)
         return result
 
     def filter_lst_of_ids(self) -> bool:
@@ -473,7 +472,7 @@ class MainApp_Of_G2S(QMainWindow):
             if not any(csv_files):
                 raise Exception("統計表IDの一覧を取得してください。")
             for csv_file in csv_files:
-                reader = pandas.read_csv(str(csv_file), chunksize=1)
+                reader = pandas.read_csv(str(csv_file), chunksize=1, dtype=str)
                 # ヘッダー行をスキップする
                 next(reader, None)
                 for chunk in reader:
@@ -485,9 +484,9 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
-            self.obj_of_cls.show_table()
+            result = True
         finally:
-            pass
+            self.show_result(self.filter_lst_of_ids.__doc__, result)
         return result
 
     def show_table(self) -> bool:
@@ -505,9 +504,10 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
+            result = True
             self.obj_of_cls.show_table()
         finally:
-            pass
+            self.show_result(self.show_table.__doc__, result)
         return result
 
     def filter_table(self) -> bool:
@@ -523,9 +523,10 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
+            result = True
             self.obj_of_cls.show_table()
         finally:
-            pass
+            self.show_result(self.filter_table.__doc__, result)
         return result
 
     def output_table(self) -> bool:
@@ -540,7 +541,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            self.show_result(self.output_table_to_csv.__doc__, result)
+            self.show_result(self.output_table.__doc__, result)
         return result
 
 
