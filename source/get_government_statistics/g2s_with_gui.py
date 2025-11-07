@@ -226,7 +226,8 @@ class MainApp_Of_G2S(QMainWindow):
             c_of_stat_name: int = 1
             # 表題
             c_of_title: int = 2
-            self.obj_of_cls.STATS_DATA_ID = self.model.item(r, c_of_id).text()
+            # 統計表IDは、10桁に補正する
+            self.obj_of_cls.STATS_DATA_ID = self.model.item(r, c_of_id).text().zfill(10)
             self.obj_of_cls.STAT_NAME = self.model.item(r, c_of_stat_name).text()
             self.obj_of_cls.TITLE = self.model.item(r, c_of_title).text()
         except Exception as e:
@@ -234,7 +235,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             result = True
         finally:
-            pass
+            self.show_info(f"選択された統計表ID: {self.obj_of_cls.STATS_DATA_ID}\n統計名: {self.obj_of_cls.STAT_NAME}\n表題: {self.obj_of_cls.TITLE}")
         return result
 
     def _setup_second_ui(self) -> bool:
@@ -250,14 +251,13 @@ class MainApp_Of_G2S(QMainWindow):
             self.top_left_scroll_layout: QVBoxLayout = QVBoxLayout()
             top_left_scroll_area.setWidgetResizable(True)
             top_left_scroll_area.setWidget(top_left_container)
-            lst_of_ids: QTableView = QTableView()
-            self.top_left_container_layout.addWidget(lst_of_ids)
+            self.lst_of_ids: QTableView = QTableView()
+            self.top_left_container_layout.addWidget(self.lst_of_ids)
             self.model: QStandardItemModel = QStandardItemModel()
             # ヘッダーを追加する
             self.model.setHorizontalHeaderLabels(self.obj_of_cls.header_of_ids_l)
-            lst_of_ids.setModel(self.model)
-            lst_of_ids.resizeColumnsToContents()
-            lst_of_ids.clicked.connect(self._get_id_from_lst)
+            self.lst_of_ids.setModel(self.model)
+            self.lst_of_ids.clicked.connect(self._get_id_from_lst)
         except Exception:
             raise
         else:
@@ -274,11 +274,11 @@ class MainApp_Of_G2S(QMainWindow):
             element: QWidget = QWidget()
             element_layout: QVBoxLayout = QVBoxLayout()
             element.setLayout(element_layout)
-            stats_table: QTableView = QTableView(self)
+            self.stats_table: QTableView = QTableView(self)
             element_layout.addWidget(QLabel(f"統計表ID: {self.obj_of_cls.STATS_DATA_ID}"))
             element_layout.addWidget(QLabel(f"統計名: {self.obj_of_cls.STAT_NAME}"))
             element_layout.addWidget(QLabel(f"表題: {self.obj_of_cls.TITLE}"))
-            element_layout.addWidget(stats_table)
+            element_layout.addWidget(self.stats_table)
             self.bottom_container_layout.addWidget(element)
             model: QStandardItemModel = QStandardItemModel()
             # ヘッダーを追加する
@@ -286,8 +286,8 @@ class MainApp_Of_G2S(QMainWindow):
             for r in self.obj_of_cls.df.itertuples(index=False):
                 items = [QStandardItem(str(v)) for v in r]
                 model.appendRow(items)
-            stats_table.setModel(model)
-            stats_table.resizeColumnsToContents()
+            self.stats_table.setModel(model)
+            self.stats_table.resizeColumnsToContents()
         except Exception:
             raise
         else:
@@ -371,9 +371,9 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return [key, desc]
 
-    def _get_keyword(self, ptxtedit: QPlainTextEdit) -> list:
+    def _get_keyword(self, p_txt_edit: QPlainTextEdit) -> list:
         """キーワードを取得します"""
-        return [line.strip() for line in ptxtedit.toPlainText().splitlines() if line.strip()]
+        return [line.strip() for line in p_txt_edit.toPlainText().splitlines() if line.strip()]
 
     def _clear_layout(self, layout) -> bool:
         """レイアウト内の全ウィジェットを削除します"""
@@ -451,6 +451,7 @@ class MainApp_Of_G2S(QMainWindow):
                     for row in reader:
                         items: list = [QStandardItem(str(cell)) for cell in row]
                         self.model.appendRow(items)
+            self.lst_of_ids.resizeColumnsToContents()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -480,6 +481,7 @@ class MainApp_Of_G2S(QMainWindow):
                     for _, row in df.iterrows():
                         items: list = [QStandardItem(str(v)) for v in row]
                         self.model.appendRow(items)
+            self.lst_of_ids.resizeColumnsToContents()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -495,7 +497,7 @@ class MainApp_Of_G2S(QMainWindow):
             if self.obj_of_cls.STATS_DATA_ID == "":
                 raise Exception("統計表IDを選択してください。")
             # 取得方法は同期のみ
-            self.get_type_combo.setCurrentIndex("同期")
+            self.get_type_combo.setCurrentIndex(1)
             self._check_first_form()
             self._clear_layout(self.bottom_container_layout)
             self.obj_of_cls.get_table_from_api()
