@@ -151,8 +151,8 @@ class MainApp_Of_PT(QMainWindow):
             reload_btn: QPushButton = QPushButton("再読み込み")
             select_and_reload_area.addWidget(reload_btn)
             left_func_area.addLayout(select_and_reload_area)
-            browse_btn.clicked.connect(lambda: self.select_pdf(False))
-            reload_btn.clicked.connect(lambda: self.select_pdf(True))
+            browse_btn.clicked.connect(self.select_pdf)
+            reload_btn.clicked.connect(self.reload_pdf)
             # パスワード入力
             self.password_input: QLineEdit = QLineEdit()
             self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
@@ -256,8 +256,8 @@ class MainApp_Of_PT(QMainWindow):
                 output_file = self.output_dir / f"{file_name_s}_{i + 1}.png"
                 pil_image.save(output_file)
                 output_files.append(str(output_file))
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             pass
         finally:
@@ -295,23 +295,18 @@ class MainApp_Of_PT(QMainWindow):
                 page_layout.addWidget(image_label)
                 # グリッドにページごとに追加する
                 self.center_viewer.addWidget(page_widget)
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             result = True
         finally:
             pass
         return result
 
-    def select_pdf(self, reload: bool) -> bool:
-        """選択します"""
+    def _setup_third_ui(self) -> bool:
+        """3番目のUser Interfaceを設定します"""
         result: bool = False
         try:
-            if reload:
-                if self.obj_of_cls.file_path == "":
-                    raise Exception("PDFファイルを選択してください。")
-            else:
-                self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
             # 各OSに応じたパス区切りに変換する
             file_p: Path = Path(self.obj_of_cls.file_path).expanduser()
             self.obj_of_cls.file_path = str(file_p)
@@ -320,6 +315,35 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.read_file()
             images: list = self._get_images(self.obj_of_cls.file_path)
             self._setup_second_ui(images)
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def select_pdf(self) -> bool:
+        """選択します"""
+        result: bool = False
+        try:
+            self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
+            self._setup_third_ui()
+        except Exception as e:
+            self.show_error(f"error: \n{str(e)}")
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def reload_pdf(self) -> bool:
+        """再読み込みします"""
+        result: bool = False
+        try:
+            if self.obj_of_cls.file_path == "":
+                raise Exception("PDFファイルを選択してください。")
+            self._setup_third_ui()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
@@ -334,8 +358,8 @@ class MainApp_Of_PT(QMainWindow):
         try:
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
             if self.obj_of_cls.file_path == "" or pw == "":
-                # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
+            self._setup_third_ui()
             self.obj_of_cls.encrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -351,8 +375,8 @@ class MainApp_Of_PT(QMainWindow):
         try:
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
             if self.obj_of_cls.file_path == "" or pw == "":
-                # 未入力の場合
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
+            self._setup_third_ui()
             self.obj_of_cls.decrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -369,8 +393,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             self.obj_of_cls.get_metadata()
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -387,8 +410,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             for value, key in self.obj_of_cls.fields:
                 match value:
                     case "creation_date":
@@ -415,7 +437,7 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("PDFファイルを選択してください。")
             # 各OSに応じたパス区切りに変換する
             for i, element in enumerate(files):
-                files[i] = str(Path(element))
+                files[i] = str(Path(element).expanduser())
             self.obj_of_cls.merge(files)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -432,8 +454,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -455,8 +476,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -478,8 +498,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             begin, end = b_spin.value(), e_spin.value()
             if begin == 0 or end == 0:
                 raise Exception("ページ範囲を指定してください。")
@@ -501,20 +520,19 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
-            # 再読み込み
-            self.select_pdf(True)
+            self._setup_third_ui()
             page: int = spin.value()
             if page == 0:
                 raise Exception("ページ範囲を指定してください。")
             if page < 1 or page > self.obj_of_cls.num_of_pages:
                 raise Exception("ページ番号が不正です。")
             self.obj_of_cls.rotate_page_clockwise(page, 90)
+            images: list = self._get_images(self.obj_of_cls.file_path)
+            self._setup_second_ui(images)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
         else:
             result = True
-            images: list = self._get_images(self.obj_of_cls.file_path)
-            self._setup_second_ui(images)
         finally:
             self.show_result(self.rotate_page.__doc__, result)
         return result
