@@ -23,6 +23,8 @@ class PdfTools:
         self.writer: PdfWriter = None
         self.metadata_of_reader: DocumentInformation = None
         self.metadata_of_writer: dict = {}
+        # ファイルの読み込みが初回かどうか判定する
+        self.first_read: bool = True
         # 暗号化されているかどうか
         self.encrypted: bool = False
         # pdfファイルの拡張子
@@ -53,7 +55,7 @@ class PdfTools:
                 self.file_path = file_path
             self.log.info(f"対象のファイルパス: {self.file_path}")
             self.reader = PdfReader(self.file_path)
-            if self.reader.is_encrypted or self.encrypted:
+            if self.first_read and self.reader.is_encrypted or self.encrypted:
                 raise Exception("ファイルが暗号化されています。")
             self.metadata_of_reader = self.reader.metadata
             self.num_of_pages = len(self.reader.pages)
@@ -64,7 +66,7 @@ class PdfTools:
             result = True
             self.log.info(f"***{self.read_file.__doc__} => 成功しました。***")
         finally:
-            pass
+            self.first_read = False
         return result
 
     def encrypt(self, password: str) -> bool:
@@ -157,16 +159,15 @@ class PdfTools:
             first_file_p: Path = Path(pdfs[0])
             folder_p: Path = first_file_p.parent
             dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_name_s: str = f"merged_file_{dt}.pdf"
-            file_p: Path = folder_p / file_name_s
+            file_p: Path = folder_p / f"merged_file_{dt}.pdf"
             file_s: str = str(file_p)
             self.writer = PdfWriter()
             for pdf in pdfs:
-                r = PdfReader(pdf)
-                if r.is_encrypted:
+                try:
+                    self.read_file(pdf)
+                    self.writer.append(self.file_path)
+                except Exception:
                     is_encrypted_lst.append(pdf)
-                else:
-                    self.writer.append(pdf)
             if is_encrypted_lst:
                 raise Exception("暗号化されたファイルがあります。")
             with open(file_s, "wb") as f:
@@ -175,6 +176,8 @@ class PdfTools:
             self.read_file(file_s)
             # マージされたファイルにメタデータの作成日を付与する
             self._add_creation_date_in_metadata()
+            # 退避させたファイルパスを読み込む
+            self.read_file(file_path_of_tmp)
         except Exception:
             if is_encrypted_lst:
                 self.log.error("暗号化されたファイルの一覧です。: ")
@@ -188,8 +191,7 @@ class PdfTools:
             self.log.info(file_s)
             self.log.info(f"***{self.merge.__doc__} => 成功しました。***")
         finally:
-            # 退避させたファイルパスを読み込む
-            self.read_file(file_path_of_tmp)
+            pass
         return result
 
     def extract_pages(self, begin_page: int, end_page: int) -> bool:
@@ -210,8 +212,7 @@ class PdfTools:
             file_of_exe_p: Path = Path(self.file_path)
             folder_p: Path = file_of_exe_p.parent
             dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_name_s: str = f"edited_file_{dt}.pdf"
-            file_p: Path = folder_p / file_name_s
+            file_p: Path = folder_p / f"edited_file_{dt}.pdf"
             file_s: str = str(file_p)
             with open(file_s, "wb") as f:
                 self.writer.write(f)
@@ -219,6 +220,8 @@ class PdfTools:
             self.read_file(file_s)
             # ページを抽出したファイルにメタデータの作成日を付与する
             self._add_creation_date_in_metadata()
+            # 退避させたファイルパスを読み込む
+            self.read_file(file_path_of_tmp)
         except Exception as e:
             raise
         else:
@@ -231,8 +234,7 @@ class PdfTools:
             self.log.info(file_s)
             self.log.info(f"***{self.extract_pages.__doc__} => 成功しました。***")
         finally:
-            # 退避させたファイルパスを読み込む
-            self.read_file(file_path_of_tmp)
+            pass
         return result
 
     def delete_pages(self, begin_page: int, end_page: int) -> bool:
@@ -254,8 +256,7 @@ class PdfTools:
             file_of_exe_p: Path = Path(self.file_path)
             folder_p: Path = file_of_exe_p.parent
             dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_name_s: str = f"edited_file_{dt}.pdf"
-            file_p: Path = folder_p / file_name_s
+            file_p: Path = folder_p / f"edited_file_{dt}.pdf"
             file_s: str = str(file_p)
             with open(file_s, "wb") as f:
                 self.writer.write(f)
@@ -263,6 +264,8 @@ class PdfTools:
             self.read_file(file_s)
             # ページを削除したファイルにメタデータの作成日を付与する
             self._add_creation_date_in_metadata()
+            # 退避させたファイルパスを読み込む
+            self.read_file(file_path_of_tmp)
         except Exception as e:
             raise
         else:
@@ -275,8 +278,7 @@ class PdfTools:
             self.log.info(file_s)
             self.log.info(f"***{self.delete_pages.__doc__} => 成功しました。***")
         finally:
-            # 退避させたファイルパスを読み込む
-            self.read_file(file_path_of_tmp)
+            pass
         return result
 
     def extract_text(self, begin_page: int, end_page: int) -> bool:

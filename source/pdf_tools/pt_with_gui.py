@@ -359,7 +359,6 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
             if self.obj_of_cls.file_path == "" or pw == "":
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            self._setup_third_ui()
             self.obj_of_cls.encrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
@@ -376,7 +375,6 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
             if self.obj_of_cls.file_path == "" or pw == "":
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            self._setup_third_ui()
             self.obj_of_cls.decrypt(pw)
         except Exception as e:
             self.show_error(f"error: \n{str(e)}")
