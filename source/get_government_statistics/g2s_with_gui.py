@@ -258,8 +258,8 @@ class MainApp_Of_G2S(QMainWindow):
             lst_of_ids.setModel(self.model)
             lst_of_ids.resizeColumnsToContents()
             lst_of_ids.clicked.connect(self._get_id_from_lst)
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             result = True
         finally:
@@ -288,8 +288,8 @@ class MainApp_Of_G2S(QMainWindow):
                 model.appendRow(items)
             stats_table.setModel(model)
             stats_table.resizeColumnsToContents()
-        except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+        except Exception:
+            raise
         else:
             result = True
         finally:
