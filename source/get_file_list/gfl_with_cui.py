@@ -26,10 +26,10 @@ class GFL_With_Cui:
                     raise Exception("フォルダが存在しません。")
                 if not folder_p.is_dir():
                     raise Exception("フォルダではありません。")
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise
-            except KeyboardInterrupt:
-                sys.exit(0)
             else:
                 break
             finally:
@@ -49,10 +49,10 @@ class GFL_With_Cui:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise
-            except KeyboardInterrupt:
-                sys.exit(0)
             else:
                 break
             finally:
@@ -90,10 +90,10 @@ def main() -> bool:
             obj_of_cls.search_recursively()
             obj_of_cls.pattern = input("ファイルの検索パターンを入力してください。: ")
             obj_of_cls.extract_by_pattern()
-        except Exception as e:
-            obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         except KeyboardInterrupt:
             sys.exit(0)
+        except Exception as e:
+            obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
         else:
             result = True
             obj_of_lt.logger.info("***処理が成功しました。***")

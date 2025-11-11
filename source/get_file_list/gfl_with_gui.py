@@ -47,15 +47,15 @@ class MainApp_Of_GFL(QWidget):
     def closeEvent(self, event):
         """終了します"""
         if self.obj_of_lt:
-            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+            self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
-    def show_info(self, msg: str):
+    def _show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def show_result(self, label: str, success: bool):
+    def _show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -63,7 +63,7 @@ class MainApp_Of_GFL(QWidget):
         else:
             self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
-    def show_error(self, msg: str):
+    def _show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
@@ -81,7 +81,7 @@ class MainApp_Of_GFL(QWidget):
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -117,7 +117,7 @@ class MainApp_Of_GFL(QWidget):
             self.log_area: QTextEdit = QTextEdit()
             layout.addRow(self.log_area)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -140,7 +140,7 @@ class MainApp_Of_GFL(QWidget):
                 self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
                 self.obj_of_cls.search_recursively()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -161,7 +161,7 @@ class MainApp_Of_GFL(QWidget):
                 wsl_path: str = subprocess.check_output(["wslpath", "-w", self.obj_of_cls.folder_path]).decode("utf-8").strip()
                 subprocess.run([EXPLORER_OF_WSL, wsl_path])
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -179,11 +179,11 @@ class MainApp_Of_GFL(QWidget):
             self.obj_of_cls.pattern = self.pattern_input.text().strip()
             self.obj_of_cls.extract_by_pattern()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.search_files.__doc__, result)
+            self._show_result(self.search_files.__doc__, result)
         return result
 
 
