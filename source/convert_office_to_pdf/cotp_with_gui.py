@@ -45,15 +45,15 @@ class MainApp_Of_COTP(QWidget):
     def closeEvent(self, event):
         """終了します"""
         if self.obj_of_lt:
-            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+            self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
-    def show_info(self, msg: str):
+    def _show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def show_result(self, label: str, success: bool):
+    def _show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -61,7 +61,7 @@ class MainApp_Of_COTP(QWidget):
         else:
             self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
-    def show_error(self, msg: str):
+    def _show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
@@ -79,7 +79,7 @@ class MainApp_Of_COTP(QWidget):
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -124,7 +124,7 @@ class MainApp_Of_COTP(QWidget):
             self.log_area.setReadOnly(True)
             layout.addRow(self.log_area)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -143,7 +143,7 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_to:
                     self.show_file_lst()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -162,7 +162,7 @@ class MainApp_Of_COTP(QWidget):
                 if self.obj_of_cls.folder_path_from:
                     self.show_file_lst()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -177,7 +177,7 @@ class MainApp_Of_COTP(QWidget):
                 raise Exception("フォルダを選択してください。")
             subprocess.run(["explorer", folder_path], shell=False)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -199,7 +199,7 @@ class MainApp_Of_COTP(QWidget):
             self.progress_bar.setValue(0)
         except Exception as e:
             self.file_lst_widget.clear()
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -220,11 +220,11 @@ class MainApp_Of_COTP(QWidget):
                     break
                 self.obj_of_cls.move_to_next_file()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.convert_file.__doc__, result)
+            self._show_result(self.convert_file.__doc__, result)
         return result
 
 
