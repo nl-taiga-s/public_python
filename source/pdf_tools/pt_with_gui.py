@@ -60,15 +60,15 @@ class MainApp_Of_PT(QMainWindow):
                 else:
                     element.unlink()
         if self.obj_of_lt:
-            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+            self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
-    def show_info(self, msg: str):
+    def _show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def show_result(self, label: str, success: bool):
+    def _show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -76,7 +76,7 @@ class MainApp_Of_PT(QMainWindow):
         else:
             self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
-    def show_error(self, msg: str):
+    def _show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
@@ -94,7 +94,7 @@ class MainApp_Of_PT(QMainWindow):
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -235,7 +235,7 @@ class MainApp_Of_PT(QMainWindow):
             left_func_area.addLayout(page_layout_of_rp)
             rotate_btn.clicked.connect(lambda: self.rotate_page(spin_of_rp))
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -330,7 +330,7 @@ class MainApp_Of_PT(QMainWindow):
             self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
             self._setup_third_ui()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -345,7 +345,7 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -361,11 +361,11 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
             self.obj_of_cls.encrypt(pw)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.encrypt_pdf.__doc__, result)
+            self._show_result(self.encrypt_pdf.__doc__, result)
         return result
 
     def decrypt_pdf(self) -> bool:
@@ -377,11 +377,11 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
             self.obj_of_cls.decrypt(pw)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.decrypt_pdf.__doc__, result)
+            self._show_result(self.decrypt_pdf.__doc__, result)
         return result
 
     def show_metadata(self) -> bool:
@@ -394,11 +394,11 @@ class MainApp_Of_PT(QMainWindow):
             self._setup_third_ui()
             self.obj_of_cls.get_metadata()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.show_metadata.__doc__, result)
+            self._show_result(self.show_metadata.__doc__, result)
         return result
 
     def write_metadata(self) -> bool:
@@ -419,11 +419,11 @@ class MainApp_Of_PT(QMainWindow):
                         self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
             self.obj_of_cls.write_metadata(self.widget_of_metadata)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.write_metadata.__doc__, result)
+            self._show_result(self.write_metadata.__doc__, result)
         return result
 
     def merge_pdfs(self) -> bool:
@@ -438,11 +438,11 @@ class MainApp_Of_PT(QMainWindow):
                 files[i] = str(Path(element).expanduser())
             self.obj_of_cls.merge(files)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.merge_pdfs.__doc__, result)
+            self._show_result(self.merge_pdfs.__doc__, result)
         return result
 
     def extract_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -460,11 +460,11 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("ページ範囲またはパスが不正です。")
             self.obj_of_cls.extract_pages(begin, end)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.extract_pages.__doc__, result)
+            self._show_result(self.extract_pages.__doc__, result)
         return result
 
     def delete_pages(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -482,11 +482,11 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("ページ範囲またはパスが不正です。")
             self.obj_of_cls.delete_pages(begin, end)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.delete_pages.__doc__, result)
+            self._show_result(self.delete_pages.__doc__, result)
         return result
 
     def extract_text(self, b_spin: QSpinBox, e_spin: QSpinBox) -> bool:
@@ -504,11 +504,11 @@ class MainApp_Of_PT(QMainWindow):
                 raise Exception("ページ範囲またはパスが不正です。")
             self.obj_of_cls.extract_text(begin, end)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.extract_text.__doc__, result)
+            self._show_result(self.extract_text.__doc__, result)
         return result
 
     def rotate_page(self, spin: QSpinBox) -> bool:
@@ -528,11 +528,11 @@ class MainApp_Of_PT(QMainWindow):
             images: list = self._get_images(self.obj_of_cls.file_path)
             self._setup_second_ui(images)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.rotate_page.__doc__, result)
+            self._show_result(self.rotate_page.__doc__, result)
         return result
 
 
