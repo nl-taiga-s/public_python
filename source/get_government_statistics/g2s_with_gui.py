@@ -55,15 +55,15 @@ class MainApp_Of_G2S(QMainWindow):
     def closeEvent(self, event):
         """終了します"""
         if self.obj_of_lt:
-            self.show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+            self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
         super().closeEvent(event)
 
-    def show_info(self, msg: str):
+    def _show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def show_result(self, label: str, success: bool):
+    def _show_result(self, label: str, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -71,7 +71,7 @@ class MainApp_Of_G2S(QMainWindow):
         else:
             self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
-    def show_error(self, msg: str):
+    def _show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.warning(self, "エラー", msg)
         self.obj_of_lt.logger.warning(msg)
@@ -89,7 +89,7 @@ class MainApp_Of_G2S(QMainWindow):
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -161,8 +161,11 @@ class MainApp_Of_G2S(QMainWindow):
             func_area.addRow(QLabel("取得方法: "), self.get_type_combo)
             # 統計表IDの一覧を取得する
             get_ids_btn: QPushButton = QPushButton("統計表IDの一覧を取得する")
-            func_area.addRow(get_ids_btn)
             get_ids_btn.clicked.connect(self.get_lst_of_ids)
+            # 統計表IDの一覧の取得をキャンセルする
+            cancel_getting_ids_btn: QPushButton = QPushButton("統計表IDの一覧の取得をキャンセルする")
+            cancel_getting_ids_btn.clicked.connect(self.cancel_getting_lst_of_ids)
+            func_area.addRow(get_ids_btn, cancel_getting_ids_btn)
             # 統計表IDの一覧を表示する
             show_ids_btn: QPushButton = QPushButton("統計表IDの一覧を表示する")
             func_area.addRow(show_ids_btn)
@@ -204,7 +207,7 @@ class MainApp_Of_G2S(QMainWindow):
             credit_notation: QLabel = QLabel(self.obj_of_cls.credit_text)
             credit_area.addWidget(credit_notation)
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
@@ -230,11 +233,13 @@ class MainApp_Of_G2S(QMainWindow):
             self.obj_of_cls.STAT_NAME = self.model.item(r, c_of_stat_name).text()
             self.obj_of_cls.TITLE = self.model.item(r, c_of_title).text()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_info(f"選択された統計表ID: {self.obj_of_cls.STATS_DATA_ID}\n統計名: {self.obj_of_cls.STAT_NAME}\n表題: {self.obj_of_cls.TITLE}")
+            self._show_info(
+                f"選択された統計表ID: {self.obj_of_cls.STATS_DATA_ID}\n統計名: {self.obj_of_cls.STAT_NAME}\n表題: {self.obj_of_cls.TITLE}"
+            )
         return result
 
     def _setup_second_ui(self) -> bool:
@@ -417,19 +422,22 @@ class MainApp_Of_G2S(QMainWindow):
             self._check_first_form()
             match self.obj_of_cls.lst_of_get_type[self.obj_of_cls.KEY]:
                 case "非同期":
-                    # asyncioをGUIイベントループと安全に共存させる
                     threading.Thread(target=_run_getting_ids_with_async, daemon=True).start()
                 case "同期":
                     self.obj_of_cls.write_stats_data_ids_to_file()
                 case _:
                     raise Exception("そのような取得方法は、ありません。")
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.get_lst_of_ids.__doc__, result)
+            pass
         return result
+
+    def cancel_getting_lst_of_ids(self) -> None:
+        """統計表IDの一覧の取得をキャンセルします"""
+        self.obj_of_cls.cancel = True
 
     def show_lst_of_ids(self) -> bool:
         """統計表IDの一覧を表示します"""
@@ -443,7 +451,7 @@ class MainApp_Of_G2S(QMainWindow):
             if not any(csv_files):
                 raise Exception("統計表IDの一覧を取得してください。")
             for csv_file in csv_files:
-                with open(csv_file, newline="", encoding="utf-8") as f:
+                with open(str(csv_file), newline="", encoding="utf-8") as f:
                     reader = csv.reader(f)
                     # ヘッダー行をスキップする
                     next(reader, None)
@@ -452,11 +460,11 @@ class MainApp_Of_G2S(QMainWindow):
                         self.model.appendRow(items)
             self.lst_of_ids.resizeColumnsToContents()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.show_lst_of_ids.__doc__, result)
+            self._show_result(self.show_lst_of_ids.__doc__, result)
         return result
 
     def filter_lst_of_ids(self) -> bool:
@@ -482,11 +490,11 @@ class MainApp_Of_G2S(QMainWindow):
                         self.model.appendRow(items)
             self.lst_of_ids.resizeColumnsToContents()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.filter_lst_of_ids.__doc__, result)
+            self._show_result(self.filter_lst_of_ids.__doc__, result)
         return result
 
     def show_table(self) -> bool:
@@ -502,12 +510,12 @@ class MainApp_Of_G2S(QMainWindow):
             self.obj_of_cls.get_table_from_api()
             self._setup_third_ui()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
             self.obj_of_cls.show_table()
         finally:
-            self.show_result(self.show_table.__doc__, result)
+            self._show_result(self.show_table.__doc__, result)
         return result
 
     def filter_table(self) -> bool:
@@ -521,12 +529,12 @@ class MainApp_Of_G2S(QMainWindow):
             self.obj_of_cls.df = self.obj_of_cls.filter_df(self.obj_of_cls.df)
             self._setup_third_ui()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
             self.obj_of_cls.show_table()
         finally:
-            self.show_result(self.filter_table.__doc__, result)
+            self._show_result(self.filter_table.__doc__, result)
         return result
 
     def output_table(self) -> bool:
@@ -537,11 +545,11 @@ class MainApp_Of_G2S(QMainWindow):
                 raise Exception("統計表を表示してください。")
             self.obj_of_cls.output_table_to_csv()
         except Exception as e:
-            self.show_error(f"error: \n{str(e)}")
+            self._show_error(f"error: \n{str(e)}")
         else:
             result = True
         finally:
-            self.show_result(self.output_table.__doc__, result)
+            self._show_result(self.output_table.__doc__, result)
         return result
 
 

@@ -89,16 +89,18 @@ class GetGovernmentStatistics:
         self.ENV_NAME_OF_APP_ID: str = "first_appid_of_estat"
         # 指定の統計表のデータフレーム
         self.df: DataFrame = None
+        # 処理をキャンセルするかどうか
+        self.cancel: bool = False
         # exe化されている場合とそれ以外を切り分ける
         exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-        # 統計表IDの一覧のCSVファイルを格納したフォルダ
+        # 統計表IDの一覧のCSVファイルを格納するフォルダ
         self.folder_p_of_ids: Path = exe_path.parent / "__stats_data_ids__"
         self.folder_s_of_ids: str = str(self.folder_p_of_ids)
         self.log.info(f"統計表IDのリストを格納するフォルダ => {self.folder_s_of_ids}")
-        # 指定の統計表をCSVファイルに出力する際のフォルダ
+        # 指定の統計表のCSVファイルを格納するフォルダ
         self.folder_p_of_table: Path = exe_path.parent / "__output__"
         self.folder_s_of_table: str = str(self.folder_p_of_table)
-        self.log.info(f"指定の統計表を出力する際のフォルダ => {self.folder_s_of_table}")
+        self.log.info(f"指定の統計表を格納するフォルダ => {self.folder_s_of_table}")
 
     def _parser_xml(self, res: Response) -> tuple[dict, int]:
         """XMLのデータを解析します(同期版と非同期版で共通)"""
@@ -113,12 +115,14 @@ class GetGovernmentStatistics:
                 element_of_title: Optional[Element] = t.find("TITLE")
                 title: str = (element_of_title.text or "") if element_of_title is not None else ""
                 page_dct[stat_id] = {"stat_name": stat_name, "title": title}
+        except asyncio.CancelledError:
+            raise
+        except KeyboardInterrupt:
+            raise
         except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(res.text)
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
@@ -140,12 +144,14 @@ class GetGovernmentStatistics:
                     "statistics_name": statistics_name,
                     "title": title,
                 }
+        except asyncio.CancelledError:
+            raise
+        except KeyboardInterrupt:
+            raise
         except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(json.dumps(data, indent=4, ensure_ascii=False))
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
@@ -175,12 +181,14 @@ class GetGovernmentStatistics:
                 stat_name: str = row.get("STAT_NAME", "")
                 title: str = row.get("TITLE", "")
                 page_dct[stat_id] = {"stat_name": stat_name, "title": title}
+        except asyncio.CancelledError:
+            raise
+        except KeyboardInterrupt:
+            raise
         except Exception:
             # デバッグ用(加工前のデータをクリップボードにコピーする)
             clipboard.copy(res.text)
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
@@ -219,10 +227,10 @@ class GetGovernmentStatistics:
                         break
                     results.append(page_dct)
                     start += limit
+        except KeyboardInterrupt:
+            raise
         except Exception:
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
@@ -260,17 +268,18 @@ class GetGovernmentStatistics:
                         break
                     yield page_dct
                     start += limit
+        except asyncio.CancelledError:
+            raise
         except Exception:
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
             pass
 
     def write_stats_data_ids_to_file(self, chunk_size: int = 100) -> Union[bool, None]:
-        """統計表IDの一覧をCSVファイルに書き込みます (同期版と非同期版を切り替える)"""
+        """統計表IDの一覧をCSVファイルに書き出す (同期版と非同期版を切り替える)"""
+        obj: Any = None
         try:
             # 統計表IDの一覧のURL
             dct_of_ids_url: dict = {
@@ -284,31 +293,46 @@ class GetGovernmentStatistics:
                         loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
                     except RuntimeError:
                         # ループがない場合
-                        return self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
+                        obj = self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
+                    except asyncio.CancelledError:
+                        raise
+                    except KeyboardInterrupt:
+                        raise
+                    except Exception:
+                        raise
                     else:
                         # ループがある場合
-                        return loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
+                        obj = loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
+                    finally:
+                        pass
                 case "同期":
-                    return self._write_stats_data_ids_to_file_with_sync(chunk_size, dct_of_ids_url)
+                    obj = self._write_stats_data_ids_to_file_with_sync(chunk_size, dct_of_ids_url)
                 case _:
                     raise Exception("そのような取得方法は、ありません。")
-        except Exception:
+        except asyncio.CancelledError:
             raise
         except KeyboardInterrupt:
-            sys.exit(0)
-        finally:
+            raise
+        except Exception:
+            raise
+        else:
             pass
+        finally:
+            self.cancel = False
+        return obj
 
     def _common_process_for_writing_stats_data_ids_to_file(self, file_index: int, buffer: list) -> bool:
-        """ファイルに書き込む共通処理"""
+        """ファイルに書き出す処理(同期版と非同期版で共通)"""
         result: bool = False
         try:
             file_p_of_ids = self.folder_p_of_ids / f"list_of_stats_data_ids_{file_index}.csv"
             file_p_of_ids.write_text("\n".join(buffer), encoding="utf-8")
-        except Exception:
+        except asyncio.CancelledError:
             raise
         except KeyboardInterrupt:
-            sys.exit(0)
+            raise
+        except Exception:
+            raise
         else:
             result = True
         finally:
@@ -316,10 +340,10 @@ class GetGovernmentStatistics:
         return result
 
     def _write_stats_data_ids_to_file_with_sync(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
-        """統計表IDの一覧をCSVファイルに書き込みます(同期版)"""
+        """統計表IDの一覧をCSVファイルに書き出す(同期版)"""
         result: bool = False
         try:
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 開始します。***")
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 処理中...")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -342,24 +366,33 @@ class GetGovernmentStatistics:
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
+                    if self.cancel:
+                        break
+                if self.cancel:
+                    break
             if len(buffer) > 1:
                 self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
+        except KeyboardInterrupt:
+            self.cancel = True
+            raise
         except Exception:
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             result = True
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。***")
         finally:
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_sync.__doc__} => 終了します。***")
+            if self.cancel:
+                self.log.warning(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 中止しました。")
+            elif result:
+                self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。")
+            else:
+                self.log.error(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 失敗しました。")
         return result
 
     async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
-        """統計表IDの一覧をCSVファイルに書き込みます(非同期版)"""
+        """統計表IDの一覧をCSVファイルに書き出す(非同期版)"""
         result: bool = False
         try:
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 開始します。***")
+            self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 処理中...")
             self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
             # フォルダの中を空にする
             for e in self.folder_p_of_ids.iterdir():
@@ -382,17 +415,26 @@ class GetGovernmentStatistics:
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
+                    if self.cancel:
+                        break
+                if self.cancel:
+                    break
             if len(buffer) > 1:
                 self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
+        except asyncio.CancelledError:
+            self.cancel = True
+            raise
         except Exception:
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             result = True
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 成功しました。***")
         finally:
-            self.log.info(f"***{self._write_stats_data_ids_to_file_with_async.__doc__} => 終了します。***")
+            if self.cancel:
+                self.log.warning(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 中止しました。")
+            elif result:
+                self.log.info(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 成功しました。")
+            else:
+                self.log.error(f"{self._write_stats_data_ids_to_file_with_async.__doc__} => 失敗しました。")
         return result
 
     def get_table_from_api(self) -> bool:
@@ -588,7 +630,6 @@ class GetGovernmentStatistics:
             raise
         else:
             result = True
-            self.log.info(f"***{self.get_table_from_api.__doc__} => 成功しました。***")
         finally:
             pass
         return result
@@ -660,7 +701,7 @@ class GetGovernmentStatistics:
         except Exception:
             raise
         else:
-            self.log.info(f"***{self.filter_df.__doc__} => 成功しました。***")
+            pass
         finally:
             pass
         return filtered_df
@@ -675,12 +716,11 @@ class GetGovernmentStatistics:
             self.log.info("検索方法 => " + ": ".join(self.lst_of_match_type))
             self.log.info("抽出するキーワード => " + (", ".join(map(str, self.lst_of_keyword)) if self.lst_of_keyword else "なし"))
             self.log.info("抽出方法 => " + (": ".join(self.lst_of_logic_type) if self.lst_of_logic_type else "なし"))
-            self.log.info(f"表示件数: {self.DATA_COUNT}")
+            self.log.info(f"表示件数 => {self.DATA_COUNT}")
         except Exception:
             raise
         else:
             result = True
-            self.log.info(f"***{self.show_table.__doc__} => 成功しました。***")
         finally:
             pass
         return result
@@ -698,8 +738,7 @@ class GetGovernmentStatistics:
             raise
         else:
             result = True
-            self.log.info(f"指定の統計表の出力先 => {file_s_of_table}")
-            self.log.info(f"***{self.output_table_to_csv.__doc__} => 成功しました。***")
+            self.log.info(f"指定の統計表のファイル => {file_s_of_table}")
         finally:
             pass
         return result

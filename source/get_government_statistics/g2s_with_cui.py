@@ -41,10 +41,10 @@ class GS_With_Cui:
                 num: int = int(text)
                 if num < 1 or num > len(lst):
                     raise Exception("入力した番号が範囲外です。")
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise
-            except KeyboardInterrupt:
-                sys.exit(0)
             else:
                 break
             finally:
@@ -64,10 +64,10 @@ class GS_With_Cui:
                         break
                     else:
                         print("文字列が何も入力されていません。")
+        except KeyboardInterrupt:
+            raise
         except Exception:
             raise
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             pass
         finally:
@@ -88,10 +88,10 @@ class GS_With_Cui:
                     raise Exception("数字を入力してください。")
                 if len(text) != DIGIT:
                     raise Exception(f"{DIGIT}桁で入力してください。")
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise
-            except KeyboardInterrupt:
-                sys.exit(0)
             else:
                 break
             finally:
@@ -111,10 +111,10 @@ class GS_With_Cui:
                         pass
                     case _:
                         raise Exception("無効な入力です。")
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise
-            except KeyboardInterrupt:
-                sys.exit(0)
             else:
                 break
             finally:
@@ -155,7 +155,7 @@ async def main() -> bool:
             if obj_with_cui._input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 obj_of_cls.lst_of_get_type = obj_with_cui._select_element(obj_of_cls.dct_of_get_type)
                 # 統計表IDをテキストファイルに書き出す
-                result = obj_of_cls.write_stats_data_ids_to_file(True)
+                result = obj_of_cls.write_stats_data_ids_to_file()
                 if isinstance(result, asyncio.Task):
                     # 非同期の場合
                     await result
@@ -171,10 +171,12 @@ async def main() -> bool:
             obj_of_cls.show_table()
             if obj_with_cui._input_bool(f"{obj_of_cls.output_table_to_csv.__doc__} => 行いますか？"):
                 obj_of_cls.output_table_to_csv()
+        except asyncio.CancelledError:
+            raise
+        except KeyboardInterrupt:
+            raise
         except Exception as e:
             obj_of_lt.logger.critical(f"***処理が失敗しました。***: \n{str(e)}")
-        except KeyboardInterrupt:
-            sys.exit(0)
         else:
             result = True
             obj_of_lt.logger.info("***処理が成功しました。***")
@@ -186,4 +188,15 @@ async def main() -> bool:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except asyncio.CancelledError:
+        sys.exit(0)
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except Exception:
+        pass
+    else:
+        pass
+    finally:
+        pass
