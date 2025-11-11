@@ -27,6 +27,9 @@ class ConvertLibreToPDF:
             "excel": [".xls", ".xlsx"],
             "word": [".doc", ".docx"],
             "powerpoint": [".ppt", ".pptx"],
+            "Calc": [".ods"],
+            "Writer": [".odt"],
+            "Impress": [".odp"],
         }
         # 対象の拡張子の辞書をリストにまとめる
         self.valid_exts: list = sum(self.file_types.values(), [])
