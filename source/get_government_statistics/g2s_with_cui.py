@@ -153,13 +153,16 @@ async def main() -> bool:
                 os.environ[obj_of_cls.ENV_NAME_OF_APP_ID] = obj_of_cls.APP_ID
             obj_of_cls.lst_of_data_type = obj_with_cui._select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui._input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
-                obj_of_cls.lst_of_get_type = obj_with_cui._select_element(obj_of_cls.dct_of_get_type)
+                # 取得方法は非同期のみ
+                obj_of_cls.lst_of_get_type = list(obj_of_cls.dct_of_get_type.items())[0]
                 # 統計表IDをテキストファイルに書き出す
                 result = obj_of_cls.write_stats_data_ids_to_file()
                 if isinstance(result, asyncio.Task):
                     # 非同期の場合
                     await result
             obj_of_cls.STATS_DATA_ID = obj_with_cui._input_stats_data_id()
+            # 取得方法は同期のみ
+            obj_of_cls.lst_of_get_type = list(obj_of_cls.dct_of_get_type.items())[1]
             obj_of_cls.get_table_from_api()
             obj_of_cls.lst_of_match_type = obj_with_cui._select_element(obj_of_cls.dct_of_match_type)
             obj_of_cls.filter = obj_with_cui._input_bool("フィルターをかけますか？")

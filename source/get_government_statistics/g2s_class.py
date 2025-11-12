@@ -7,7 +7,7 @@ from csv import DictReader
 from io import StringIO
 from logging import Logger
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Dict, Optional, Union
 from xml.etree.ElementTree import Element
 
 import clipboard
@@ -195,48 +195,6 @@ class GetGovernmentStatistics:
             pass
         return page_dct, row_count
 
-    def _get_stats_data_ids_with_sync(self, dct_of_ids_url: dict) -> List[Dict[str, dict]]:
-        """ページを取得します(同期版)"""
-        try:
-            data_type: str = self.lst_of_data_type[self.KEY]
-            parser_map: dict = {
-                "xml": self._parser_xml,
-                "json": self._parser_json,
-                "csv": self._parser_csv,
-            }
-            parser: Any = parser_map.get(data_type)
-            if not parser:
-                raise Exception("データタイプが対応していません")
-            url: str = dct_of_ids_url[data_type]
-            results: list = []
-            start: int = 1
-            limit: int = 100
-            with httpx.Client(timeout=120.0) as client:
-                while True:
-                    params: dict = {
-                        "appId": self.APP_ID,
-                        "lang": "J",
-                        "limit": limit,
-                        "startPosition": start,
-                    }
-                    res: Response = client.get(url, params=params)
-                    res.encoding = "utf-8"
-                    res.raise_for_status()
-                    page_dct, count = parser(res)
-                    if count == 0:
-                        break
-                    results.append(page_dct)
-                    start += limit
-        except KeyboardInterrupt:
-            raise
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-        return results
-
     async def _get_stats_data_ids_with_async(self, dct_of_ids_url: dict) -> AsyncGenerator[Dict[str, dict], None]:
         """ページを取得します(非同期版)"""
         try:
@@ -278,7 +236,7 @@ class GetGovernmentStatistics:
             pass
 
     def write_stats_data_ids_to_file(self, chunk_size: int = 100) -> Union[bool, None]:
-        """統計表IDの一覧をCSVファイルに書き出す (同期版と非同期版を切り替える)"""
+        """統計表IDの一覧をCSVファイルに書き出す"""
         obj: Any = None
         try:
             # 統計表IDの一覧のURL
@@ -287,28 +245,10 @@ class GetGovernmentStatistics:
                 "json": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsList",
                 "csv": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsList",
             }
-            match self.lst_of_get_type[self.KEY]:
-                case "非同期":
-                    try:
-                        loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-                    except RuntimeError:
-                        # ループがない場合
-                        obj = self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
-                    except asyncio.CancelledError:
-                        raise
-                    except KeyboardInterrupt:
-                        raise
-                    except Exception:
-                        raise
-                    else:
-                        # ループがある場合
-                        obj = loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
-                    finally:
-                        pass
-                case "同期":
-                    obj = self._write_stats_data_ids_to_file_with_sync(chunk_size, dct_of_ids_url)
-                case _:
-                    raise Exception("そのような取得方法は、ありません。")
+            loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        except RuntimeError:
+            # ループがない場合
+            obj = self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
         except asyncio.CancelledError:
             raise
         except KeyboardInterrupt:
@@ -316,7 +256,8 @@ class GetGovernmentStatistics:
         except Exception:
             raise
         else:
-            pass
+            # ループがある場合
+            obj = loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
         finally:
             self.cancel = False
         return obj
@@ -337,55 +278,6 @@ class GetGovernmentStatistics:
             result = True
         finally:
             pass
-        return result
-
-    def _write_stats_data_ids_to_file_with_sync(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
-        """統計表IDの一覧をCSVファイルに書き出す(同期版)"""
-        result: bool = False
-        try:
-            self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 処理中...")
-            self.folder_p_of_ids.mkdir(parents=True, exist_ok=True)
-            # フォルダの中を空にする
-            for e in self.folder_p_of_ids.iterdir():
-                if e.is_dir():
-                    shutil.rmtree(e)
-                else:
-                    e.unlink()
-            buffer: list = [self.header_of_ids_s]
-            file_index: int = 1
-            for page in self._get_stats_data_ids_with_sync(dct_of_ids_url):
-                for stat_id, info in page.items():
-                    col2: str = info.get("stat_name", info.get("statistics_name", ""))
-                    col3: str = info.get("title", "")
-                    if col3:
-                        # データクレンジング
-                        col3 = col3.replace("\u002c", "\u3001").replace("\uff0c", "\u3001")
-                    buffer.append(f"{stat_id},{col2},{col3}")
-                    if len(buffer) >= chunk_size:
-                        self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
-                        buffer.clear()
-                        buffer.append(self.header_of_ids_s)
-                        file_index += 1
-                    if self.cancel:
-                        break
-                if self.cancel:
-                    break
-            if len(buffer) > 1:
-                self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
-        except KeyboardInterrupt:
-            self.cancel = True
-            raise
-        except Exception:
-            raise
-        else:
-            result = True
-        finally:
-            if self.cancel:
-                self.log.warning(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 中止しました。")
-            elif result:
-                self.log.info(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 成功しました。")
-            else:
-                self.log.error(f"{self._write_stats_data_ids_to_file_with_sync.__doc__} => 失敗しました。")
         return result
 
     async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
@@ -415,8 +307,8 @@ class GetGovernmentStatistics:
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
-                    if self.cancel:
-                        break
+                    # if self.cancel:
+                    #     break
                 if self.cancel:
                     break
             if len(buffer) > 1:

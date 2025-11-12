@@ -114,15 +114,20 @@ class MainApp_Of_G2S(QMainWindow):
             self.top_layout: QHBoxLayout = QHBoxLayout()
             self.main_layout.addLayout(self.top_layout)
             # 左上
-            self.top_left_layout: QVBoxLayout = QVBoxLayout()
-            self.top_layout.addLayout(self.top_left_layout)
+            self.top_left_scroll_area: QScrollArea = QScrollArea()
+            self.top_left_scroll_area.setWidgetResizable(True)
+            self.top_layout.addWidget(self.top_left_scroll_area)
             self._setup_second_ui()
             # 右上
-            self.top_right_layout: QVBoxLayout = QVBoxLayout()
-            self.top_layout.addLayout(self.top_right_layout)
+            top_right_scroll_area: QScrollArea = QScrollArea()
+            top_right_scroll_area.setWidgetResizable(True)
+            self.top_layout.addWidget(top_right_scroll_area)
+            top_right_container: QWidget = QWidget()
+            self.top_right_container_layout: QVBoxLayout = QVBoxLayout(top_right_container)
+            top_right_scroll_area.setWidget(top_right_container)
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
-            self.top_right_layout.addWidget(self.log_area)
+            self.top_right_container_layout.addWidget(self.log_area)
             # 下
             self.second_element_title_area: QHBoxLayout = QHBoxLayout()
             self.main_layout.addLayout(self.second_element_title_area)
@@ -130,20 +135,19 @@ class MainApp_Of_G2S(QMainWindow):
             self.second_element_title_area.addWidget(QLabel("機能"))
             self.bottom_layout: QHBoxLayout = QHBoxLayout()
             self.main_layout.addLayout(self.bottom_layout)
-            # 仮想コンテナ
-            bottom_container: QWidget = QWidget()
-            self.bottom_container_layout: QHBoxLayout = QHBoxLayout()
-            bottom_container.setLayout(self.bottom_container_layout)
-            bottom_scroll_area: QScrollArea = QScrollArea()
-            self.bottom_layout.addWidget(bottom_scroll_area)
-            bottom_scroll_area.setWidgetResizable(True)
-            bottom_scroll_area.setWidget(bottom_container)
             # 統計表
-            self.table_area: QVBoxLayout = QVBoxLayout()
-            self.bottom_layout.addLayout(self.table_area)
+            self.table_scroll_area: QScrollArea = QScrollArea()
+            self.table_scroll_area.setWidgetResizable(True)
+            self.bottom_layout.addWidget(self.table_scroll_area)
             # 関数
+            func_scroll_area: QScrollArea = QScrollArea()
+            func_scroll_area.setWidgetResizable(True)
+            self.bottom_layout.addWidget(func_scroll_area)
+            func_container: QWidget = QWidget()
+            func_container_layout: QVBoxLayout = QVBoxLayout(func_container)
+            func_scroll_area.setWidget(func_container)
             func_area: QFormLayout = QFormLayout()
-            self.bottom_layout.addLayout(func_area)
+            func_container_layout.addLayout(func_area)
             # アプリケーションID
             self.app_id_text: QLineEdit = QLineEdit()
             func_area.addRow(QLabel("アプリケーションID: "), self.app_id_text)
@@ -246,15 +250,9 @@ class MainApp_Of_G2S(QMainWindow):
         """2番目のUser Interfaceを設定します"""
         result: bool = False
         try:
-            # 仮想コンテナ
-            top_left_container: QWidget = QWidget()
-            self.top_left_container_layout: QHBoxLayout = QHBoxLayout()
-            top_left_container.setLayout(self.top_left_container_layout)
-            top_left_scroll_area: QScrollArea = QScrollArea()
-            self.top_left_layout.addWidget(top_left_scroll_area)
-            self.top_left_scroll_layout: QVBoxLayout = QVBoxLayout()
-            top_left_scroll_area.setWidgetResizable(True)
-            top_left_scroll_area.setWidget(top_left_container)
+            self.top_left_container: QWidget = QWidget()
+            self.top_left_container_layout: QVBoxLayout = QVBoxLayout(self.top_left_container)
+            self.top_left_scroll_area.setWidget(self.top_left_container)
             self.lst_of_ids: QTableView = QTableView()
             self.top_left_container_layout.addWidget(self.lst_of_ids)
             self.model: QStandardItemModel = QStandardItemModel()
@@ -274,16 +272,14 @@ class MainApp_Of_G2S(QMainWindow):
         """3番目のUser Interfaceを設定します"""
         result: bool = False
         try:
-            # 統計表IDごとに仮想コンテナでまとめる
-            element: QWidget = QWidget()
-            element_layout: QVBoxLayout = QVBoxLayout()
-            element.setLayout(element_layout)
+            self.table_container: QWidget = QWidget()
+            self.table_container_layout: QVBoxLayout = QVBoxLayout(self.table_container)
+            self.table_scroll_area.setWidget(self.table_container)
             self.stats_table: QTableView = QTableView(self)
-            element_layout.addWidget(QLabel(f"統計表ID: {self.obj_of_cls.STATS_DATA_ID}"))
-            element_layout.addWidget(QLabel(f"統計名: {self.obj_of_cls.STAT_NAME}"))
-            element_layout.addWidget(QLabel(f"表題: {self.obj_of_cls.TITLE}"))
-            element_layout.addWidget(self.stats_table)
-            self.bottom_container_layout.addWidget(element)
+            self.table_container_layout.addWidget(QLabel(f"統計表ID: {self.obj_of_cls.STATS_DATA_ID}"))
+            self.table_container_layout.addWidget(QLabel(f"統計名: {self.obj_of_cls.STAT_NAME}"))
+            self.table_container_layout.addWidget(QLabel(f"表題: {self.obj_of_cls.TITLE}"))
+            self.table_container_layout.addWidget(self.stats_table)
             model: QStandardItemModel = QStandardItemModel()
             # ヘッダーを追加する
             model.setHorizontalHeaderLabels(self.obj_of_cls.df.columns.tolist())
@@ -309,8 +305,6 @@ class MainApp_Of_G2S(QMainWindow):
             if not self.obj_of_cls.lst_of_data_type:
                 raise Exception("データ形式を選択してください。")
             self.obj_of_cls.lst_of_get_type = self._get_lst(self.get_type_combo, self.obj_of_cls.dct_of_get_type)
-            if not self.obj_of_cls.lst_of_get_type:
-                raise Exception("取得する方法を選択してください。")
         except Exception:
             raise
         else:
@@ -379,27 +373,39 @@ class MainApp_Of_G2S(QMainWindow):
         """キーワードを取得します"""
         return [line.strip() for line in p_txt_edit.toPlainText().splitlines() if line.strip()]
 
-    def _clear_layout(self, layout) -> bool:
-        """レイアウト内の全ウィジェットを削除します"""
+    def _clear_widget(self, widget: QWidget) -> bool:
+        """ウィジェットやQScrollAreaの中身を安全に削除します"""
         result: bool = False
         try:
-            if layout is not None:
-                while layout.count():
-                    item = layout.takeAt(0)
-                    widget = item.widget()
-                    if widget is not None:
-                        widget.deleteLater()
-                    else:
-                        sub_layout = item.layout()
-                        if sub_layout is not None:
-                            self._clear_layout(sub_layout)
+            if widget is None:
+                raise Exception("ウィジェットが存在しません。")
+            # QScrollArea の場合は中身を削除
+            elif isinstance(widget, QScrollArea):
+                inner_widget = widget.widget()
+                if inner_widget is not None:
+                    self._clear_widget(inner_widget)
+                    inner_widget.deleteLater()
+                    widget.takeWidget()
+            else:
+                # 通常の QWidget の場合
+                layout = widget.layout()
+                if layout is not None:
+                    while layout.count():
+                        item = layout.takeAt(0)
+                        child_widget = item.widget()
+                        child_layout = item.layout()
+                        if child_widget is not None:
+                            self._clear_widget(child_widget)
+                            child_widget.deleteLater()
+                        elif child_layout is not None:
+                            # 子レイアウトを再帰的にクリア
+                            self._clear_widget(QWidget().setLayout(child_layout))
         except Exception:
             raise
         else:
             result = True
         finally:
-            pass
-        return result
+            return result
 
     def get_lst_of_ids(self) -> bool:
         """統計表IDの一覧を取得します"""
@@ -419,14 +425,10 @@ class MainApp_Of_G2S(QMainWindow):
 
         result: bool = False
         try:
+            # 取得方法は非同期のみ
+            self.get_type_combo.setCurrentIndex(0)
             self._check_first_form()
-            match self.obj_of_cls.lst_of_get_type[self.obj_of_cls.KEY]:
-                case "非同期":
-                    threading.Thread(target=_run_getting_ids_with_async, daemon=True).start()
-                case "同期":
-                    self.obj_of_cls.write_stats_data_ids_to_file()
-                case _:
-                    raise Exception("そのような取得方法は、ありません。")
+            threading.Thread(target=_run_getting_ids_with_async, daemon=True).start()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -443,7 +445,7 @@ class MainApp_Of_G2S(QMainWindow):
         """統計表IDの一覧を表示します"""
         result: bool = False
         try:
-            self._clear_layout(self.top_left_layout)
+            self._clear_widget(self.top_left_scroll_area)
             self._setup_second_ui()
             # 検索パターン
             PATTERN: str = "*.csv"
@@ -472,7 +474,7 @@ class MainApp_Of_G2S(QMainWindow):
         result: bool = False
         try:
             self._check_second_form()
-            self._clear_layout(self.top_left_layout)
+            self._clear_widget(self.top_left_scroll_area)
             self._setup_second_ui()
             # 検索パターン
             PATTERN: str = "*.csv"
@@ -506,7 +508,7 @@ class MainApp_Of_G2S(QMainWindow):
             # 取得方法は同期のみ
             self.get_type_combo.setCurrentIndex(1)
             self._check_first_form()
-            self._clear_layout(self.bottom_container_layout)
+            self._clear_widget(self.table_scroll_area)
             self.obj_of_cls.get_table_from_api()
             self._setup_third_ui()
         except Exception as e:
@@ -525,7 +527,7 @@ class MainApp_Of_G2S(QMainWindow):
             if self.obj_of_cls.df is None:
                 raise Exception("統計表を表示してください。")
             self._check_second_form()
-            self._clear_layout(self.bottom_container_layout)
+            self._clear_widget(self.table_scroll_area)
             self.obj_of_cls.df = self.obj_of_cls.filter_df(self.obj_of_cls.df)
             self._setup_third_ui()
         except Exception as e:
