@@ -7,11 +7,11 @@ from comtypes.client import CreateObject
 
 class ConvertOfficeToPDF:
     """
-    Excel, Word, PowerPointをPDFに一括変換します
+    オフィスファイルをPDFに一括変換します
+    Windows + Microsoft Office(デスクトップ版)が必要です
     Excel => .xls, .xlsx
     Word => .doc, .docx
     PowerPoint => .ppt, .pptx
-    Windows + Microsoft Office(デスクトップ版)が必要です
     """
 
     def __init__(self, logger: Logger):
