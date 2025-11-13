@@ -87,7 +87,7 @@ def main() -> bool:
         try:
             obj_of_cls.folder_path = obj_with_cui._input_folder_path()
             obj_of_cls.recursive = obj_with_cui._input_bool("フォルダを再帰的に検索しますか？")
-            obj_of_cls.search_recursively()
+            obj_of_cls.search_directly_under_folder()
             obj_of_cls.pattern = input("ファイルの検索パターンを入力してください。: ")
             obj_of_cls.extract_by_pattern()
         except KeyboardInterrupt:

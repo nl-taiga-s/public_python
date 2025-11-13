@@ -23,8 +23,8 @@ class GetFileList:
         self.num_of_f_before: int = 0
         self.num_of_f_after: int = 0
 
-    def search_recursively(self) -> bool:
-        """再帰的に検索します"""
+    def search_directly_under_folder(self) -> bool:
+        """フォルダ直下を検索します"""
         result: bool = False
         # 初期化する
         self.lst_file_before = []
@@ -47,7 +47,7 @@ class GetFileList:
             raise
         else:
             result = True
-            self.log.info(f"***{self.search_recursively.__doc__} => 成功しました。***")
+            self.log.info(f"***{self.search_directly_under_folder.__doc__} => 成功しました。***")
         finally:
             pass
         return result
