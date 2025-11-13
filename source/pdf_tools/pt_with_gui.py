@@ -120,74 +120,76 @@ class MainApp_Of_PT(QMainWindow):
             main_layout: QHBoxLayout = QHBoxLayout()
             base_layout.addLayout(main_layout)
             # 左側
-            left_layout: QVBoxLayout = QVBoxLayout()
-            left_func_area: QVBoxLayout = QVBoxLayout()
-            left_layout.addLayout(left_func_area)
-            main_layout.addLayout(left_layout)
+            left_scroll_area: QScrollArea = QScrollArea()
+            left_scroll_area.setWidgetResizable(True)
+            main_layout.addWidget(left_scroll_area)
+            left_container: QWidget = QWidget()
+            left_container_layout: QVBoxLayout = QVBoxLayout(left_container)
+            left_scroll_area.setWidget(left_container)
             # 中央
-            center_layout: QVBoxLayout = QVBoxLayout()
             center_scroll_area: QScrollArea = QScrollArea()
             center_scroll_area.setWidgetResizable(True)
-            center_layout.addWidget(center_scroll_area)
-            main_layout.addLayout(center_layout)
-            # 仮想コンテナのウィジェットとレイアウト
-            center_widget: QWidget = QWidget()
-            self.center_viewer: QVBoxLayout = QVBoxLayout()
-            center_widget.setLayout(self.center_viewer)
-            center_scroll_area.setWidget(center_widget)
+            main_layout.addWidget(center_scroll_area)
+            center_container: QWidget = QWidget()
+            self.center_container_layout: QVBoxLayout = QVBoxLayout(center_container)
+            center_scroll_area.setWidget(center_container)
             # 右側
-            right_layout: QVBoxLayout = QVBoxLayout()
-            main_layout.addLayout(right_layout)
+            right_scroll_area: QScrollArea = QScrollArea()
+            right_scroll_area.setWidgetResizable(True)
+            main_layout.addWidget(right_scroll_area)
+            right_container: QWidget = QWidget()
+            right_container_layout: QVBoxLayout = QVBoxLayout(right_container)
+            right_scroll_area.setWidget(right_container)
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
-            right_layout.addWidget(self.log_area)
+            right_container_layout.addWidget(self.log_area)
             # ファイル選択と再読み込み
             self.file_input: QLineEdit = QLineEdit()
-            left_func_area.addWidget(QLabel("PDFファイルパス"))
-            left_func_area.addWidget(self.file_input)
+            left_container_layout.addWidget(QLabel("PDFファイルパス"))
+            left_container_layout.addWidget(self.file_input)
             select_and_reload_area: QHBoxLayout = QHBoxLayout()
             browse_btn: QPushButton = QPushButton("参照")
             select_and_reload_area.addWidget(browse_btn)
             reload_btn: QPushButton = QPushButton("再読み込み")
             select_and_reload_area.addWidget(reload_btn)
-            left_func_area.addLayout(select_and_reload_area)
+            left_container_layout.addLayout(select_and_reload_area)
             browse_btn.clicked.connect(self.select_pdf)
             reload_btn.clicked.connect(self.reload_pdf)
             # パスワード入力
             self.password_input: QLineEdit = QLineEdit()
             self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
-            left_func_area.addWidget(QLabel("パスワード"))
-            left_func_area.addWidget(self.password_input)
+            left_container_layout.addWidget(QLabel("パスワード"))
+            left_container_layout.addWidget(self.password_input)
             # 暗号化と復号化
             encrypt_and_decrypt_area: QHBoxLayout = QHBoxLayout()
             encrypt_btn: QPushButton = QPushButton("暗号化")
             encrypt_and_decrypt_area.addWidget(encrypt_btn)
             decrypt_btn: QPushButton = QPushButton("復号化")
             encrypt_and_decrypt_area.addWidget(decrypt_btn)
-            left_func_area.addLayout(encrypt_and_decrypt_area)
+            left_container_layout.addLayout(encrypt_and_decrypt_area)
             encrypt_btn.clicked.connect(self.encrypt_pdf)
             decrypt_btn.clicked.connect(self.decrypt_pdf)
             # メタデータの表示
             meta_btn: QPushButton = QPushButton("メタデータの表示")
-            left_func_area.addWidget(meta_btn)
+            left_container_layout.addWidget(meta_btn)
             meta_btn.clicked.connect(self.show_metadata)
             # メタデータの入力
-            left_func_area.addWidget(QLabel("メタデータの入力"))
+            left_container_layout.addWidget(QLabel("メタデータの入力"))
             self.widget_of_metadata: dict = {}
             self.line_edits_of_metadata: dict = {}
             for value, key in self.obj_of_cls.fields:
                 if value in ["creation_date", "modification_date"]:
                     continue
                 self.line_edits_of_metadata[key] = QLineEdit()
-                left_func_area.addWidget(QLabel(value.capitalize().replace("_", " ")))
-                left_func_area.addWidget(self.line_edits_of_metadata[key])
+                left_container_layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
+                left_container_layout.addWidget(self.line_edits_of_metadata[key])
             # メタデータの書き込み
             write_meta_btn: QPushButton = QPushButton("メタデータの書き込み")
-            left_func_area.addWidget(write_meta_btn)
+            left_container_layout.addWidget(write_meta_btn)
             write_meta_btn.clicked.connect(self.write_metadata)
             # マージ
             merge_btn: QPushButton = QPushButton("複数PDFをマージ")
-            left_func_area.addWidget(merge_btn)
+            left_container_layout.addWidget(merge_btn)
             merge_btn.clicked.connect(self.merge_pdfs)
             # ページの抽出
             begin_spin_of_ep: QSpinBox = QSpinBox()
@@ -197,9 +199,9 @@ class MainApp_Of_PT(QMainWindow):
             page_layout_of_ep.addWidget(begin_spin_of_ep)
             page_layout_of_ep.addWidget(QLabel("ページの抽出終了"))
             page_layout_of_ep.addWidget(end_spin_of_ep)
-            left_func_area.addLayout(page_layout_of_ep)
+            left_container_layout.addLayout(page_layout_of_ep)
             extract_page_btn: QPushButton = QPushButton("ページの抽出")
-            left_func_area.addWidget(extract_page_btn)
+            left_container_layout.addWidget(extract_page_btn)
             extract_page_btn.clicked.connect(lambda: self.extract_pages(begin_spin_of_ep, end_spin_of_ep))
             # ページの削除
             begin_spin_of_dp: QSpinBox = QSpinBox()
@@ -209,9 +211,9 @@ class MainApp_Of_PT(QMainWindow):
             page_layout_of_dp.addWidget(begin_spin_of_dp)
             page_layout_of_dp.addWidget(QLabel("ページの削除終了"))
             page_layout_of_dp.addWidget(end_spin_of_dp)
-            left_func_area.addLayout(page_layout_of_dp)
+            left_container_layout.addLayout(page_layout_of_dp)
             delete_page_btn: QPushButton = QPushButton("ページの削除")
-            left_func_area.addWidget(delete_page_btn)
+            left_container_layout.addWidget(delete_page_btn)
             delete_page_btn.clicked.connect(lambda: self.delete_pages(begin_spin_of_dp, end_spin_of_dp))
             # テキストの抽出
             begin_spin_of_et: QSpinBox = QSpinBox()
@@ -221,9 +223,9 @@ class MainApp_Of_PT(QMainWindow):
             page_layout_of_et.addWidget(begin_spin_of_et)
             page_layout_of_et.addWidget(QLabel("テキストの抽出終了"))
             page_layout_of_et.addWidget(end_spin_of_et)
-            left_func_area.addLayout(page_layout_of_et)
+            left_container_layout.addLayout(page_layout_of_et)
             extract_text_btn: QPushButton = QPushButton("テキストの抽出")
-            left_func_area.addWidget(extract_text_btn)
+            left_container_layout.addWidget(extract_text_btn)
             extract_text_btn.clicked.connect(lambda: self.extract_text(begin_spin_of_et, end_spin_of_et))
             # ページの回転
             spin_of_rp: QSpinBox = QSpinBox()
@@ -232,7 +234,7 @@ class MainApp_Of_PT(QMainWindow):
             page_layout_of_rp.addWidget(spin_of_rp)
             rotate_btn: QPushButton = QPushButton("ページを時計回りに回転（90度）")
             page_layout_of_rp.addWidget(rotate_btn)
-            left_func_area.addLayout(page_layout_of_rp)
+            left_container_layout.addLayout(page_layout_of_rp)
             rotate_btn.clicked.connect(lambda: self.rotate_page(spin_of_rp))
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
@@ -269,8 +271,8 @@ class MainApp_Of_PT(QMainWindow):
         result: bool = False
         try:
             # 既存のレイアウトをクリア（再表示に対応）
-            for i in reversed(range(self.center_viewer.count())):
-                widget: QWidget = self.center_viewer.itemAt(i).widget()
+            for i in reversed(range(self.center_container_layout.count())):
+                widget: QWidget = self.center_container_layout.itemAt(i).widget()
                 if widget is not None:
                     widget.setParent(None)
             if not images:
@@ -294,7 +296,7 @@ class MainApp_Of_PT(QMainWindow):
                 image_label.setFixedSize(pixmap.size())
                 page_layout.addWidget(image_label)
                 # グリッドにページごとに追加する
-                self.center_viewer.addWidget(page_widget)
+                self.center_container_layout.addWidget(page_widget)
         except Exception:
             raise
         else:
