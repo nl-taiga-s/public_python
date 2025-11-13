@@ -7,11 +7,14 @@ from subprocess import CompletedProcess
 
 class ConvertLibreToPDF:
     """
-    Excel, Word, PowerPointをPDFに一括変換します
+    オフィスファイルをPDFに一括変換します
+    LibreOfficeが必要です
     Excel => .xls, .xlsx
     Word => .doc, .docx
     PowerPoint => .ppt, .pptx
-    LibreOfficeが必要です
+    Calc => .ods
+    Writer => .odt
+    Impress => .odp
     """
 
     def __init__(self, logger: Logger):
@@ -27,9 +30,9 @@ class ConvertLibreToPDF:
             "excel": [".xls", ".xlsx"],
             "word": [".doc", ".docx"],
             "powerpoint": [".ppt", ".pptx"],
-            "Calc": [".ods"],
-            "Writer": [".odt"],
-            "Impress": [".odp"],
+            "calc": [".ods"],
+            "writer": [".odt"],
+            "impress": [".odp"],
         }
         # 対象の拡張子の辞書をリストにまとめる
         self.valid_exts: list = sum(self.file_types.values(), [])

@@ -12,10 +12,13 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QListWidget,
+    QMainWindow,
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QScrollArea,
     QTextEdit,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -34,7 +37,7 @@ class QTextEditHandler(logging.Handler):
         self.widget.append(msg)
 
 
-class MainApp_Of_CLTP(QWidget):
+class MainApp_Of_CLTP(QMainWindow):
     def __init__(self):
         """初期化します"""
         super().__init__()
@@ -95,37 +98,44 @@ class MainApp_Of_CLTP(QWidget):
         try:
             # タイトル
             self.setWindowTitle("Officeファイル => PDF 一括変換アプリ with LibreOffice")
-            layout: QFormLayout = QFormLayout()
-            self.setLayout(layout)
+            central: QWidget = QWidget()
+            self.setCentralWidget(central)
+            base_layout: QVBoxLayout = QVBoxLayout(central)
+            main_scroll_area: QScrollArea = QScrollArea()
+            main_scroll_area.setWidgetResizable(True)
+            base_layout.addWidget(main_scroll_area)
+            main_container: QWidget = QWidget()
+            main_container_layout: QFormLayout = QFormLayout(main_container)
+            main_scroll_area.setWidget(main_container)
             self.label_from: QLabel = QLabel("変換元フォルダ: 未選択")
-            layout.addRow(self.label_from)
+            main_container_layout.addRow(self.label_from)
             btn_select_from: QPushButton = QPushButton("変換元フォルダを選択")
-            layout.addRow(btn_select_from)
+            main_container_layout.addRow(btn_select_from)
             btn_select_from.clicked.connect(self.select_folder_from)
             btn_open_from: QPushButton = QPushButton("変換元フォルダを開く")
-            layout.addRow(btn_open_from)
+            main_container_layout.addRow(btn_open_from)
             btn_open_from.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_from))
             self.label_to: QLabel = QLabel("変換先フォルダ: 未選択")
-            layout.addRow(self.label_to)
+            main_container_layout.addRow(self.label_to)
             btn_select_to: QPushButton = QPushButton("変換先フォルダを選択")
-            layout.addRow(btn_select_to)
+            main_container_layout.addRow(btn_select_to)
             btn_select_to.clicked.connect(self.select_folder_to)
             btn_open_to: QPushButton = QPushButton("変換先フォルダを開く")
-            layout.addRow(btn_open_to)
+            main_container_layout.addRow(btn_open_to)
             btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
-            layout.addRow(QLabel("変換対象ファイル一覧: "))
+            main_container_layout.addRow(QLabel("変換対象ファイル一覧: "))
             self.file_lst_widget: QListWidget = QListWidget()
-            layout.addRow(self.file_lst_widget)
-            layout.addRow(QLabel("進行状況: "))
+            main_container_layout.addRow(self.file_lst_widget)
+            main_container_layout.addRow(QLabel("進行状況: "))
             self.progress_bar: QProgressBar = QProgressBar()
-            layout.addRow(self.progress_bar)
+            main_container_layout.addRow(self.progress_bar)
             btn_convert: QPushButton = QPushButton("一括変換を実行します")
-            layout.addRow(btn_convert)
+            main_container_layout.addRow(btn_convert)
             btn_convert.clicked.connect(self.convert_file)
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
-            layout.addRow(QLabel("ログ: "))
-            layout.addRow(self.log_area)
+            main_container_layout.addRow(QLabel("ログ: "))
+            main_container_layout.addRow(self.log_area)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -250,7 +260,7 @@ def main() -> bool:
         # エラーチェック
         LIBRE_COMMAND: str = "soffice"
         if not shutil.which(LIBRE_COMMAND):
-            raise ImportError("LibreOfficeをインストールしてください。: \nhttps://ja.libreoffice.org/")
+            raise ImportError("LibreOfficeをインストールして、sofficeコマンドのパスを通してください。。: \nhttps://ja.libreoffice.org/")
         window: MainApp_Of_CLTP = MainApp_Of_CLTP()
         window.resize(1000, 800)
         # 最大化して、表示させる
