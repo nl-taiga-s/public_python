@@ -149,21 +149,21 @@ class MainApp_Of_G2S(QMainWindow):
             func_container_layout.addLayout(func_area)
             # アプリケーションID
             self.app_id_text: QLineEdit = QLineEdit()
-            self.app_id_text.editingFinished.connect(self._get_app_id)
+            self.app_id_text.editingFinished.connect(self.get_app_id)
             func_area.addRow(QLabel("アプリケーションID: "), self.app_id_text)
             # データタイプ
             self.data_type_combo: QComboBox = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_data_type.items():
                 self.data_type_combo.addItem(f"{key}: {desc}", userData=key)
-            self.data_type_combo.currentIndexChanged.connect(self._get_data_type)
-            self._get_data_type(0)
+            self.data_type_combo.currentIndexChanged.connect(self.get_data_type)
+            self.get_data_type(0)
             func_area.addRow(QLabel("データタイプ: "), self.data_type_combo)
             # 取得方法
             self.get_type_combo: QComboBox = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_get_type.items():
                 self.get_type_combo.addItem(f"{key}: {desc}", userData=key)
-            self.get_type_combo.currentIndexChanged.connect(self._get_get_type)
-            self._get_get_type(0)
+            self.get_type_combo.currentIndexChanged.connect(self.get_get_type)
+            self.get_get_type(0)
             func_area.addRow(QLabel("取得方法: "), self.get_type_combo)
             # 統計表IDの一覧を取得する
             get_ids_btn: QPushButton = QPushButton("統計表IDの一覧を取得する")
@@ -182,21 +182,21 @@ class MainApp_Of_G2S(QMainWindow):
             filter_ids_btn.clicked.connect(self.filter_lst_of_ids)
             # フィルターのキーワード
             self.keyword_text: QPlainTextEdit = QPlainTextEdit()
-            self.keyword_text.textChanged.connect(self._get_keyword)
+            self.keyword_text.textChanged.connect(self.get_keyword)
             func_area.addRow(QLabel("フィルターのキーワード\n(1行につき、1つのキーワード): "), self.keyword_text)
             # 検索方法
             self.match_type_combo: QComboBox = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_match_type.items():
                 self.match_type_combo.addItem(f"{key}: {desc}", userData=key)
-            self.match_type_combo.currentIndexChanged.connect(self._get_match_type)
-            self._get_match_type(0)
+            self.match_type_combo.currentIndexChanged.connect(self.get_match_type)
+            self.get_match_type(0)
             func_area.addRow(QLabel("検索方法: "), self.match_type_combo)
             # 抽出方法
             self.logic_type_combo: QComboBox = QComboBox()
             for key, desc in self.obj_of_cls.dct_of_logic_type.items():
                 self.logic_type_combo.addItem(f"{key}: {desc}", userData=key)
-            self.logic_type_combo.currentIndexChanged.connect(self._get_logic_type)
-            self._get_logic_type(0)
+            self.logic_type_combo.currentIndexChanged.connect(self.get_logic_type)
+            self.get_logic_type(0)
             func_area.addRow(QLabel("抽出方法: "), self.logic_type_combo)
             # 指定の統計表を表示する
             show_table_btn: QPushButton = QPushButton("統計表を表示する")
@@ -223,9 +223,8 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def _get_id_from_lst(self, index: QModelIndex) -> bool:
+    def get_id_from_lst(self, index: QModelIndex):
         """一覧から統計表IDを取得します"""
-        result: bool = False
         try:
             if index is None:
                 raise Exception("指定した統計表IDを取得できませんでした。")
@@ -244,12 +243,11 @@ class MainApp_Of_G2S(QMainWindow):
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
-            result = True
+            pass
         finally:
             self._show_info(
                 f"選択された統計表ID: {self.obj_of_cls.STATS_DATA_ID}\n統計名: {self.obj_of_cls.STAT_NAME}\n表題: {self.obj_of_cls.TITLE}"
             )
-        return result
 
     def _setup_second_ui(self) -> bool:
         """2番目のUser Interfaceを設定します"""
@@ -264,7 +262,7 @@ class MainApp_Of_G2S(QMainWindow):
             # ヘッダーを追加する
             self.model.setHorizontalHeaderLabels(self.obj_of_cls.header_of_ids_l)
             self.lst_of_ids.setModel(self.model)
-            self.lst_of_ids.clicked.connect(self._get_id_from_lst)
+            self.lst_of_ids.clicked.connect(self.get_id_from_lst)
         except Exception:
             raise
         else:
@@ -337,80 +335,6 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def _get_app_id(self):
-        """アプリケーションIDを取得します"""
-        try:
-            self.obj_of_cls.APP_ID = self.app_id_text.text()
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
-    def _get_data_type(self, index: int):
-        """データタイプを取得します"""
-        try:
-            key: str = self.data_type_combo.itemData(index)
-            desc: str = self.obj_of_cls.dct_of_data_type[key]
-            self.obj_of_cls.lst_of_data_type = [key, desc]
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
-    def _get_get_type(self, index: int):
-        """取得方法を取得します"""
-        try:
-            key: str = self.get_type_combo.itemData(index)
-            desc: str = self.obj_of_cls.dct_of_get_type[key]
-            self.obj_of_cls.lst_of_get_type = [key, desc]
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
-    def _get_match_type(self, index: int):
-        """検索方法を取得します"""
-        try:
-            key: str = self.match_type_combo.itemData(index)
-            desc: str = self.obj_of_cls.dct_of_match_type[key]
-            self.obj_of_cls.lst_of_match_type = [key, desc]
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
-    def _get_logic_type(self, index: int):
-        """抽出方法を取得します"""
-        try:
-            key: str = self.logic_type_combo.itemData(index)
-            desc: str = self.obj_of_cls.dct_of_logic_type[key]
-            self.obj_of_cls.lst_of_logic_type = [key, desc]
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
-    def _get_keyword(self):
-        """キーワードを取得します"""
-        try:
-            self.obj_of_cls.lst_of_keyword = [line.strip() for line in self.keyword_text.toPlainText().splitlines() if line.strip()]
-        except Exception:
-            raise
-        else:
-            pass
-        finally:
-            pass
-
     def _clear_widget(self, widget: QWidget) -> bool:
         """ウィジェットやQScrollAreaの中身を安全に削除します"""
         result: bool = False
@@ -441,6 +365,80 @@ class MainApp_Of_G2S(QMainWindow):
         finally:
             pass
         return result
+
+    def get_app_id(self):
+        """アプリケーションIDを取得します"""
+        try:
+            self.obj_of_cls.APP_ID = self.app_id_text.text().strip()
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def get_data_type(self, index: int):
+        """データタイプを取得します"""
+        try:
+            key: str = self.data_type_combo.itemData(index)
+            desc: str = self.obj_of_cls.dct_of_data_type[key]
+            self.obj_of_cls.lst_of_data_type = [key, desc]
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def get_get_type(self, index: int):
+        """取得方法を取得します"""
+        try:
+            key: str = self.get_type_combo.itemData(index)
+            desc: str = self.obj_of_cls.dct_of_get_type[key]
+            self.obj_of_cls.lst_of_get_type = [key, desc]
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def get_match_type(self, index: int):
+        """検索方法を取得します"""
+        try:
+            key: str = self.match_type_combo.itemData(index)
+            desc: str = self.obj_of_cls.dct_of_match_type[key]
+            self.obj_of_cls.lst_of_match_type = [key, desc]
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def get_logic_type(self, index: int):
+        """抽出方法を取得します"""
+        try:
+            key: str = self.logic_type_combo.itemData(index)
+            desc: str = self.obj_of_cls.dct_of_logic_type[key]
+            self.obj_of_cls.lst_of_logic_type = [key, desc]
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def get_keyword(self):
+        """キーワードを取得します"""
+        try:
+            self.obj_of_cls.lst_of_keyword = [line.strip() for line in self.keyword_text.toPlainText().splitlines() if line.strip()]
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
 
     def get_lst_of_ids(self) -> bool:
         """統計表IDの一覧を取得します"""
