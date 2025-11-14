@@ -158,6 +158,7 @@ class MainApp_Of_PT(QMainWindow):
             # パスワード入力
             self.password_input: QLineEdit = QLineEdit()
             self.password_input.setPlaceholderText("パスワード（英数字/アンダーバー/ハイフン）")
+            self.password_input.editingFinished.connect(self.get_password)
             left_container_layout.addWidget(QLabel("パスワード"))
             left_container_layout.addWidget(self.password_input)
             # 暗号化と復号化
@@ -354,14 +355,24 @@ class MainApp_Of_PT(QMainWindow):
             pass
         return result
 
+    def get_password(self):
+        """パスワードを取得します"""
+        try:
+            self.obj_of_cls.password = self.password_input.text()
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
     def encrypt_pdf(self) -> bool:
         """暗号化します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
-            if self.obj_of_cls.file_path == "" or pw == "":
+            if self.obj_of_cls.file_path == "" or self.obj_of_cls.password == "":
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            self.obj_of_cls.encrypt(pw)
+            self.obj_of_cls.encrypt(self.obj_of_cls.password)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -374,10 +385,9 @@ class MainApp_Of_PT(QMainWindow):
         """復号化します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path, pw = self.file_input.text(), self.password_input.text()
-            if self.obj_of_cls.file_path == "" or pw == "":
+            if self.obj_of_cls.file_path == "" or self.obj_of_cls.password == "":
                 raise Exception("PDFファイルを選択し、パスワードを入力してください。")
-            self.obj_of_cls.decrypt(pw)
+            self.obj_of_cls.decrypt(self.obj_of_cls.password)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -390,7 +400,6 @@ class MainApp_Of_PT(QMainWindow):
         """メタデータを表示します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
@@ -407,7 +416,6 @@ class MainApp_Of_PT(QMainWindow):
         """メタデータを書き込みます"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
@@ -451,7 +459,6 @@ class MainApp_Of_PT(QMainWindow):
         """ページを抽出します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
@@ -473,7 +480,6 @@ class MainApp_Of_PT(QMainWindow):
         """ページを削除します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
@@ -495,7 +501,6 @@ class MainApp_Of_PT(QMainWindow):
         """テキストを抽出します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
@@ -517,7 +522,6 @@ class MainApp_Of_PT(QMainWindow):
         """ページを回転します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path = self.file_input.text()
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()

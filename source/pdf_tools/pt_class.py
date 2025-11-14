@@ -27,6 +27,8 @@ class PdfTools:
         self.first_read: bool = True
         # 暗号化されているかどうか
         self.encrypted: bool = False
+        # 暗号化のパスワード
+        self.password: str = ""
         # pdfファイルの拡張子
         self.EXTENSION: str = ".pdf"
         # 日本時間
