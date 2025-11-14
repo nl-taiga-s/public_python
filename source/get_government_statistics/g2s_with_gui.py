@@ -115,12 +115,12 @@ class MainApp_Of_G2S(QMainWindow):
             # 左上
             self.top_left_scroll_area: QScrollArea = QScrollArea()
             self.top_left_scroll_area.setWidgetResizable(True)
-            self.top_layout.addWidget(self.top_left_scroll_area)
+            self.top_layout.addWidget(self.top_left_scroll_area, 1)
             self._setup_second_ui()
             # 右上
             top_right_scroll_area: QScrollArea = QScrollArea()
             top_right_scroll_area.setWidgetResizable(True)
-            self.top_layout.addWidget(top_right_scroll_area)
+            self.top_layout.addWidget(top_right_scroll_area, 1)
             top_right_container: QWidget = QWidget()
             self.top_right_container_layout: QVBoxLayout = QVBoxLayout(top_right_container)
             top_right_scroll_area.setWidget(top_right_container)
