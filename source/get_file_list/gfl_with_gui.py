@@ -113,10 +113,11 @@ class MainApp_Of_GFL(QMainWindow):
             select_folder_btn.clicked.connect(self.select_folder)
             self.recursive_checkbox: QCheckBox = QCheckBox("サブフォルダも含めて検索する（再帰的）")
             main_container_layout.addRow(self.recursive_checkbox)
-            self.recursive_checkbox.toggled.connect(self.check_recursive)
+            self.recursive_checkbox.toggled.connect(self.get_recursive)
             main_container_layout.addRow(QLabel("検索パターン:"))
             self.pattern_input: QLineEdit = QLineEdit()
             self.pattern_input.setPlaceholderText("検索パターンを入力...")
+            self.pattern_input.editingFinished.connect(self.get_pattern)
             main_container_layout.addRow(self.pattern_input)
             open_folder_btn: QPushButton = QPushButton("フォルダを開く")
             main_container_layout.addRow(open_folder_btn)
@@ -152,19 +153,28 @@ class MainApp_Of_GFL(QMainWindow):
             pass
         return result
 
-    def check_recursive(self) -> bool:
-        """再帰的かどうかを確認します"""
-        result: bool = False
+    def get_recursive(self):
+        """再帰的かどうかを取得します"""
         try:
             self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
             self.obj_of_cls.search_directly_under_folder()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
-            result = True
+            pass
         finally:
             pass
-        return result
+
+    def get_pattern(self):
+        """検索パターンを取得します"""
+        try:
+            self.obj_of_cls.pattern = self.pattern_input.text().strip()
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
 
     def open_explorer(self) -> bool:
         """エクスプローラーを開きます"""
@@ -193,7 +203,8 @@ class MainApp_Of_GFL(QMainWindow):
         try:
             if self.obj_of_cls.folder_path == "":
                 raise Exception("フォルダを選択してください。")
-            self.obj_of_cls.pattern = self.pattern_input.text().strip()
+            if self.obj_of_cls.pattern == "":
+                raise Exception("検索パターンを入力してください。")
             self.obj_of_cls.extract_by_pattern()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
