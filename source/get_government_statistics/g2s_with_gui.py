@@ -111,7 +111,7 @@ class MainApp_Of_G2S(QMainWindow):
             self.first_element_title_area.addWidget(QLabel("統計表ID"))
             self.first_element_title_area.addWidget(QLabel("ログ"))
             self.top_layout: QHBoxLayout = QHBoxLayout()
-            self.main_layout.addLayout(self.top_layout, 1)
+            self.main_layout.addLayout(self.top_layout, 2)
             # 左上
             self.top_left_scroll_area: QScrollArea = QScrollArea()
             self.top_left_scroll_area.setWidgetResizable(True)
@@ -133,15 +133,15 @@ class MainApp_Of_G2S(QMainWindow):
             self.second_element_title_area.addWidget(QLabel("統計表"))
             self.second_element_title_area.addWidget(QLabel("機能"))
             self.bottom_layout: QHBoxLayout = QHBoxLayout()
-            self.main_layout.addLayout(self.bottom_layout, 1)
+            self.main_layout.addLayout(self.bottom_layout, 3)
             # 統計表
             self.table_scroll_area: QScrollArea = QScrollArea()
             self.table_scroll_area.setWidgetResizable(True)
-            self.bottom_layout.addWidget(self.table_scroll_area)
+            self.bottom_layout.addWidget(self.table_scroll_area, 1)
             # 関数
             func_scroll_area: QScrollArea = QScrollArea()
             func_scroll_area.setWidgetResizable(True)
-            self.bottom_layout.addWidget(func_scroll_area)
+            self.bottom_layout.addWidget(func_scroll_area, 1)
             func_container: QWidget = QWidget()
             func_container_layout: QVBoxLayout = QVBoxLayout(func_container)
             func_scroll_area.setWidget(func_container)
