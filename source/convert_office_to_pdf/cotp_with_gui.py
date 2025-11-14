@@ -198,8 +198,6 @@ class MainApp_Of_COTP(QMainWindow):
         """ファイル一覧を表示します"""
         result: bool = False
         try:
-            if self.obj_of_cls.folder_path_from == "" or self.obj_of_cls.folder_path_to == "":
-                raise Exception("変換元と変換先のフォルダを選択してください。")
             self.obj_of_cls.create_file_lst()
             self.file_lst_widget.clear()
             for f in self.obj_of_cls.filtered_lst_of_f:
