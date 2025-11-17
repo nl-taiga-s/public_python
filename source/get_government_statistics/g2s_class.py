@@ -85,8 +85,6 @@ class GetGovernmentStatistics:
         self.TITLE: str = ""
         # dataframeの件数
         self.DATA_COUNT: int = 0
-        # アプリケーションIDの環境変数名
-        self.ENV_NAME_OF_APP_ID: str = "first_appid_of_estat"
         # 指定の統計表のデータフレーム
         self.df: DataFrame = None
         # 処理をキャンセルするかどうか
@@ -228,6 +226,10 @@ class GetGovernmentStatistics:
                     start += limit
         except asyncio.CancelledError:
             raise
+        except httpx.HTTPStatusError:
+            raise
+        except httpx.RequestError:
+            raise
         except Exception:
             raise
         else:
@@ -250,6 +252,10 @@ class GetGovernmentStatistics:
             # ループがない場合
             obj = self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
         except asyncio.CancelledError:
+            raise
+        except httpx.HTTPStatusError:
+            raise
+        except httpx.RequestError:
             raise
         except KeyboardInterrupt:
             raise
@@ -315,6 +321,10 @@ class GetGovernmentStatistics:
                 self._common_process_for_writing_stats_data_ids_to_file(file_index, buffer)
         except asyncio.CancelledError:
             self.cancel = True
+            raise
+        except httpx.HTTPStatusError:
+            raise
+        except httpx.RequestError:
             raise
         except Exception:
             raise

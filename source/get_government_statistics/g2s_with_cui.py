@@ -1,5 +1,4 @@
 import asyncio
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -146,20 +145,13 @@ async def main() -> bool:
     obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
-            if obj_of_cls.ENV_NAME_OF_APP_ID in os.environ:
-                obj_of_cls.APP_ID = os.environ.get(obj_of_cls.ENV_NAME_OF_APP_ID)
-            else:
-                obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
-                os.environ[obj_of_cls.ENV_NAME_OF_APP_ID] = obj_of_cls.APP_ID
+            obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
             obj_of_cls.lst_of_data_type = obj_with_cui._select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui._input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 # 取得方法は非同期のみ
                 obj_of_cls.lst_of_get_type = list(obj_of_cls.dct_of_get_type.items())[0]
                 # 統計表IDをテキストファイルに書き出す
-                result = obj_of_cls.write_stats_data_ids_to_file()
-                if isinstance(result, asyncio.Task):
-                    # 非同期の場合
-                    await result
+                await obj_of_cls.write_stats_data_ids_to_file()
             obj_of_cls.STATS_DATA_ID = obj_with_cui._input_stats_data_id()
             # 取得方法は同期のみ
             obj_of_cls.lst_of_get_type = list(obj_of_cls.dct_of_get_type.items())[1]

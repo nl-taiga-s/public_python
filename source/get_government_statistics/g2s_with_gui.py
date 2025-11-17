@@ -4,9 +4,11 @@ import logging
 import sys
 import threading
 from pathlib import Path
+from typing import Any
 
+import httpx
 import pandas
-from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QModelIndex, QObject, Signal
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QApplication,
@@ -28,6 +30,41 @@ from PySide6.QtWidgets import (
 
 from source.common.common import GUITools, LogTools, PathTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
+
+
+class GetIdsWorker(QObject):
+    """統計表IDの一覧を取得する処理の非同期ワーカー"""
+
+    finished: Signal = Signal(bool)
+    error: Signal = Signal(str)
+
+    def __init__(self, obj_of_cls: Any):
+        """初期化します"""
+        super().__init__()
+        self.obj_of_cls = obj_of_cls
+
+    def run(self):
+        """実行します"""
+        try:
+            asyncio.run(self.obj_of_cls.write_stats_data_ids_to_file())
+            if self.obj_of_cls.cancel:
+                self.finished.emit(False)
+            else:
+                self.finished.emit(True)
+        except httpx.HTTPStatusError as e:
+            self.error.emit(f"HTTPStatusError: \n{str(e)}")
+        except httpx.RequestError as e:
+            self.error.emit(f"RequestError: \n{str(e)}")
+        except Exception as e:
+            self.error.emit(f"Exception: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def cancel(self):
+        """キャンセルします"""
+        self.obj_of_cls.cancel = True
 
 
 # QTextEdit にログを流すためのハンドラ
@@ -442,26 +479,20 @@ class MainApp_Of_G2S(QMainWindow):
 
     def get_lst_of_ids(self) -> bool:
         """統計表IDの一覧を取得します"""
-
-        def _run_getting_ids_with_async() -> bool:
-            """バックグラウンドスレッドで非同期の処理をします"""
-            result: bool = False
-            try:
-                asyncio.run(self.obj_of_cls.write_stats_data_ids_to_file())
-            except Exception:
-                raise
-            else:
-                result = True
-            finally:
-                pass
-            return result
-
         result: bool = False
         try:
             self._check_first_form()
             # 取得方法は非同期のみ
             self.get_type_combo.setCurrentIndex(0)
-            threading.Thread(target=_run_getting_ids_with_async, daemon=True).start()
+            self.worker: GetIdsWorker = GetIdsWorker(self.obj_of_cls)
+            self.thread_of_worker = threading.Thread(target=self.worker.run, daemon=True)
+            self.worker.error.connect(lambda msg: self._show_error(msg))
+            self.worker.finished.connect(lambda ok: self._show_result(self.get_lst_of_ids.__doc__, ok))
+            self.thread_of_worker.start()
+        except httpx.HTTPStatusError as e:
+            self._show_error(f"error: \n{str(e)}")
+        except httpx.RequestError as e:
+            self._show_error(f"error: \n{str(e)}")
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -470,9 +501,10 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def cancel_getting_lst_of_ids(self) -> None:
+    def cancel_getting_lst_of_ids(self):
         """統計表IDの一覧の取得をキャンセルします"""
-        self.obj_of_cls.cancel = True
+        if hasattr(self, "worker") and self.worker is not None:
+            self.worker.cancel()
 
     def show_lst_of_ids(self) -> bool:
         """統計表IDの一覧を表示します"""
