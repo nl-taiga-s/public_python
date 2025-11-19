@@ -1,4 +1,3 @@
-import glob
 from logging import Logger
 from pathlib import Path
 
@@ -30,14 +29,13 @@ class GetFileList:
         self.lst_file_before = []
         self.num_of_f_before = 0
         try:
-            RECURSIVE: str = "**" if self.recursive else "*"
-            search_folder_p: Path = Path(self.folder_path) / RECURSIVE
-            search_folder_s: str = str(search_folder_p)
             self.log.info(f"起点のフォルダパス: {self.folder_path}")
             self.log.info(f"再帰的に検索: {"する" if self.recursive else "しない"}")
-            for f in glob.glob(search_folder_s, recursive=self.recursive):
-                if Path(f).is_file():
-                    self.lst_file_before.append(f)
+            search_folder_p: Path = Path(self.folder_path)
+            RECURSIVE: str = "**/*" if self.recursive else "*"
+            for f in search_folder_p.glob(RECURSIVE):
+                if f.is_file():
+                    self.lst_file_before.append(str(f))
             if not self.lst_file_before:
                 raise Exception("フォルダにファイルがありませんでした。")
             self.num_of_f_before = len(self.lst_file_before)
