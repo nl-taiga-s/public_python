@@ -1,4 +1,3 @@
-import glob
 from logging import Logger
 from pathlib import Path
 
@@ -50,18 +49,11 @@ class ConvertOfficeToPDF:
     def create_file_lst(self) -> bool:
         """ファイルリストを作成します"""
         result: bool = False
-        # 初期化する
-        self.filtered_lst_of_f = []
-        self.number_of_f = 0
         try:
-            search_folder_p: Path = Path(self.folder_path_from) / "*"
-            search_folder_s: str = str(search_folder_p)
-            # フィルター前のファイルのリスト
-            unfiltered_lst_of_f: list = glob.glob(search_folder_s)
-            for f in unfiltered_lst_of_f:
-                file_p: Path = Path(f)
-                if file_p.suffix.lower() in self.valid_exts:
-                    self.filtered_lst_of_f.append(f)
+            search_folder_p: Path = Path(self.folder_path_from)
+            for f in search_folder_p.glob("*"):
+                if f.suffix.lower() in self.valid_exts:
+                    self.filtered_lst_of_f.append(str(f))
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
