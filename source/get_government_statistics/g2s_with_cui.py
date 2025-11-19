@@ -23,7 +23,7 @@ class GS_With_Cui:
                 app_id: str = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
                 if app_id == "":
                     raise Exception("アプリケーションIDが未入力です。")
-                if not re.fullmatch(r"[a-z0-9]", app_id):
+                if not re.fullmatch(r"[a-z0-9]+", app_id):
                     raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
             except KeyboardInterrupt:
                 raise

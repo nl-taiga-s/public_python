@@ -408,7 +408,7 @@ class MainApp_Of_G2S(QMainWindow):
         """アプリケーションIDを取得します"""
         try:
             self.obj_of_cls.APP_ID = self.app_id_text.text().strip()
-            if not re.fullmatch(r"[a-z0-9]", self.obj_of_cls.APP_ID):
+            if not re.fullmatch(r"[a-z0-9]+", self.obj_of_cls.APP_ID):
                 raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
