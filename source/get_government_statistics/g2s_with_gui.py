@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import logging
+import re
 import sys
 import threading
 from pathlib import Path
@@ -407,6 +408,8 @@ class MainApp_Of_G2S(QMainWindow):
         """アプリケーションIDを取得します"""
         try:
             self.obj_of_cls.APP_ID = self.app_id_text.text().strip()
+            if not re.fullmatch(r"[a-z0-9]", self.obj_of_cls.APP_ID):
+                raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -489,10 +492,6 @@ class MainApp_Of_G2S(QMainWindow):
             self.worker.error.connect(lambda msg: self._show_error(msg))
             self.worker.finished.connect(lambda ok: self._show_result(self.get_lst_of_ids.__doc__, ok))
             self.thread_of_worker.start()
-        except httpx.HTTPStatusError as e:
-            self._show_error(f"error: \n{str(e)}")
-        except httpx.RequestError as e:
-            self._show_error(f"error: \n{str(e)}")
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:

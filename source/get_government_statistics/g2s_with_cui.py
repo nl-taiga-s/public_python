@@ -1,4 +1,5 @@
 import asyncio
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,25 @@ class GS_With_Cui:
             "yes": ["はい", "1", "Yes", "yes", "Y", "y"],
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
+
+    def _input_app_id(self) -> str:
+        """アプリケーションIDを入力します"""
+        while True:
+            try:
+                app_id: str = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
+                if app_id == "":
+                    raise Exception("アプリケーションIDが未入力です。")
+                if not re.fullmatch(r"[a-z0-9]", app_id):
+                    raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
+            except KeyboardInterrupt:
+                raise
+            except Exception:
+                raise
+            else:
+                break
+            finally:
+                pass
+        return app_id
 
     def _select_element(self, elements: Any) -> list:
         """要素を選択します"""
@@ -145,7 +165,7 @@ async def main() -> bool:
     obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(obj_of_lt.logger)
     while True:
         try:
-            obj_of_cls.APP_ID = input("政府統計のAPIのアプリケーションIDを取得して、入力してください。https://www.e-stat.go.jp/: ").strip()
+            obj_of_cls.APP_ID = obj_with_cui._input_app_id()
             obj_of_cls.lst_of_data_type = obj_with_cui._select_element(obj_of_cls.dct_of_data_type)
             if obj_with_cui._input_bool(f"{obj_of_cls.write_stats_data_ids_to_file.__doc__} => 行いますか？"):
                 # 取得方法は非同期のみ
