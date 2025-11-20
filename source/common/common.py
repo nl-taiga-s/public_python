@@ -146,10 +146,8 @@ class PathTools:
         """ログファイルのパスを取得します"""
         file_p: Optional[Path] = None
         try:
-            # 実行するファイルのディレクトリ
-            folder_of_exe_p: Path = base_path.parent
             # ログフォルダのパス
-            folder_of_log_p: Path = folder_of_exe_p / "__log__"
+            folder_of_log_p: Path = base_path.parent / "__log__"
             # ログフォルダが存在しない場合は作成します
             folder_of_log_p.mkdir(parents=True, exist_ok=True)
             # ログファイル名
