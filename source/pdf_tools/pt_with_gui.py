@@ -2,7 +2,6 @@ import logging
 import shutil
 import sys
 from pathlib import Path
-from typing import Any
 
 import pypdfium2
 from PySide6.QtCore import Qt
@@ -249,14 +248,13 @@ class MainApp_Of_PT(QMainWindow):
         """ビューワーに表示するファイルの各ページの画像を取得します"""
         output_files: list = []
         try:
-            file_p: Path = Path(file_path)
-            file_name_s = file_p.stem
             self.output_dir = Path(__file__).parent / "__images__"
             self.output_dir.mkdir(parents=True, exist_ok=True)
-            pdf = pypdfium2.PdfDocument(file_path)
+            pdf: pypdfium2.PdfDocument = pypdfium2.PdfDocument(file_path)
+            file_name_s: str = Path(file_path).stem
             for i, page in enumerate(pdf):
-                pil_image: Any = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
-                output_file = self.output_dir / f"{file_name_s}_{i + 1}.png"
+                pil_image: pypdfium2.PdfBitmap = page.render(scale=1, rotation=0, crop=(0, 0, 0, 0)).to_pil()
+                output_file: Path = self.output_dir / f"{file_name_s}_{i + 1}.png"
                 pil_image.save(output_file)
                 output_files.append(str(output_file))
         except Exception:

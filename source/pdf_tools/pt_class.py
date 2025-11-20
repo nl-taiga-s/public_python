@@ -158,10 +158,7 @@ class PdfTools:
             file_path_of_tmp: str = self.file_path
             # 暗号化されたファイルのリスト
             is_encrypted_lst: list = []
-            first_file_p: Path = Path(pdfs[0])
-            folder_p: Path = first_file_p.parent
-            dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_p: Path = folder_p / f"merged_file_{dt}.pdf"
+            file_p: Path = Path(pdfs[0]).parent / f"merged_file_{self.obj_of_dt2._convert_for_file_name()}.pdf"
             file_s: str = str(file_p)
             self.writer = PdfWriter()
             for pdf in pdfs:
@@ -211,10 +208,7 @@ class PdfTools:
             for i in range(self.num_of_pages):
                 if b <= i and i <= e:
                     self.writer.add_page(self.reader.pages[i])
-            file_of_exe_p: Path = Path(self.file_path)
-            folder_p: Path = file_of_exe_p.parent
-            dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_p: Path = folder_p / f"edited_file_{dt}.pdf"
+            file_p: Path = Path(self.file_path).parent / f"edited_file_{self.obj_of_dt2._convert_for_file_name()}.pdf"
             file_s: str = str(file_p)
             with open(file_s, "wb") as f:
                 self.writer.write(f)
@@ -255,10 +249,7 @@ class PdfTools:
                 if b <= i and i <= e:
                     continue
                 self.writer.add_page(self.reader.pages[i])
-            file_of_exe_p: Path = Path(self.file_path)
-            folder_p: Path = file_of_exe_p.parent
-            dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_p: Path = folder_p / f"edited_file_{dt}.pdf"
+            file_p: Path = Path(self.file_path).parent / f"edited_file_{self.obj_of_dt2._convert_for_file_name()}.pdf"
             file_s: str = str(file_p)
             with open(file_s, "wb") as f:
                 self.writer.write(f)
