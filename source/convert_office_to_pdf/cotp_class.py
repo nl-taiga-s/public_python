@@ -46,14 +46,27 @@ class ConvertOfficeToPDF:
         # すべてのファイルを変換できたかどうか
         self.complete: bool = False
 
+    def _set_file_path(self) -> bool:
+        """ファイルパスを設定します"""
+        result: bool = False
+        try:
+            self.current_file_path_from = self.filtered_lst_of_f[self.p]
+            current_file_from_p: Path = Path(self.current_file_path_from)
+            current_file_to_p: Path = Path(self.folder_path_to) / f"{current_file_from_p.stem}.pdf"
+            self.current_file_path_to = str(current_file_to_p)
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
     def create_file_lst(self) -> bool:
         """ファイルリストを作成します"""
         result: bool = False
         try:
-            search_folder_p: Path = Path(self.folder_path_from)
-            for f in search_folder_p.glob("*"):
-                if f.suffix.lower() in self.valid_exts:
-                    self.filtered_lst_of_f.append(str(f))
+            self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
@@ -65,23 +78,6 @@ class ConvertOfficeToPDF:
             self.log.info(f"***{self.create_file_lst.__doc__} => 成功しました。***")
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
             self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
-        finally:
-            pass
-        return result
-
-    def _set_file_path(self) -> bool:
-        """ファイルパスを設定します"""
-        result: bool = False
-        try:
-            self.current_file_path_from = self.filtered_lst_of_f[self.p]
-            current_file_from_p: Path = Path(self.current_file_path_from)
-            file_name_no_ext: str = current_file_from_p.stem
-            current_file_to_p: Path = Path(self.folder_path_to) / (file_name_no_ext + ".pdf")
-            self.current_file_path_to = str(current_file_to_p)
-        except Exception:
-            raise
-        else:
-            result = True
         finally:
             pass
         return result
@@ -200,8 +196,7 @@ class ConvertOfficeToPDF:
 
         result: bool = False
         try:
-            current_file_from_p: Path = Path(self.current_file_path_from)
-            ext: str = current_file_from_p.suffix.lower()
+            ext: str = Path(self.current_file_path_from).suffix.lower()
             match ext:
                 case var if var in self.file_types["excel"]:
                     result = _with_excel()
