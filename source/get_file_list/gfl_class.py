@@ -25,17 +25,11 @@ class GetFileList:
     def search_directly_under_folder(self) -> bool:
         """フォルダ直下を検索します"""
         result: bool = False
-        # 初期化する
-        self.lst_file_before = []
-        self.num_of_f_before = 0
         try:
             self.log.info(f"起点のフォルダパス: {self.folder_path}")
             self.log.info(f"再帰的に検索: {"する" if self.recursive else "しない"}")
-            search_folder_p: Path = Path(self.folder_path)
             RECURSIVE: str = "**/*" if self.recursive else "*"
-            for f in search_folder_p.glob(RECURSIVE):
-                if f.is_file():
-                    self.lst_file_before.append(str(f))
+            self.lst_file_before = [str(f) for f in Path(self.folder_path).glob(RECURSIVE) if f.is_file()]
             if not self.lst_file_before:
                 raise Exception("フォルダにファイルがありませんでした。")
             self.num_of_f_before = len(self.lst_file_before)
@@ -53,9 +47,6 @@ class GetFileList:
     def extract_by_pattern(self) -> bool:
         """検索パターンで抽出します"""
         result: bool = False
-        # 初期化する
-        self.lst_file_after = []
-        self.num_of_f_after = 0
         try:
             self.log.info(f"検索パターン: {self.pattern if self.pattern else "なし"}")
             self.lst_file_after = [f for f in self.lst_file_before if self.pattern in f]
