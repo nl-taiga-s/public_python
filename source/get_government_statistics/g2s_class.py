@@ -632,8 +632,7 @@ class GetGovernmentStatistics:
         result: bool = False
         try:
             self.folder_p_of_table.mkdir(parents=True, exist_ok=True)
-            dt: str = self.obj_of_dt2._convert_for_file_name()
-            file_p_of_table: Path = self.folder_p_of_table / f"stats_table_{self.STATS_DATA_ID}_{dt}.csv"
+            file_p_of_table: Path = self.folder_p_of_table / f"stats_table_{self.STATS_DATA_ID}_{self.obj_of_dt2._convert_for_file_name()}.csv"
             file_s_of_table: str = str(file_p_of_table)
             self.df.to_csv(file_s_of_table, index=False, encoding="utf-8")
         except Exception:

@@ -374,7 +374,7 @@ class MainApp_Of_G2S(QMainWindow):
         return result
 
     def _clear_widget(self, widget: QWidget) -> bool:
-        """ウィジェットやQScrollAreaの中身を安全に削除します"""
+        """ウィジェットの中身を安全に削除します"""
         result: bool = False
         try:
             if widget is None:
