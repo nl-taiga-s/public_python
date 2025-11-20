@@ -1,4 +1,5 @@
 import logging
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -356,7 +357,10 @@ class MainApp_Of_PT(QMainWindow):
     def get_password(self):
         """パスワードを取得します"""
         try:
-            self.obj_of_cls.password = self.password_input.text()
+            tmp: str = self.password_input.text().strip()
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", tmp):
+                raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
+            self.obj_of_cls.password = tmp
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
