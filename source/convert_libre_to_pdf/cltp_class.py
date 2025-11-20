@@ -54,10 +54,7 @@ class ConvertLibreToPDF:
         """ファイルリストを作成します"""
         result: bool = False
         try:
-            search_folder_p: Path = Path(self.folder_path_from)
-            for f in search_folder_p.glob("*"):
-                if f.suffix.lower() in self.valid_exts:
-                    self.filtered_lst_of_f.append(str(f))
+            self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
@@ -113,8 +110,7 @@ class ConvertLibreToPDF:
         try:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => PDF")
-            current_file_from_p: Path = Path(self.current_file_path_from)
-            ext: str = current_file_from_p.suffix.lower()
+            ext: str = Path(self.current_file_path_from).suffix.lower()
             if ext in self.valid_exts:
                 convert_obj: CompletedProcess = subprocess.run(
                     ["soffice", "--headless", "--convert-to", "pdf", "--outdir", self.folder_path_to, self.current_file_path_from],
