@@ -1,7 +1,6 @@
 import subprocess
 from logging import Logger
 from pathlib import Path
-from subprocess import CompletedProcess
 
 
 class ConvertLibreToPDF:
@@ -112,7 +111,7 @@ class ConvertLibreToPDF:
             self.log.info(f"{self.current_file_path_from} => PDF")
             ext: str = Path(self.current_file_path_from).suffix.lower()
             if ext in self.valid_exts:
-                convert_obj: CompletedProcess = subprocess.run(
+                convert_obj: subprocess.CompletedProcess = subprocess.run(
                     ["soffice", "--headless", "--convert-to", "pdf", "--outdir", self.folder_path_to, self.current_file_path_from],
                     capture_output=True,
                     text=True,
