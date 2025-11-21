@@ -3,10 +3,8 @@ import logging
 import platform
 import sys
 from logging import FileHandler, Formatter, Logger, StreamHandler
-from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 
@@ -63,23 +61,6 @@ class LogTools:
         return result
 
 
-class QtSafeLogger(QObject):
-    sig_info = Signal(str)
-    sig_error = Signal(str)
-
-    def __init__(self, base_logger: logging.Logger):
-        super().__init__()
-        self.logger: Logger = base_logger
-
-    def _info(self, msg: str):
-        self.logger.info(msg)
-        self.sig_info.emit(msg)
-
-    def _error(self, msg: str):
-        self.logger.error(msg)
-        self.sig_error.emit(msg)
-
-
 class PlatformTools:
     def __init__(self):
         """初期化します"""
@@ -131,34 +112,6 @@ class DatetimeTools:
             dt = self.dt
         # datetime型 => str型
         return dt.strftime(f"D\072%Y%m%d%H%M%S{utc}")
-
-
-class PathTools:
-    """
-    * `Path()`は、引数に相対パスもしくは絶対パスの文字列を指定して、その環境に合わせた`Path`オブジェクトを作成します。
-    """
-
-    def __init__(self):
-        """初期化します"""
-        self.obj_of_dt2: DatetimeTools = DatetimeTools()
-
-    def _get_file_path_of_log(self, base_path: Path) -> Path:
-        """ログファイルのパスを取得します"""
-        file_p: Optional[Path] = None
-        try:
-            # ログフォルダのパス
-            folder_of_log_p: Path = base_path.parent / "__log__"
-            # ログフォルダが存在しない場合は作成します
-            folder_of_log_p.mkdir(parents=True, exist_ok=True)
-            # ログファイル名
-            file_name_of_log = f"log_{self.obj_of_dt2._convert_for_file_name()}.log"
-        except Exception:
-            raise
-        else:
-            file_p = folder_of_log_p / file_name_of_log
-        finally:
-            pass
-        return file_p
 
 
 class GUITools:
