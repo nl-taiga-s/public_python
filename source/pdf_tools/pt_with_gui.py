@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import DatetimeTools, GUITools, LogTools, PathTools
+from source.common.common import DatetimeTools, GUITools, LogTools
 from source.pdf_tools.pt_class import PdfTools
 
 
@@ -45,7 +45,6 @@ class MainApp_Of_PT(QMainWindow):
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: PdfTools = PdfTools(self.obj_of_lt.logger)
         self._setup_first_ui()
-        self.obj_of_pt: PathTools = PathTools()
         self.obj_of_dt2: DatetimeTools = DatetimeTools()
         self._setup_log()
 
@@ -87,8 +86,14 @@ class MainApp_Of_PT(QMainWindow):
         try:
             # exe化されている場合とそれ以外を切り分ける
             exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-            file_of_log_p: Path = self.obj_of_pt._get_file_path_of_log(exe_path)
-            self.obj_of_lt.file_path_of_log = str(file_of_log_p)
+            # ログフォルダのパス
+            folder_p: Path = exe_path.parent / "__log__"
+            # ログフォルダが存在しない場合は、作成します
+            folder_p.mkdir(parents=True, exist_ok=True)
+            # ログファイル名
+            file_name: str = f"log_{self.obj_of_dt2._convert_for_file_name()}.log"
+            file_p: Path = folder_p / file_name
+            self.obj_of_lt.file_path_of_log = str(file_p)
             self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
@@ -281,16 +286,16 @@ class MainApp_Of_PT(QMainWindow):
             for i, element in enumerate(images):
                 # 垂直レイアウトを用意する
                 page_layout: QVBoxLayout = QVBoxLayout()
-                page_layout.setAlignment(Qt.AlignCenter)
+                page_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 page_widget: QWidget = QWidget()
                 page_widget.setLayout(page_layout)
                 # ページ番号のラベル
                 page_num_label: QLabel = QLabel(f"page: {i + 1}\n")
-                page_num_label.setAlignment(Qt.AlignCenter)
+                page_num_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 page_layout.addWidget(page_num_label)
                 # 画像のラベル
                 image_label: QLabel = QLabel()
-                pixmap: QPixmap = QPixmap(element).scaledToWidth(300, Qt.SmoothTransformation)
+                pixmap: QPixmap = QPixmap(element).scaledToWidth(300, Qt.TransformationMode.SmoothTransformation)
                 image_label.setPixmap(pixmap)
                 image_label.setScaledContents(True)
                 image_label.setFixedSize(pixmap.size())

@@ -218,7 +218,7 @@ class PdfTools:
             self._add_creation_date_in_metadata()
             # 退避させたファイルパスを読み込む
             self.read_file(file_path_of_tmp)
-        except Exception as e:
+        except Exception:
             raise
         else:
             result = True
@@ -259,7 +259,7 @@ class PdfTools:
             self._add_creation_date_in_metadata()
             # 退避させたファイルパスを読み込む
             self.read_file(file_path_of_tmp)
-        except Exception as e:
+        except Exception:
             raise
         else:
             result = True
@@ -286,7 +286,7 @@ class PdfTools:
                 if b <= i and i <= e:
                     lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
             self.log.info("\n".join(lst_of_text_in_pages))
-        except Exception as e:
+        except Exception:
             raise
         else:
             result = True

@@ -3,8 +3,36 @@ import sys
 from enum import Enum
 from pathlib import Path
 
-from source.common.common import DatetimeTools, LogTools, PathTools
+from source.common.common import DatetimeTools, LogTools
 from source.pdf_tools.pt_class import PdfTools
+
+
+class MENU(Enum):
+    encrypt_file = "ファイルを暗号化します"
+    decrypt_file = "ファイルを復号化します"
+    print_metadata = "メタデータを出力します"
+    write_metadata = "メタデータを書き込みます"
+    merge_files = "ファイルをマージします"
+    extract_pages = "ページを抽出します"
+    delete_pages = "ページを削除します"
+    extract_text = "テキストを抽出します"
+    rotate_page = "ページを時計回りで回転します"
+
+    @classmethod
+    def by_index(cls, index: int):
+        # インデックスで指定したクラスメンバーを返す
+        return list(cls)[index]
+
+
+class DEGREES(Enum):
+    ninety = 90
+    one_hundred_eighty = 180
+    two_hundred_seventy = 270
+
+    @classmethod
+    def by_index(cls, index: int):
+        # インデックスで指定したクラスメンバーを返す
+        return list(cls)[index]
 
 
 class PT_With_Cui:
@@ -15,25 +43,10 @@ class PT_With_Cui:
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
         self.obj_of_dt2: DatetimeTools = DatetimeTools()
-        self.MENU: Enum = Enum(
-            "MENU",
-            [
-                "ファイルを暗号化します",
-                "ファイルを復号化します",
-                "メタデータを出力します",
-                "メタデータを書き込みます",
-                "ファイルをマージします",
-                "ページを抽出します",
-                "ページを削除します",
-                "テキストを抽出します",
-                "ページを時計回りで回転します",
-            ],
-        )
-        self.DEGREES: Enum = Enum("DEGREES", ["90", "180", "270"])
 
     def _select_menu(self) -> str:
         """メニューを選択します"""
-        menu: list = [f"({m.value}) {m.name}" for m in self.MENU]
+        menu: list = [f"({index}) {m.value}" for index, m in enumerate(MENU, start=1)]
         while True:
             try:
                 print(*menu, sep="\n")
@@ -43,7 +56,7 @@ class PT_With_Cui:
                 if not choice.isdecimal():
                     raise Exception("数字を入力してください。")
                 num: int = int(choice)
-                if 1 > num or num > len(self.MENU):
+                if 1 > num or num > len(menu):
                     raise Exception("入力した番号が範囲外です。")
             except KeyboardInterrupt:
                 raise
@@ -53,7 +66,7 @@ class PT_With_Cui:
                 break
             finally:
                 pass
-        return self.MENU(num)
+        return MENU.by_index(num - 1).name
 
     def _input_file_path(self, ext: str) -> str:
         """ファイルパスを入力します。"""
@@ -195,17 +208,17 @@ class PT_With_Cui:
 
     def _input_degrees(self) -> int:
         """回転する度数を入力します"""
-        degrees: list = [f"({d.value}) {d.name}" for d in self.DEGREES]
+        degrees: list = [f"({index}) {d.value}" for index, d in enumerate(DEGREES, start=1)]
         while True:
             try:
                 print(*degrees, sep="\n")
-                num: str = input("度数の番号を入力してください。: ").strip()
-                if num == "":
+                choice: str = input("度数の番号を入力してください。: ").strip()
+                if choice == "":
                     raise Exception("未入力です。")
-                if not num.isdecimal():
+                if not choice.isdecimal():
                     raise Exception("数字を入力してください。")
-                n = int(num)
-                if 1 > n or n > len(self.DEGREES):
+                num = int(choice)
+                if 1 > num or num > len(degrees):
                     raise Exception("入力した番号が範囲外です。")
             except KeyboardInterrupt:
                 raise
@@ -215,7 +228,7 @@ class PT_With_Cui:
                 break
             finally:
                 pass
-        return int(self.DEGREES(n).name)
+        return DEGREES.by_index(num - 1).value
 
     def _input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
@@ -246,11 +259,16 @@ def main() -> bool:
     result: bool = False
     # ログを設定します
     try:
-        obj_of_pt: PathTools = PathTools()
+        obj_of_dt2: DatetimeTools = DatetimeTools()
         obj_of_lt: LogTools = LogTools()
-        file_of_exe_p: Path = Path(__file__)
-        file_of_log_p: Path = obj_of_pt._get_file_path_of_log(file_of_exe_p)
-        obj_of_lt.file_path_of_log = str(file_of_log_p)
+        # ログフォルダのパス
+        folder_p: Path = Path(__file__).parent / "__log__"
+        # ログフォルダが存在しない場合は、作成します
+        folder_p.mkdir(parents=True, exist_ok=True)
+        # ログファイル名
+        file_name: str = f"log_{obj_of_dt2._convert_for_file_name()}.log"
+        file_p: Path = folder_p / file_name
+        obj_of_lt.file_path_of_log = str(file_p)
         obj_of_lt._setup_file_handler(obj_of_lt.file_path_of_log)
         obj_of_lt._setup_stream_handler()
     except Exception as e:
@@ -269,50 +287,50 @@ def main() -> bool:
             # メニューを選択します
             option: str = obj_with_cui._select_menu()
             match option:
-                case var if var == obj_with_cui.MENU.ファイルを暗号化します:
+                case var if var == MENU.encrypt_file.name:
                     # ファイルを暗号化します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     pw: str = obj_with_cui._input_password("暗号化")
                     obj_of_cls.encrypt(pw)
-                case var if var == obj_with_cui.MENU.ファイルを復号化します:
+                case var if var == MENU.decrypt_file.name:
                     # ファイルを復号化します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     pw: str = obj_with_cui._input_password("復号化")
                     obj_of_cls.decrypt(pw)
-                case var if var == obj_with_cui.MENU.メタデータを出力します:
+                case var if var == MENU.print_metadata.name:
                     # メタデータを出力します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
                     obj_of_cls.get_metadata()
-                case var if var == obj_with_cui.MENU.メタデータを書き込みます:
+                case var if var == MENU.write_metadata.name:
                     # メタデータを書き込みます
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
                     obj_of_cls.metadata_of_writer = obj_with_cui._input_writing_metadata(obj_of_cls)
                     obj_of_cls.write_metadata(obj_of_cls.metadata_of_writer)
-                case var if var == obj_with_cui.MENU.ファイルをマージします:
+                case var if var == MENU.merge_files.name:
                     # ファイルをマージします
                     pdfs: list = obj_with_cui._input_lst_of_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.merge(pdfs)
-                case var if var == obj_with_cui.MENU.ページを抽出します:
+                case var if var == MENU.extract_pages.name:
                     # ページを抽出します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
                     begin_page, end_page = obj_with_cui._input_pages_range(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_pages(begin_page, end_page)
-                case var if var == obj_with_cui.MENU.ページを削除します:
+                case var if var == MENU.delete_pages.name:
                     # ページを削除します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
                     begin_page, end_page = obj_with_cui._input_pages_range(obj_of_cls.num_of_pages)
                     obj_of_cls.delete_pages(begin_page, end_page)
-                case var if var == obj_with_cui.MENU.テキストを抽出します:
+                case var if var == MENU.extract_text.name:
                     # テキストを抽出します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
                     begin_page, end_page = obj_with_cui._input_pages_range(obj_of_cls.num_of_pages)
                     obj_of_cls.extract_text(begin_page, end_page)
-                case var if var == obj_with_cui.MENU.ページを時計回りで回転します:
+                case var if var == MENU.rotate_page.name:
                     # ページを時計回りで回転します
                     obj_of_cls.file_path = obj_with_cui._input_file_path(obj_of_cls.EXTENSION)
                     obj_of_cls.read_file()
