@@ -1,19 +1,17 @@
 import asyncio
+import csv
+import io
 import json
 import shutil
 import sys
-import xml.etree.ElementTree as et
-from csv import DictReader
-from io import StringIO
 from logging import Logger
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Optional, Union
-from xml.etree.ElementTree import Element
+from typing import Any, AsyncGenerator
+from xml.etree import ElementTree
 
 import clipboard
 import httpx
-import pandas as pd
-from httpx import Client, Response
+import pandas
 from pandas import DataFrame
 from tabulate import tabulate
 
@@ -100,17 +98,17 @@ class GetGovernmentStatistics:
         self.folder_s_of_table: str = str(self.folder_p_of_table)
         self.log.info(f"指定の統計表を格納するフォルダ => {self.folder_s_of_table}")
 
-    def _parser_xml(self, res: Response) -> tuple[dict, int]:
+    def _parser_xml(self, res: httpx.Response) -> tuple[dict, int]:
         """XMLのデータを解析します(同期版と非同期版で共通)"""
         page_dct: dict = {}
         try:
-            root: Element[str] = et.fromstring(res.text)
-            table_lst: list[Element[str]] = root.findall(".//TABLE_INF")
+            root: ElementTree.Element[str] = ElementTree.fromstring(res.text)
+            table_lst: list[ElementTree.Element[str]] = root.findall(".//TABLE_INF")
             for t in table_lst:
                 stat_id: str = (t.attrib.get("id", "") or "") if t is not None else ""
-                element_of_stat_name: Optional[Element] = t.find("STAT_NAME")
+                element_of_stat_name: ElementTree.Element | None = t.find("STAT_NAME")
                 stat_name: str = (element_of_stat_name.text or "") if element_of_stat_name is not None else ""
-                element_of_title: Optional[Element] = t.find("TITLE")
+                element_of_title: ElementTree.Element | None = t.find("TITLE")
                 title: str = (element_of_title.text or "") if element_of_title is not None else ""
                 page_dct[stat_id] = {"stat_name": stat_name, "title": title}
         except asyncio.CancelledError:
@@ -127,7 +125,7 @@ class GetGovernmentStatistics:
             pass
         return page_dct, len(table_lst)
 
-    def _parser_json(self, res: Response) -> tuple[dict, int]:
+    def _parser_json(self, res: httpx.Response) -> tuple[dict, int]:
         """JSONのデータを解析します(同期版と非同期版で共通)"""
         page_dct: dict = {}
         try:
@@ -156,7 +154,7 @@ class GetGovernmentStatistics:
             pass
         return page_dct, len(table_lst)
 
-    def _parser_csv(self, res: Response) -> tuple[dict, int]:
+    def _parser_csv(self, res: httpx.Response) -> tuple[dict, int]:
         """CSVのデータを解析します(同期版と非同期版で共通)"""
         page_dct: dict = {}
         row_count: int = 0
@@ -172,7 +170,7 @@ class GetGovernmentStatistics:
             if start_idx == 0:
                 raise Exception("CSVファイルにヘッダー行が見つかりません。")
             csv_text: str = "\n".join(lines[start_idx:])
-            reader: DictReader[str] = DictReader(StringIO(csv_text))
+            reader: csv.DictReader[str] = csv.DictReader(io.StringIO(csv_text))
             for row in reader:
                 row_count += 1
                 stat_id: str = row.get("TABLE_INF", "")
@@ -193,15 +191,21 @@ class GetGovernmentStatistics:
             pass
         return page_dct, row_count
 
-    async def _get_stats_data_ids_with_async(self, dct_of_ids_url: dict) -> AsyncGenerator[Dict[str, dict], None]:
+    async def _get_stats_data_ids_with_async(self) -> AsyncGenerator[dict, None]:
         """ページを取得します(非同期版)"""
         try:
-            data_type: str = self.lst_of_data_type[self.KEY]
             parser_map: dict = {
                 "xml": self._parser_xml,
                 "json": self._parser_json,
                 "csv": self._parser_csv,
             }
+            # 統計表IDの一覧のURL
+            dct_of_ids_url: dict = {
+                "xml": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsList",
+                "json": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsList",
+                "csv": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsList",
+            }
+            data_type: str = self.lst_of_data_type[self.KEY]
             parser: Any = parser_map.get(data_type)
             if not parser:
                 raise Exception("データタイプが対応していません")
@@ -216,7 +220,7 @@ class GetGovernmentStatistics:
                         "limit": limit,
                         "startPosition": start,
                     }
-                    res: Response = await client.get(url, params=params)
+                    res: httpx.Response = await client.get(url, params=params)
                     res.encoding = "utf-8"
                     res.raise_for_status()
                     page_dct, count = parser(res)
@@ -237,20 +241,11 @@ class GetGovernmentStatistics:
         finally:
             pass
 
-    def write_stats_data_ids_to_file(self, chunk_size: int = 100) -> Union[bool, None]:
+    async def write_stats_data_ids_to_file(self, chunk_size: int = 100) -> bool:
         """統計表IDの一覧をCSVファイルに書き出す"""
-        obj: Any = None
+        result: bool = False
         try:
-            # 統計表IDの一覧のURL
-            dct_of_ids_url: dict = {
-                "xml": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsList",
-                "json": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsList",
-                "csv": f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsList",
-            }
-            loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        except RuntimeError:
-            # ループがない場合
-            obj = self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url)
+            await self._write_stats_data_ids_to_file_with_async(chunk_size)
         except asyncio.CancelledError:
             raise
         except httpx.HTTPStatusError:
@@ -262,11 +257,10 @@ class GetGovernmentStatistics:
         except Exception:
             raise
         else:
-            # ループがある場合
-            obj = loop.create_task(self._write_stats_data_ids_to_file_with_async(chunk_size, dct_of_ids_url))
+            result = True
         finally:
-            self.cancel = False
-        return obj
+            pass
+        return result
 
     def _common_process_for_writing_stats_data_ids_to_file(self, file_index: int, buffer: list) -> bool:
         """ファイルに書き出す処理(同期版と非同期版で共通)"""
@@ -286,7 +280,7 @@ class GetGovernmentStatistics:
             pass
         return result
 
-    async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100, dct_of_ids_url: dict = {}) -> bool:
+    async def _write_stats_data_ids_to_file_with_async(self, chunk_size: int = 100) -> bool:
         """統計表IDの一覧をCSVファイルに書き出す(非同期版)"""
         result: bool = False
         try:
@@ -300,7 +294,7 @@ class GetGovernmentStatistics:
                     e.unlink()
             buffer: list = [self.header_of_ids_s]
             file_index: int = 1
-            async for page in self._get_stats_data_ids_with_async(dct_of_ids_url):
+            async for page in self._get_stats_data_ids_with_async():
                 for stat_id, info in page.items():
                     col2: str = info.get("stat_name", info.get("statistics_name", ""))
                     col3: str = info.get("title", "")
@@ -313,8 +307,6 @@ class GetGovernmentStatistics:
                         buffer.clear()
                         buffer.append(self.header_of_ids_s)
                         file_index += 1
-                    # if self.cancel:
-                    #     break
                 if self.cancel:
                     break
             if len(buffer) > 1:
@@ -358,14 +350,14 @@ class GetGovernmentStatistics:
             }
             return params
 
-        def _with_xml(client: Client, dct_of_params: dict) -> DataFrame:
+        def _with_xml(client: httpx.Client, dct_of_params: dict) -> DataFrame:
             """XMLでデータを取得します"""
             try:
                 id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getStatsData"
                 # リクエストを送信する
-                res: Response = client.get(id_url, params=dct_of_params)
+                res: httpx.Response = client.get(id_url, params=dct_of_params)
                 # 解析して、ルート要素を取得する
-                root: Element[str] = et.fromstring(res.text)
+                root: ElementTree.Element[str] = ElementTree.fromstring(res.text)
                 # CLASS_OBJからコードと名称のマッピングを作成する
                 mapping: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
@@ -387,7 +379,7 @@ class GetGovernmentStatistics:
                     # VALUEのテキストを追加する
                     row["値"] = (element.text or "").strip()
                     rows.append(row)
-                df: DataFrame = pd.DataFrame(rows)
+                df: DataFrame = pandas.DataFrame(rows)
                 # 列名を日本語に変換する
                 id2name: dict = {}
                 for obj in root.findall(".//CLASS_OBJ"):
@@ -398,7 +390,7 @@ class GetGovernmentStatistics:
                 df.rename(columns=id2name, inplace=True)
                 # 値列を数値型に変換する
                 if "値" in df.columns:
-                    df["値"] = pd.to_numeric(df["値"], errors="coerce")
+                    df["値"] = pandas.to_numeric(df["値"], errors="coerce")
             except Exception:
                 raise
             else:
@@ -408,12 +400,12 @@ class GetGovernmentStatistics:
                 clipboard.copy(res.text)
             return df
 
-        def _with_json(client: Client, dct_of_params: dict) -> DataFrame:
+        def _with_json(client: httpx.Client, dct_of_params: dict) -> DataFrame:
             """JSONでデータを取得します"""
             try:
                 id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/json/getStatsData"
                 # リクエストを送信する
-                res: Response = client.get(id_url, params=dct_of_params)
+                res: httpx.Response = client.get(id_url, params=dct_of_params)
                 data: Any = res.json()
                 # CLASS_OBJとVALUEを抽出する
                 class_inf: Any = data["GET_STATS_DATA"]["STATISTICAL_DATA"]["CLASS_INF"]["CLASS_OBJ"]
@@ -446,10 +438,10 @@ class GetGovernmentStatistics:
                         else:
                             row[k] = v
                     translated_rows.append(row)
-                df: DataFrame = pd.DataFrame(translated_rows)
+                df: DataFrame = pandas.DataFrame(translated_rows)
                 # 値列を数値型に変換する
                 if "値" in df.columns:
-                    df["値"] = pd.to_numeric(df["値"], errors="coerce")
+                    df["値"] = pandas.to_numeric(df["値"], errors="coerce")
             except Exception:
                 raise
             else:
@@ -459,12 +451,12 @@ class GetGovernmentStatistics:
                 clipboard.copy(json.dumps(res.json(), indent=4, ensure_ascii=False))
             return df
 
-        def _with_csv(client: Client, dct_of_params: dict) -> DataFrame:
+        def _with_csv(client: httpx.Client, dct_of_params: dict) -> DataFrame:
             """CSVでデータを取得します"""
             try:
                 id_url: str = f"http://api.e-stat.go.jp/rest/{self.VERSION}/app/getSimpleStatsData"
                 # リクエストを送信する
-                res: Response = client.get(id_url, params=dct_of_params)
+                res: httpx.Response = client.get(id_url, params=dct_of_params)
                 lines: list[str] = res.text.splitlines()
                 # VALUE行の位置を検索する
                 value_idx: int = 0
@@ -478,7 +470,7 @@ class GetGovernmentStatistics:
                 header_cols: list[str] = [h.strip('"') for h in lines[value_idx + 1].split(",")]
                 # データ本体を文字列として抽出する
                 csv_body: str = "\n".join(lines[value_idx + 2 :])
-                df: DataFrame = pd.read_csv(StringIO(csv_body), header=None)
+                df: DataFrame = pandas.read_csv(io.StringIO(csv_body), header=None)
                 df.columns = header_cols
                 # 列名を日本語に置換し、不要な英語コード列を削除する
                 rename_map: dict = {}
@@ -503,7 +495,7 @@ class GetGovernmentStatistics:
                 df = df.drop(columns=drop_cols)
                 # 値列を数値型に変換する
                 if "値" in df.columns:
-                    df["値"] = pd.to_numeric(df["値"], errors="coerce")
+                    df["値"] = pandas.to_numeric(df["値"], errors="coerce")
             except Exception:
                 raise
             else:
@@ -538,7 +530,7 @@ class GetGovernmentStatistics:
 
     def filter_df(self, df: DataFrame) -> DataFrame:
         """データフレームをフィルターにかけます"""
-        filtered_df: DataFrame = None
+        filtered_df: DataFrame | None = None
         try:
             match self.lst_of_match_type[self.KEY]:
                 case "部分一致":

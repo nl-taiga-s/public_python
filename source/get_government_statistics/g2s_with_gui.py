@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from source.common.common import GUITools, LogTools, PathTools
+from source.common.common import DatetimeTools, GUITools, LogTools
 from source.get_government_statistics.g2s_class import GetGovernmentStatistics
 
 
@@ -46,12 +46,11 @@ class GetIdsWorker(QObject):
 
     def run(self):
         """実行します"""
+        result: bool = False
         try:
-            asyncio.run(self.obj_of_cls.write_stats_data_ids_to_file())
-            if self.obj_of_cls.cancel:
-                self.finished.emit(False)
-            else:
-                self.finished.emit(True)
+            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.obj_of_cls.write_stats_data_ids_to_file())
         except httpx.HTTPStatusError as e:
             self.error.emit(f"HTTPStatusError: \n{str(e)}")
         except httpx.RequestError as e:
@@ -59,9 +58,11 @@ class GetIdsWorker(QObject):
         except Exception as e:
             self.error.emit(f"Exception: \n{str(e)}")
         else:
-            pass
+            result = True
         finally:
-            pass
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close
+        self.finished.emit(result)
 
     def cancel(self):
         """キャンセルします"""
@@ -86,7 +87,7 @@ class MainApp_Of_G2S(QMainWindow):
         self.obj_of_lt: LogTools = LogTools()
         self.obj_of_cls: GetGovernmentStatistics = GetGovernmentStatistics(self.obj_of_lt.logger)
         self._setup_first_ui()
-        self.obj_of_pt: PathTools = PathTools()
+        self.obj_of_dt2: DatetimeTools = DatetimeTools()
         self._setup_log()
 
     def closeEvent(self, event):
@@ -119,8 +120,14 @@ class MainApp_Of_G2S(QMainWindow):
         try:
             # exe化されている場合とそれ以外を切り分ける
             exe_path: Path = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-            file_of_log_p: Path = self.obj_of_pt._get_file_path_of_log(exe_path)
-            self.obj_of_lt.file_path_of_log = str(file_of_log_p)
+            # ログフォルダのパス
+            folder_p: Path = exe_path.parent / "__log__"
+            # ログフォルダが存在しない場合は、作成します
+            folder_p.mkdir(parents=True, exist_ok=True)
+            # ログファイル名
+            file_name: str = f"log_{self.obj_of_dt2._convert_for_file_name()}.log"
+            file_p: Path = folder_p / file_name
+            self.obj_of_lt.file_path_of_log = str(file_p)
             self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
             text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
