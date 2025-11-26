@@ -259,7 +259,7 @@ class GetGovernmentStatistics:
         else:
             result = True
         finally:
-            pass
+            self.cancel = False
         return result
 
     def _common_process_for_writing_stats_data_ids_to_file(self, file_index: int, buffer: list) -> bool:
