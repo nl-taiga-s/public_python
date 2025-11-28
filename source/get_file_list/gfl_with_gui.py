@@ -112,7 +112,7 @@ class MainApp_Of_GFL(QMainWindow):
             main_container: QWidget = QWidget()
             main_container_layout: QFormLayout = QFormLayout(main_container)
             main_scroll_area.setWidget(main_container)
-            self.folder_label: QLabel = QLabel("フォルダが未選択です")
+            self.folder_label: QLabel = QLabel("フォルダ: 未選択")
             main_container_layout.addRow(self.folder_label)
             select_folder_btn: QPushButton = QPushButton("フォルダを選択する")
             main_container_layout.addRow(select_folder_btn)
