@@ -1,5 +1,6 @@
 from logging import Logger
 from pathlib import Path
+from typing import Any
 
 from comtypes.client import CreateObject
 
@@ -126,8 +127,8 @@ class ConvertOfficeToPDF:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_excel.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
-                obj: object = CreateObject("Excel.Application")
-                f: object = obj.Workbooks.Open(self.current_file_path_from, ReadOnly=False)
+                obj: Any = CreateObject("Excel.Application")
+                f: Any = obj.Workbooks.Open(self.current_file_path_from, ReadOnly=False)
                 f.ExportAsFixedFormat(Filename=self.current_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
             except Exception:
                 raise
@@ -149,8 +150,8 @@ class ConvertOfficeToPDF:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_word.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
-                obj: object = CreateObject("Word.Application")
-                f: object = obj.Documents.Open(self.current_file_path_from, ReadOnly=False)
+                obj: Any = CreateObject("Word.Application")
+                f: Any = obj.Documents.Open(self.current_file_path_from, ReadOnly=False)
                 f.ExportAsFixedFormat(
                     OutputFileName=self.current_file_path_to,
                     ExportFormat=PDF_NUMBER_OF_WORD,
@@ -175,8 +176,8 @@ class ConvertOfficeToPDF:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {_with_powerpoint.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
-                obj: object = CreateObject("PowerPoint.Application")
-                f: object = obj.Presentations.Open(self.current_file_path_from, ReadOnly=False)
+                obj: Any = CreateObject("PowerPoint.Application")
+                f: Any = obj.Presentations.Open(self.current_file_path_from, ReadOnly=False)
                 f.ExportAsFixedFormat(
                     Path=self.current_file_path_to,
                     FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
