@@ -416,7 +416,7 @@ class MainApp_Of_G2S(QMainWindow):
         try:
             tmp: str = self.app_id_text.text().strip()
             if not re.fullmatch(r"[a-z0-9]+", tmp):
-                raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
+                raise Exception("以下の文字で入力してください。\n* 半角英字小文字\n* 数字")
             self.obj_of_cls.APP_ID = tmp
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")

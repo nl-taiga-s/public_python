@@ -24,11 +24,11 @@ class GS_With_Cui:
                 if app_id == "":
                     raise Exception("アプリケーションIDが未入力です。")
                 if not re.fullmatch(r"[a-z0-9]+", app_id):
-                    raise Exception("以下の文字で入力してください。\n* 半角英語小文字\n* 数字")
+                    raise Exception("以下の文字で入力してください。\n* 半角英字小文字\n* 数字")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -62,8 +62,8 @@ class GS_With_Cui:
                     raise Exception("入力した番号が範囲外です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -85,8 +85,8 @@ class GS_With_Cui:
                         print("文字列が何も入力されていません。")
         except KeyboardInterrupt:
             raise
-        except Exception:
-            raise
+        except Exception as e:
+            print(f"error: \n{str(e)}")
         else:
             pass
         finally:
@@ -100,7 +100,7 @@ class GS_With_Cui:
         DIGIT: int = 10
         while True:
             try:
-                text = input("統計表IDを入力してください。: ").strip()
+                text: str = input("統計表IDを入力してください。: ").strip()
                 if text == "":
                     raise Exception("統計表IDが未入力です。")
                 if not text.isdecimal():
@@ -109,8 +109,8 @@ class GS_With_Cui:
                     raise Exception(f"{DIGIT}桁で入力してください。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -132,8 +132,8 @@ class GS_With_Cui:
                         raise Exception("無効な入力です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
