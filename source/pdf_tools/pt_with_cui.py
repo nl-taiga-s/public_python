@@ -60,8 +60,8 @@ class PT_With_Cui:
                     raise Exception("入力した番号が範囲外です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -85,8 +85,8 @@ class PT_With_Cui:
                     raise Exception(f"{ext}ファイル以外は入力しないでください。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -109,8 +109,8 @@ class PT_With_Cui:
                         print("ファイルが何も入力されていません。")
         except KeyboardInterrupt:
             raise
-        except Exception:
-            raise
+        except Exception as e:
+            print(f"error: \n{str(e)}")
         else:
             pass
         finally:
@@ -128,8 +128,8 @@ class PT_With_Cui:
                     raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -152,15 +152,15 @@ class PT_With_Cui:
                             obj_of_cls.metadata_of_writer[key_of_w] = value
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
                 pass
         return obj_of_cls.metadata_of_writer
 
-    def _input_pages_range(self, num_of_pages: int) -> list:
+    def _input_pages_range(self, num_of_pages: int) -> tuple:
         """ページ範囲を入力します"""
         while True:
             try:
@@ -176,13 +176,13 @@ class PT_With_Cui:
                     raise Exception("指定のページ範囲が不正です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
                 pass
-        return [bp, ep]
+        return (bp, ep)
 
     def _input_page(self, num_of_pages: int) -> int:
         """ページを入力します"""
@@ -198,8 +198,8 @@ class PT_With_Cui:
                     raise Exception("指定のページ範囲が不正です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -222,8 +222,8 @@ class PT_With_Cui:
                     raise Exception("入力した番号が範囲外です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -245,8 +245,8 @@ class PT_With_Cui:
                         raise Exception("無効な入力です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:

@@ -118,9 +118,9 @@ class MainApp_Of_PT(QMainWindow):
             # 各要素のタイトル
             element_title_area: QHBoxLayout = QHBoxLayout()
             base_layout.addLayout(element_title_area)
-            element_title_area.addWidget(QLabel("機能"))
-            element_title_area.addWidget(QLabel("ビューワー"))
-            element_title_area.addWidget(QLabel("ログ"))
+            element_title_area.addWidget(QLabel("機能"), 1)
+            element_title_area.addWidget(QLabel("ビューワー"), 1)
+            element_title_area.addWidget(QLabel("ログ"), 1)
             # 主要
             main_layout: QHBoxLayout = QHBoxLayout()
             base_layout.addLayout(main_layout)
