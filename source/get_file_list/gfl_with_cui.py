@@ -28,8 +28,8 @@ class GFL_With_Cui:
                     raise Exception("フォルダではありません。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
@@ -51,8 +51,8 @@ class GFL_With_Cui:
                         raise Exception("無効な入力です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
