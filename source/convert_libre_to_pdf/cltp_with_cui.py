@@ -14,7 +14,7 @@ class CLTP_With_Cui:
             "no": ["いいえ", "0", "No", "no", "N", "n"],
         }
 
-    def _input_folder_path(self) -> list:
+    def _input_folder_path(self) -> tuple:
         """フォルダのパスを入力します"""
         while True:
             try:
@@ -32,13 +32,13 @@ class CLTP_With_Cui:
                     raise Exception("フォルダではありません。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
                 pass
-        return [folder_from_s, folder_to_s]
+        return (folder_from_s, folder_to_s)
 
     def _input_bool(self, msg: str) -> bool:
         """はいかいいえをを入力します"""
@@ -55,8 +55,8 @@ class CLTP_With_Cui:
                         raise Exception("無効な入力です。")
             except KeyboardInterrupt:
                 raise
-            except Exception:
-                raise
+            except Exception as e:
+                print(f"error: \n{str(e)}")
             else:
                 break
             finally:
