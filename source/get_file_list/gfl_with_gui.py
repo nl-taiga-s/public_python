@@ -146,7 +146,7 @@ class MainApp_Of_GFL(QMainWindow):
         """フォルダを選択します"""
         result: bool = False
         try:
-            self.obj_of_cls.folder_path = QFileDialog.getExistingDirectory(self, "フォルダを選択")
+            self.obj_of_cls.folder_path = QFileDialog.getExistingDirectory(self, caption="フォルダを選択")
             folder_p: Path = Path(self.obj_of_cls.folder_path).expanduser()
             self.obj_of_cls.folder_path = str(folder_p)
             self.folder_label.setText(self.obj_of_cls.folder_path)

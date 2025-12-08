@@ -333,7 +333,7 @@ class MainApp_Of_PT(QMainWindow):
         """選択します"""
         result: bool = False
         try:
-            self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, "PDFファイルを選択", "", "PDF Files (*.pdf)")
+            self.obj_of_cls.file_path, _ = QFileDialog.getOpenFileName(self, caption="PDFファイルを選択", dir="", filter="PDF Files (*.pdf)")
             self._setup_third_ui()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
@@ -446,7 +446,7 @@ class MainApp_Of_PT(QMainWindow):
         """マージします"""
         result: bool = False
         try:
-            files, _ = QFileDialog.getOpenFileNames(self, "マージするPDFを選択", "", "PDF Files (*.pdf)")
+            files, _ = QFileDialog.getOpenFileNames(self, caption="マージするPDFを選択", dir="", filter="PDF Files (*.pdf)")
             if not files:
                 raise Exception("PDFファイルを選択してください。")
             # 各OSに応じたパス区切りに変換する

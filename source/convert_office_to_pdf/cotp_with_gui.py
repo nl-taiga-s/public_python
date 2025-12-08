@@ -151,7 +151,7 @@ class MainApp_Of_COTP(QMainWindow):
         """変換元のフォルダを選択します"""
         result: bool = False
         try:
-            self.obj_of_cls.folder_path_from = QFileDialog.getExistingDirectory(self, "変換元のフォルダを選択")
+            self.obj_of_cls.folder_path_from = QFileDialog.getExistingDirectory(self, caption="変換元のフォルダを選択")
             folder_p: Path = Path(self.obj_of_cls.folder_path_from).expanduser()
             self.obj_of_cls.folder_path_from = str(folder_p)
             if self.obj_of_cls.folder_path_from:
@@ -170,7 +170,7 @@ class MainApp_Of_COTP(QMainWindow):
         """変換先のフォルダを選択します"""
         result: bool = False
         try:
-            self.obj_of_cls.folder_path_to = QFileDialog.getExistingDirectory(self, "変換先のフォルダを選択")
+            self.obj_of_cls.folder_path_to = QFileDialog.getExistingDirectory(self, caption="変換先のフォルダを選択")
             folder_p: Path = Path(self.obj_of_cls.folder_path_to).expanduser()
             self.obj_of_cls.folder_path_to = str(folder_p)
             if self.obj_of_cls.folder_path_to:
