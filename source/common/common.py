@@ -3,6 +3,7 @@ import logging
 import platform
 import sys
 from logging import FileHandler, Formatter, Logger, StreamHandler
+from typing import Any
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox, QWidget
@@ -87,9 +88,9 @@ class PlatformTools:
 class DatetimeTools:
     def __init__(self):
         """初期化します"""
-        self.dt: datetime.datetime = None
+        self.dt: Any = None
 
-    def _convert_dt_to_str(self, dt: datetime.datetime | None = None) -> str:
+    def _convert_dt_to_str(self, dt: Any = None) -> str:
         """datetime型からstr型に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -97,7 +98,7 @@ class DatetimeTools:
         # datetime型 => str型
         return dt.strftime("%Y-%m-%d_%H:%M:%S")
 
-    def _convert_for_file_name(self, dt: datetime.datetime | None = None) -> str:
+    def _convert_for_file_name(self, dt: Any = None) -> str:
         """ファイル名用に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -105,7 +106,7 @@ class DatetimeTools:
         # datetime型 => str型
         return dt.strftime("%Y%m%d_%H%M%S")
 
-    def _convert_for_metadata_in_pdf(self, utc: str, dt: datetime.datetime | None = None) -> str:
+    def _convert_for_metadata_in_pdf(self, utc: str, dt: Any = None) -> str:
         """pdfのメタデータ用に変換します"""
         if dt is None:
             self.dt = datetime.datetime.now()
@@ -117,7 +118,7 @@ class DatetimeTools:
 class GUITools:
     def __init__(self, parent: QWidget | None = None):
         """初期化します"""
-        self.parent: QWidget = parent
+        self.parent: QWidget | None = parent
 
     def _show_start_up_error(self, msg: str):
         """起動エラーのウィンドウを表示します"""
