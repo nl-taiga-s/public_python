@@ -131,6 +131,7 @@ class ConvertOfficeToPDF:
                 f: Any = obj.Workbooks.Open(self.current_file_path_from, ReadOnly=False)
                 f.ExportAsFixedFormat(Filename=self.current_file_path_to, Type=PDF_NUMBER_OF_EXCEL)
             except Exception:
+                self.log.error("***失敗しました。***")
                 raise
             else:
                 result = True
@@ -157,6 +158,7 @@ class ConvertOfficeToPDF:
                     ExportFormat=PDF_NUMBER_OF_WORD,
                 )
             except Exception:
+                self.log.error("***失敗しました。***")
                 raise
             else:
                 result = True
@@ -183,6 +185,7 @@ class ConvertOfficeToPDF:
                     FixedFormatType=PDF_NUMBER_OF_POWERPOINT,
                 )
             except Exception:
+                self.log.error("***失敗しました。***")
                 raise
             else:
                 result = True

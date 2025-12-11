@@ -104,37 +104,44 @@ class MainApp_Of_COTP(QMainWindow):
             central: QWidget = QWidget()
             self.setCentralWidget(central)
             base_layout: QVBoxLayout = QVBoxLayout(central)
+            # 主要
             main_scroll_area: QScrollArea = QScrollArea()
             main_scroll_area.setWidgetResizable(True)
             base_layout.addWidget(main_scroll_area)
             main_container: QWidget = QWidget()
             main_container_layout: QFormLayout = QFormLayout(main_container)
             main_scroll_area.setWidget(main_container)
-            self.label_from: QLabel = QLabel("変換元のフォルダ: 未選択")
-            main_container_layout.addRow(self.label_from)
+            # 変換元
+            label_from: QLabel = QLabel("変換元のフォルダ: 未選択")
+            main_container_layout.addRow(label_from)
             btn_select_from: QPushButton = QPushButton("変換元のフォルダを選択する")
             main_container_layout.addRow(btn_select_from)
-            btn_select_from.clicked.connect(self.select_folder_from)
+            btn_select_from.clicked.connect(lambda *args, lbl=label_from: self.select_folder_from(lbl))
             btn_open_from: QPushButton = QPushButton("変換元のフォルダを開く")
             main_container_layout.addRow(btn_open_from)
-            btn_open_from.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_from))
+            btn_open_from.clicked.connect(lambda *args, folder_path=self.obj_of_cls.folder_path_from: self.open_explorer(folder_path))
+            # 対象ファイルの一覧
             main_container_layout.addRow(QLabel("変換対象ファイルの一覧: "))
-            self.file_lst_widget: QListWidget = QListWidget()
-            main_container_layout.addRow(self.file_lst_widget)
-            self.label_to: QLabel = QLabel("変換先のフォルダ: 未選択")
-            main_container_layout.addRow(self.label_to)
+            self.lst_widget: QListWidget = QListWidget()
+            main_container_layout.addRow(self.lst_widget)
+            # 変換先
+            label_to: QLabel = QLabel("変換先のフォルダ: 未選択")
+            main_container_layout.addRow(label_to)
             btn_select_to: QPushButton = QPushButton("変換先のフォルダを選択する")
             main_container_layout.addRow(btn_select_to)
-            btn_select_to.clicked.connect(self.select_folder_to)
+            btn_select_to.clicked.connect(lambda *args, lbl=label_to: self.select_folder_to(lbl))
             btn_open_to: QPushButton = QPushButton("変換先のフォルダを開く")
             main_container_layout.addRow(btn_open_to)
-            btn_open_to.clicked.connect(lambda: self.open_explorer(self.obj_of_cls.folder_path_to))
+            btn_open_to.clicked.connect(lambda *args, folder_path=self.obj_of_cls.folder_path_to: self.open_explorer(folder_path))
+            # 進行状況
             main_container_layout.addRow(QLabel("進行状況: "))
             self.progress_bar: QProgressBar = QProgressBar()
             main_container_layout.addRow(self.progress_bar)
+            # 実行
             btn_convert: QPushButton = QPushButton("PDFファイルへの一括変換を実行する")
             main_container_layout.addRow(btn_convert)
-            btn_convert.clicked.connect(self.convert_file)
+            btn_convert.clicked.connect(self.convert_all_files)
+            # ログ
             self.log_area: QTextEdit = QTextEdit()
             self.log_area.setReadOnly(True)
             main_container_layout.addRow(QLabel("ログ: "))
@@ -147,7 +154,7 @@ class MainApp_Of_COTP(QMainWindow):
             pass
         return result
 
-    def select_folder_from(self) -> bool:
+    def select_folder_from(self, lbl: QLabel) -> bool:
         """変換元のフォルダを選択します"""
         result: bool = False
         try:
@@ -155,7 +162,7 @@ class MainApp_Of_COTP(QMainWindow):
             folder_p: Path = Path(self.obj_of_cls.folder_path_from).expanduser()
             self.obj_of_cls.folder_path_from = str(folder_p)
             if self.obj_of_cls.folder_path_from:
-                self.label_from.setText(f"変換元フォルダ: {self.obj_of_cls.folder_path_from}")
+                lbl.setText(f"変換元フォルダ: {self.obj_of_cls.folder_path_from}")
                 if self.obj_of_cls.folder_path_to:
                     self.show_file_lst()
         except Exception as e:
@@ -166,7 +173,7 @@ class MainApp_Of_COTP(QMainWindow):
             pass
         return result
 
-    def select_folder_to(self) -> bool:
+    def select_folder_to(self, lbl: QLabel) -> bool:
         """変換先のフォルダを選択します"""
         result: bool = False
         try:
@@ -174,7 +181,7 @@ class MainApp_Of_COTP(QMainWindow):
             folder_p: Path = Path(self.obj_of_cls.folder_path_to).expanduser()
             self.obj_of_cls.folder_path_to = str(folder_p)
             if self.obj_of_cls.folder_path_to:
-                self.label_to.setText(f"変換先フォルダ: {self.obj_of_cls.folder_path_to}")
+                lbl.setText(f"変換先フォルダ: {self.obj_of_cls.folder_path_to}")
                 if self.obj_of_cls.folder_path_from:
                     self.show_file_lst()
         except Exception as e:
@@ -185,7 +192,7 @@ class MainApp_Of_COTP(QMainWindow):
             pass
         return result
 
-    def open_explorer(self, folder_path: str) -> bool:
+    def open_explorer(self, folder_path: str = "") -> bool:
         """エクスプローラーを開きます"""
         result: bool = False
         try:
@@ -205,14 +212,13 @@ class MainApp_Of_COTP(QMainWindow):
         result: bool = False
         try:
             self.obj_of_cls.create_file_lst()
-            self.file_lst_widget.clear()
+            self.lst_widget.clear()
             for f in self.obj_of_cls.filtered_lst_of_f:
                 file_p: Path = Path(f)
                 file_s: str = file_p.name
-                self.file_lst_widget.addItem(file_s)
+                self.lst_widget.addItem(file_s)
             self.progress_bar.setValue(0)
         except Exception as e:
-            self.file_lst_widget.clear()
             self._show_error(f"error: \n{str(e)}")
         else:
             result = True
@@ -220,8 +226,8 @@ class MainApp_Of_COTP(QMainWindow):
             pass
         return result
 
-    def convert_file(self) -> bool:
-        """変換します"""
+    def convert_all_files(self) -> bool:
+        """全てのファイルを一括変換します"""
         result: bool = False
         try:
             if not self.obj_of_cls.filtered_lst_of_f:
@@ -238,7 +244,7 @@ class MainApp_Of_COTP(QMainWindow):
         else:
             result = True
         finally:
-            self._show_result(self.convert_file.__doc__, result)
+            self._show_result(self.convert_all_files.__doc__, result)
         return result
 
 
