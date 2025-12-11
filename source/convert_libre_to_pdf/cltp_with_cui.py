@@ -92,7 +92,7 @@ def main() -> bool:
     try:
         LIBRE_COMMAND: str = "soffice"
         if not shutil.which(LIBRE_COMMAND):
-            raise ImportError("LibreOfficeをインストールして、sofficeコマンドのパスを通してください。: \nhttps://ja.libreoffice.org/")
+            raise ImportError(f"LibreOfficeをインストールして、{LIBRE_COMMAND}コマンドのパスを通してください。: \nhttps://ja.libreoffice.org/")
     except ImportError as e:
         print(f"error: \n{str(e)}")
         return result
