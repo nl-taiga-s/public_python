@@ -162,7 +162,7 @@ class MainApp_Of_PT(QMainWindow):
             reload_btn.clicked.connect(self.reload_pdf)
             # パスワード入力
             self.password_input: QLineEdit = QLineEdit()
-            self.password_input.editingFinished.connect(self.get_password)
+            self.password_input.editingFinished.connect(self._get_password)
             left_container_layout.addWidget(QLabel("パスワード"))
             left_container_layout.addWidget(self.password_input)
             # 暗号化と復号化
@@ -182,12 +182,12 @@ class MainApp_Of_PT(QMainWindow):
             left_container_layout.addWidget(QLabel("メタデータの入力"))
             self.widget_of_metadata: dict = {}
             self.line_edits_of_metadata: dict = {}
-            for value, key in self.obj_of_cls.fields:
-                if value in ["creation_date", "modification_date"]:
+            for key, value in self.obj_of_cls.fields.items():
+                if key in ["creation_date", "modification_date"]:
                     continue
-                self.line_edits_of_metadata[key] = QLineEdit()
-                left_container_layout.addWidget(QLabel(value.capitalize().replace("_", " ")))
-                left_container_layout.addWidget(self.line_edits_of_metadata[key])
+                self.line_edits_of_metadata[value] = QLineEdit()
+                left_container_layout.addWidget(QLabel(key.capitalize().replace("_", " ")))
+                left_container_layout.addWidget(self.line_edits_of_metadata[value])
             # メタデータの書き込み
             write_meta_btn: QPushButton = QPushButton("メタデータを書き込む")
             left_container_layout.addWidget(write_meta_btn)
@@ -207,7 +207,9 @@ class MainApp_Of_PT(QMainWindow):
             left_container_layout.addLayout(page_layout_of_ep)
             extract_page_btn: QPushButton = QPushButton("ページを抽出する")
             left_container_layout.addWidget(extract_page_btn)
-            extract_page_btn.clicked.connect(lambda: self.extract_pages(begin_spin_of_ep, end_spin_of_ep))
+            extract_page_btn.clicked.connect(
+                lambda *args, begin_spin=begin_spin_of_ep, end_spin=end_spin_of_ep: self.extract_pages(begin_spin, end_spin)
+            )
             # ページの削除
             begin_spin_of_dp: QSpinBox = QSpinBox()
             end_spin_of_dp: QSpinBox = QSpinBox()
@@ -219,7 +221,9 @@ class MainApp_Of_PT(QMainWindow):
             left_container_layout.addLayout(page_layout_of_dp)
             delete_page_btn: QPushButton = QPushButton("ページを削除する")
             left_container_layout.addWidget(delete_page_btn)
-            delete_page_btn.clicked.connect(lambda: self.delete_pages(begin_spin_of_dp, end_spin_of_dp))
+            delete_page_btn.clicked.connect(
+                lambda *args, begin_spin=begin_spin_of_dp, end_spin=end_spin_of_dp: self.delete_pages(begin_spin, end_spin)
+            )
             # テキストの抽出
             begin_spin_of_et: QSpinBox = QSpinBox()
             end_spin_of_et: QSpinBox = QSpinBox()
@@ -231,7 +235,9 @@ class MainApp_Of_PT(QMainWindow):
             left_container_layout.addLayout(page_layout_of_et)
             extract_text_btn: QPushButton = QPushButton("テキストを抽出する")
             left_container_layout.addWidget(extract_text_btn)
-            extract_text_btn.clicked.connect(lambda: self.extract_text(begin_spin_of_et, end_spin_of_et))
+            extract_text_btn.clicked.connect(
+                lambda *args, begin_spin=begin_spin_of_et, end_spin=end_spin_of_et: self.extract_text(begin_spin, end_spin)
+            )
             # ページの回転
             spin_of_rp: QSpinBox = QSpinBox()
             page_layout_of_rp: QHBoxLayout = QHBoxLayout()
@@ -240,7 +246,7 @@ class MainApp_Of_PT(QMainWindow):
             rotate_btn: QPushButton = QPushButton("ページを時計回りに回転する（90度）")
             page_layout_of_rp.addWidget(rotate_btn)
             left_container_layout.addLayout(page_layout_of_rp)
-            rotate_btn.clicked.connect(lambda: self.rotate_page(spin_of_rp))
+            rotate_btn.clicked.connect(lambda *args, spin=spin_of_rp: self.rotate_page(spin))
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -329,6 +335,20 @@ class MainApp_Of_PT(QMainWindow):
             pass
         return result
 
+    def _get_password(self):
+        """パスワードを取得します"""
+        try:
+            tmp: str = self.password_input.text().strip()
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", tmp):
+                raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
+            self.obj_of_cls.password = tmp
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
     def select_pdf(self) -> bool:
         """選択します"""
         result: bool = False
@@ -357,20 +377,6 @@ class MainApp_Of_PT(QMainWindow):
         finally:
             pass
         return result
-
-    def get_password(self):
-        """パスワードを取得します"""
-        try:
-            tmp: str = self.password_input.text().strip()
-            if not re.fullmatch(r"[A-Za-z0-9_-]+", tmp):
-                raise Exception("以下の文字で入力してください。\n* 半角英数字\n* アンダーバー\n* ハイフン")
-            self.obj_of_cls.password = tmp
-        except Exception as e:
-            self._show_error(f"error: \n{str(e)}")
-        else:
-            pass
-        finally:
-            pass
 
     def encrypt_pdf(self) -> bool:
         """暗号化します"""
@@ -425,14 +431,14 @@ class MainApp_Of_PT(QMainWindow):
             if self.obj_of_cls.file_path == "":
                 raise Exception("PDFファイルを選択してください。")
             self._setup_third_ui()
-            for value, key in self.obj_of_cls.fields:
-                match value:
+            for key, value in self.obj_of_cls.fields.items():
+                match key:
                     case "creation_date":
-                        self.widget_of_metadata[key] = self.obj_of_cls.creation_date
+                        self.widget_of_metadata[value] = self.obj_of_cls.creation_date
                     case "modification_date":
-                        self.widget_of_metadata[key] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
+                        self.widget_of_metadata[value] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.obj_of_cls.UTC_OF_JP)
                     case _:
-                        self.widget_of_metadata[key] = self.line_edits_of_metadata[key].text()
+                        self.widget_of_metadata[value] = self.line_edits_of_metadata[value].text()
             self.obj_of_cls.write_metadata(self.widget_of_metadata)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")

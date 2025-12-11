@@ -140,16 +140,16 @@ class PT_With_Cui:
         """書き込み用のメタデータを入力します"""
         while True:
             try:
-                for key_of_r, key_of_w in obj_of_cls.fields:
-                    match key_of_r:
+                for ky, vl in obj_of_cls.fields.items():
+                    match ky:
                         case "creation_date":
-                            obj_of_cls.metadata_of_writer[key_of_w] = obj_of_cls.creation_date
+                            obj_of_cls.metadata_of_writer[vl] = obj_of_cls.creation_date
                         case "modification_date":
                             time: str = self.obj_of_dt2._convert_for_metadata_in_pdf(obj_of_cls.UTC_OF_JP)
-                            obj_of_cls.metadata_of_writer[key_of_w] = time
+                            obj_of_cls.metadata_of_writer[vl] = time
                         case _:
-                            value: str = input(f"{key_of_r.capitalize().replace("_", " ")}: ").strip()
-                            obj_of_cls.metadata_of_writer[key_of_w] = value
+                            value: str = input(f"{ky.capitalize().replace("_", " ")}: ").strip()
+                            obj_of_cls.metadata_of_writer[vl] = value
             except KeyboardInterrupt:
                 raise
             except Exception as e:

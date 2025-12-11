@@ -33,17 +33,17 @@ class PdfTools:
         self.EXTENSION: str = ".pdf"
         # 日本時間
         self.UTC_OF_JP: str = "+09'00'"
-        # メタデータの書き込み用のフィールド
-        self.fields: list = [
-            ("title", "/Title"),  # タイトル
-            ("author", "/Author"),  # 作成者
-            ("subject", "/Subject"),  # サブタイトル
-            ("creator", "/Creator"),  # アプリケーション
-            ("producer", "/Producer"),  # PDF変換
-            ("keywords", "/Keywords"),  # キーワード
-            ("creation_date", "/CreationDate"),  # 作成日
-            ("modification_date", "/ModDate"),  # 更新日
-        ]
+        # メタデータの書き込み用の辞書
+        self.fields: dict = {
+            "title": "/Title",  # タイトル
+            "author": "/Author",  # 作成者
+            "subject": "/Subject",  # サブタイトル
+            "creator": "/Creator",  # アプリケーション
+            "producer": "/Producer",  # PDF変換
+            "keywords": "/Keywords",  # キーワード
+            "creation_date": "/CreationDate",  # 作成日
+            "modification_date": "/ModDate",  # 更新日
+        }
         # メタデータの書き込み用の作成日
         self.creation_date: str = ""
         # メタデータの書き込み用の更新日
@@ -118,7 +118,7 @@ class PdfTools:
         result: bool = False
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
-            for key, _ in self.fields:
+            for key in self.fields.keys():
                 value: Any = getattr(self.metadata_of_reader, key, None)
                 self.log.info(f"{key.capitalize().replace("_", " ")}: {value or None}")
         except Exception:
@@ -284,7 +284,7 @@ class PdfTools:
             e: int = end_page - 1
             for i in range(self.num_of_pages):
                 if b <= i and i <= e:
-                    lst_of_text_in_pages.append(f"{i + 1}ページ: \n{self.reader.pages[i].extract_text()}")
+                    lst_of_text_in_pages.append(f"{i + 1}ページ: {self.reader.pages[i].extract_text()}")
             self.log.info("\n".join(lst_of_text_in_pages))
         except Exception:
             raise
@@ -326,9 +326,9 @@ class PdfTools:
         try:
             self.log.info(f"対象のファイルパス: {self.file_path}")
             self.metadata_of_writer = {}
-            for value, key in self.fields:
-                if value == "creation_date":
-                    self.metadata_of_writer[key] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.UTC_OF_JP)
+            for key, value in self.fields.items():
+                if key == "creation_date":
+                    self.metadata_of_writer[value] = self.obj_of_dt2._convert_for_metadata_in_pdf(self.UTC_OF_JP)
                     break
             self.write_metadata(self.metadata_of_writer)
         except Exception:
