@@ -27,7 +27,7 @@ class GetFileList:
         result: bool = False
         try:
             self.log.info(f"起点のフォルダパス: {self.folder_path}")
-            self.log.info(f"再帰的に検索: {"する" if self.recursive else "しない"}")
+            self.log.info(f"再帰的に検索: {'する' if self.recursive else 'しない'}")
             RECURSIVE: str = "**/*" if self.recursive else "*"
             self.lst_file_before = [str(f) for f in Path(self.folder_path).glob(RECURSIVE) if f.is_file()]
             if not self.lst_file_before:

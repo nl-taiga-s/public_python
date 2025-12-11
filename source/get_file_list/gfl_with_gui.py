@@ -106,33 +106,40 @@ class MainApp_Of_GFL(QMainWindow):
             central: QWidget = QWidget()
             self.setCentralWidget(central)
             base_layout: QVBoxLayout = QVBoxLayout(central)
+            # 主要
             main_scroll_area: QScrollArea = QScrollArea()
             main_scroll_area.setWidgetResizable(True)
             base_layout.addWidget(main_scroll_area)
             main_container: QWidget = QWidget()
             main_container_layout: QFormLayout = QFormLayout(main_container)
             main_scroll_area.setWidget(main_container)
-            self.folder_label: QLabel = QLabel("フォルダ: 未選択")
-            main_container_layout.addRow(self.folder_label)
+            # フォルダ
+            folder_label: QLabel = QLabel("フォルダ: 未選択")
+            main_container_layout.addRow(folder_label)
             select_folder_btn: QPushButton = QPushButton("フォルダを選択する")
             main_container_layout.addRow(select_folder_btn)
-            select_folder_btn.clicked.connect(self.select_folder)
+            select_folder_btn.clicked.connect(lambda *args, lbl=folder_label: self.select_folder(lbl))
             open_folder_btn: QPushButton = QPushButton("フォルダを開く")
             main_container_layout.addRow(open_folder_btn)
             open_folder_btn.clicked.connect(self.open_explorer)
-            self.recursive_checkbox: QCheckBox = QCheckBox("サブフォルダも含めて検索する（再帰的）")
-            main_container_layout.addRow(self.recursive_checkbox)
-            self.recursive_checkbox.toggled.connect(self.get_recursive)
+            # 再帰的
+            recursive_checkbox: QCheckBox = QCheckBox("サブフォルダも含めて検索する（再帰的）")
+            main_container_layout.addRow(recursive_checkbox)
+            recursive_checkbox.toggled.connect(lambda *args, chckbx=recursive_checkbox: self._get_recursive(chckbx))
+            # 検索パターン
             main_container_layout.addRow(QLabel("検索パターン:"))
-            self.pattern_input: QLineEdit = QLineEdit()
-            self.pattern_input.setPlaceholderText("検索パターンを入力...")
-            self.pattern_input.editingFinished.connect(self.get_pattern)
-            main_container_layout.addRow(self.pattern_input)
+            pattern_input: QLineEdit = QLineEdit()
+            pattern_input.setPlaceholderText("検索パターンを入力...")
+            pattern_input.editingFinished.connect(lambda *args, lndt=pattern_input: self._get_pattern(lndt))
+            main_container_layout.addRow(pattern_input)
+            # 実行
             search_btn: QPushButton = QPushButton("検索パターンで検索する")
             main_container_layout.addRow(search_btn)
             search_btn.clicked.connect(self.search_files)
-            main_container_layout.addRow(QLabel("検索結果:"))
+            # ログ
             self.log_area: QTextEdit = QTextEdit()
+            self.log_area.setReadOnly(True)
+            main_container_layout.addRow(QLabel("ログ:"))
             main_container_layout.addRow(self.log_area)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
@@ -142,14 +149,37 @@ class MainApp_Of_GFL(QMainWindow):
             pass
         return result
 
-    def select_folder(self) -> bool:
+    def _get_recursive(self, chckbx: QCheckBox):
+        """再帰的かどうかを取得します"""
+        try:
+            self.obj_of_cls.recursive = chckbx.isChecked()
+            self.obj_of_cls.search_directly_under_folder()
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def _get_pattern(self, lndt: QLineEdit):
+        """検索パターンを取得します"""
+        try:
+            self.obj_of_cls.pattern = lndt.text().strip()
+        except Exception as e:
+            self._show_error(f"error: \n{str(e)}")
+        else:
+            pass
+        finally:
+            pass
+
+    def select_folder(self, lbl: QLabel) -> bool:
         """フォルダを選択します"""
         result: bool = False
         try:
             self.obj_of_cls.folder_path = QFileDialog.getExistingDirectory(self, caption="フォルダを選択")
             folder_p: Path = Path(self.obj_of_cls.folder_path).expanduser()
             self.obj_of_cls.folder_path = str(folder_p)
-            self.folder_label.setText(self.obj_of_cls.folder_path)
+            lbl.setText(self.obj_of_cls.folder_path)
             self.obj_of_cls.search_directly_under_folder()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
@@ -158,29 +188,6 @@ class MainApp_Of_GFL(QMainWindow):
         finally:
             pass
         return result
-
-    def get_recursive(self):
-        """再帰的かどうかを取得します"""
-        try:
-            self.obj_of_cls.recursive = self.recursive_checkbox.isChecked()
-            self.obj_of_cls.search_directly_under_folder()
-        except Exception as e:
-            self._show_error(f"error: \n{str(e)}")
-        else:
-            pass
-        finally:
-            pass
-
-    def get_pattern(self):
-        """検索パターンを取得します"""
-        try:
-            self.obj_of_cls.pattern = self.pattern_input.text().strip()
-        except Exception as e:
-            self._show_error(f"error: \n{str(e)}")
-        else:
-            pass
-        finally:
-            pass
 
     def open_explorer(self) -> bool:
         """エクスプローラーを開きます"""
