@@ -1,0 +1,149 @@
+from logging import Logger
+from pathlib import Path
+
+from markitdown import DocumentConverterResult, MarkItDown
+
+
+class ConvertToMd:
+    """markdownに一括変換します"""
+
+    def __init__(self, logger: Logger):
+        """初期化します"""
+        self.log: Logger = logger
+        self.log.info(f"{self.__class__.__doc__}\n{self.file_type}")
+        # 変換元のフォルダパス
+        self.folder_path_from: str = ""
+        # 変換先のフォルダパス
+        self.folder_path_to: str = ""
+        # 拡張子を指定する
+        self.file_type: dict = {
+            "PDF": ".pdf",
+            "Excel": ".xlsx",
+            "Word": ".docx",
+            "PowerPoint": ".pptx",
+            "HTML": ".html",
+            "CSV": ".csv",
+            "JSON": ".json",
+            "XML": ".xml",
+        }
+        # 対象の拡張子の辞書をリストにまとめる
+        self.valid_exts: list = sum(self.file_type.values(), [])
+        # フィルター後のファイルのリスト
+        self.filtered_lst_of_f: list = []
+        # 変換元のフォルダのファイルの数
+        self.number_of_f: int = 0
+        # マークダウンのオブジェクト
+        self.md: MarkItDown = None
+        # ファイルリストのポインタ
+        self.p: int = 0
+        # 変換元のファイルパス
+        self.current_file_path_from: str = ""
+        # 変換先のファイルパス
+        self.current_file_path_to: str = ""
+        # 処理したファイルの数
+        self.count: int = 0
+        # 処理が成功したファイルの数
+        self.success: int = 0
+        # すべてのファイルを変換できたかどうか
+        self.complete: bool = False
+
+    def _set_file_path(self) -> bool:
+        result: bool = False
+        try:
+            self.current_file_path_from = self.filtered_lst_of_f[self.p]
+            current_file_from_p: Path = Path(self.current_file_path_from)
+            current_file_to_p: Path = Path(self.folder_path_to) / f"{current_file_from_p.stem}.md"
+            self.current_file_path_to = str(current_file_to_p)
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def create_file_lst(self) -> bool:
+        result: bool = False
+        try:
+            self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
+            self.number_of_f = len(self.filtered_lst_of_f)
+            if not self.number_of_f:
+                raise Exception("変換元のファイルがありません。")
+            self._set_file_path()
+            self.md = MarkItDown()
+        except Exception:
+            raise
+        else:
+            result = True
+            self.log.info(f"***{self.create_file_lst.__doc__} => 成功しました。***")
+            self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
+            self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
+        finally:
+            pass
+        return result
+
+    def move_to_previous_file(self) -> bool:
+        """前のファイルへ"""
+        result: bool = False
+        try:
+            if not self.p:
+                self.p = self.number_of_f - 1
+            else:
+                self.p -= 1
+            self._set_file_path()
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def move_to_next_file(self) -> bool:
+        """次のファイルへ"""
+        result: bool = False
+        try:
+            if self.p == self.number_of_f - 1:
+                self.p = 0
+            else:
+                self.p += 1
+            self._set_file_path()
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def convert_file(self) -> bool:
+        """ファイルの種類を判定して、変換を実行します"""
+        result: bool = False
+        try:
+            self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
+            self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
+            try:
+                doc: DocumentConverterResult = self.md.convert(self.current_file_path_from)
+                current_file_to_p: Path = Path(self.current_file_path_to)
+                current_file_to_p.write_text(doc.text_content, encoding="utf-8")
+            except Exception:
+                self.log.error("***失敗しました。***")
+                raise
+            else:
+                self.success += 1
+                self.log.info("***成功しました。***")
+            finally:
+                self.count += 1
+                if self.count == self.number_of_f:
+                    if self.success == self.number_of_f:
+                        self.complete = True
+                        self.log.info("全てのファイルの変換が終了しました。")
+                    else:
+                        raise Exception("一部のファイルの変換が失敗しました。")
+        except Exception:
+            raise
+        else:
+            pass
+        finally:
+            pass
+        return result
