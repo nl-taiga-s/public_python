@@ -24,12 +24,13 @@ class ConvertLibreToPDF:
         }
         # 拡張子のリスト
         self.valid_exts: list = sum(self.file_types.values(), [])
+        # 拡張子をログに出力する
+        self.log.info("以下が変換元に指定できるファイルの拡張子の一覧です。\n")
         for key, info in self.file_types.items():
             values: str = ""
             for value in info:
                 values += f"{value}, "
             values = values.rstrip(", ")
-            # 拡張子をログに出力する
             self.log.info(f"{key}: {values}")
         # 拡張子をログに出力した後は、改行する
         self.log.info("")
