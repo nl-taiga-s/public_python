@@ -114,6 +114,20 @@ class MainApp_Of_CLTP(QMainWindow):
             main_container: QWidget = QWidget()
             main_container_layout: QFormLayout = QFormLayout(main_container)
             main_scroll_area.setWidget(main_container)
+            # 概要
+            overview_area: QTextEdit = QTextEdit()
+            overview_area.setReadOnly(True)
+            lines_of_overview: list = []
+            lines_of_overview.append("以下が変換元に指定できるファイルの拡張子の一覧です。\n")
+            for key, info in self.obj_of_cls.file_type.items():
+                values: str = ""
+                for value in info:
+                    values += f"{value}, "
+                values = values.rstrip(", ")
+                lines_of_overview.append(f"{key}: {values}")
+            overview_area.setText("\n".join(lines_of_overview))
+            main_container_layout.addRow(QLabel("概要: "))
+            main_container_layout.addRow(overview_area)
             # 変換元
             label_from: QLabel = QLabel("変換元のフォルダ: 未選択")
             main_container_layout.addRow(label_from)

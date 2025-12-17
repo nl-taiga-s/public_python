@@ -7,33 +7,36 @@ class ConvertLibreToPDF:
     """
     オフィスファイルをPDFに一括変換します
     LibreOfficeが必要です
-    Excel => .xls, .xlsx
-    Word => .doc, .docx
-    PowerPoint => .ppt, .pptx
-    Calc => .ods
-    Writer => .odt
-    Impress => .odp
     """
 
     def __init__(self, logger: Logger):
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
+        # 拡張子の辞書
+        self.file_types: dict = {
+            "Excel": [".xls", ".xlsx"],
+            "Word": [".doc", ".docx"],
+            "Powerpoint": [".ppt", ".pptx"],
+            "Calc": [".ods"],
+            "Writer": [".odt"],
+            "Impress": [".odp"],
+        }
+        # 拡張子のリスト
+        self.valid_exts: list = sum(self.file_types.values(), [])
+        for key, info in self.file_types.items():
+            values: str = ""
+            for value in info:
+                values += f"{value}, "
+            values = values.rstrip(", ")
+            # 拡張子をログに出力する
+            self.log.info(f"{key}: {values}")
+        # 拡張子をログに出力した後は、改行する
+        self.log.info("")
         # 変換元のフォルダパス
         self.folder_path_from: str = ""
         # 変換先のフォルダパス
         self.folder_path_to: str = ""
-        # 拡張子を指定する
-        self.file_types: dict = {
-            "excel": [".xls", ".xlsx"],
-            "word": [".doc", ".docx"],
-            "powerpoint": [".ppt", ".pptx"],
-            "calc": [".ods"],
-            "writer": [".odt"],
-            "impress": [".odp"],
-        }
-        # 対象の拡張子の辞書をリストにまとめる
-        self.valid_exts: list = sum(self.file_types.values(), [])
         # 変換元のフォルダのフィルター後のファイルのリスト
         self.filtered_lst_of_f: list = []
         # 変換元のフォルダのファイルの数
@@ -46,13 +49,14 @@ class ConvertLibreToPDF:
         self.count: int = 0
         # 処理が成功したファイルの数
         self.success: int = 0
-        # すべてのファイルを変換できたかどうか
+        # 全てのファイルを変換できたかどうか
         self.complete: bool = False
 
     def create_file_lst(self) -> bool:
         """ファイルリストを作成します"""
         result: bool = False
         try:
+            # 指定のフォルダにあるファイルパスのリストから指定の拡張子で抽出する
             self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
@@ -104,19 +108,17 @@ class ConvertLibreToPDF:
         return result
 
     def convert_file(self) -> bool:
-        """ファイルの種類を判定して、変換を実行します"""
+        """変換します"""
         result: bool = False
         try:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => PDF")
-            ext: str = Path(self.current_file_path_from).suffix.lower()
-            if ext in self.valid_exts:
-                convert_obj: subprocess.CompletedProcess = subprocess.run(
-                    ["soffice", "--headless", "--convert-to", "pdf", "--outdir", self.folder_path_to, self.current_file_path_from],
-                    capture_output=True,
-                    text=True,
-                )
-                result = not convert_obj.returncode
+            convert_obj: subprocess.CompletedProcess = subprocess.run(
+                ["soffice", "--headless", "--convert-to", "pdf", "--outdir", self.folder_path_to, self.current_file_path_from],
+                capture_output=True,
+                text=True,
+            )
+            result = not convert_obj.returncode
             self.count += 1
             if result:
                 self.success += 1
