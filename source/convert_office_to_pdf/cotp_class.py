@@ -9,27 +9,33 @@ class ConvertOfficeToPDF:
     """
     オフィスファイルをPDFに一括変換します
     Windows + Microsoft Office(デスクトップ版)が必要です
-    Excel => .xls, .xlsx
-    Word => .doc, .docx
-    PowerPoint => .ppt, .pptx
     """
 
     def __init__(self, logger: Logger):
         """初期化します"""
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
+        # 拡張子の辞書
+        self.file_types: dict = {
+            "Excel": [".xls", ".xlsx"],
+            "Word": [".doc", ".docx"],
+            "Powerpoint": [".ppt", ".pptx"],
+        }
+        # 拡張子のリスト
+        self.valid_exts: list = sum(self.file_types.values(), [])
+        for key, info in self.file_types.items():
+            values: str = ""
+            for value in info:
+                values += f"{value}, "
+            values = values.rstrip(", ")
+            # 拡張子をログに出力する
+            self.log.info(f"{key}: {values}")
+        # 拡張子をログに出力した後は、改行する
+        self.log.info("")
         # 変換元のフォルダパス
         self.folder_path_from: str = ""
         # 変換先のフォルダパス
         self.folder_path_to: str = ""
-        # 拡張子を指定する
-        self.file_types: dict = {
-            "excel": [".xls", ".xlsx"],
-            "word": [".doc", ".docx"],
-            "powerpoint": [".ppt", ".pptx"],
-        }
-        # 対象の拡張子の辞書をリストにまとめる
-        self.valid_exts: list = sum(self.file_types.values(), [])
         # フィルター後のファイルのリスト
         self.filtered_lst_of_f: list = []
         # 変換元のフォルダのファイルの数
@@ -44,7 +50,7 @@ class ConvertOfficeToPDF:
         self.count: int = 0
         # 処理が成功したファイルの数
         self.success: int = 0
-        # すべてのファイルを変換できたかどうか
+        # 全てのファイルを変換できたかどうか
         self.complete: bool = False
 
     def _set_file_path(self) -> bool:
@@ -67,6 +73,7 @@ class ConvertOfficeToPDF:
         """ファイルリストを作成します"""
         result: bool = False
         try:
+            # 指定のフォルダにあるファイルパスのリストから指定の拡張子で抽出する
             self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
@@ -202,11 +209,11 @@ class ConvertOfficeToPDF:
         try:
             ext: str = Path(self.current_file_path_from).suffix.lower()
             match ext:
-                case var if var in self.file_types["excel"]:
+                case var if var in self.file_types["Excel"]:
                     result = _with_excel()
-                case var if var in self.file_types["word"]:
+                case var if var in self.file_types["Word"]:
                     result = _with_word()
-                case var if var in self.file_types["powerpoint"]:
+                case var if var in self.file_types["Powerpoint"]:
                     result = _with_powerpoint()
             self.count += 1
             if result:
