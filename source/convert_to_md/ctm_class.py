@@ -10,24 +10,33 @@ class ConvertToMd:
     def __init__(self, logger: Logger):
         """初期化します"""
         self.log: Logger = logger
-        self.log.info(f"{self.__class__.__doc__}\n{self.file_type}")
+        self.log.info(self.__class__.__doc__)
+        # 拡張子の辞書
+        self.file_type: dict = {
+            "PDF": [".pdf"],
+            "Excel": [".xlsx"],
+            "Word": [".docx"],
+            "PowerPoint": [".pptx"],
+            "HTML": [".html"],
+            "CSV": [".csv"],
+            "JSON": [".json"],
+            "XML": [".xml"],
+        }
+        # 拡張子のリスト
+        self.valid_exts: list = sum(self.file_type.values(), [])
+        for key, info in self.file_type.items():
+            values: str = ""
+            for value in info:
+                values += f"{value}, "
+            values = values.rstrip(", ")
+            # 拡張子をログに出力する
+            self.log.info(f"{key}: {values}")
+        # 拡張子をログに出力した後は、改行する
+        self.log.info("")
         # 変換元のフォルダパス
         self.folder_path_from: str = ""
         # 変換先のフォルダパス
         self.folder_path_to: str = ""
-        # 拡張子を指定する
-        self.file_type: dict = {
-            "PDF": ".pdf",
-            "Excel": ".xlsx",
-            "Word": ".docx",
-            "PowerPoint": ".pptx",
-            "HTML": ".html",
-            "CSV": ".csv",
-            "JSON": ".json",
-            "XML": ".xml",
-        }
-        # 対象の拡張子の辞書をリストにまとめる
-        self.valid_exts: list = sum(self.file_type.values(), [])
         # フィルター後のファイルのリスト
         self.filtered_lst_of_f: list = []
         # 変換元のフォルダのファイルの数
@@ -48,6 +57,7 @@ class ConvertToMd:
         self.complete: bool = False
 
     def _set_file_path(self) -> bool:
+        """ファイルパスを設定します"""
         result: bool = False
         try:
             self.current_file_path_from = self.filtered_lst_of_f[self.p]
@@ -63,8 +73,10 @@ class ConvertToMd:
         return result
 
     def create_file_lst(self) -> bool:
+        """ファイルリストを作成します"""
         result: bool = False
         try:
+            # 指定のフォルダにあるファイルパスのリストから指定の拡張子で抽出する
             self.filtered_lst_of_f = [str(f) for f in Path(self.folder_path_from).glob("*") if f.suffix.lower() in self.valid_exts]
             self.number_of_f = len(self.filtered_lst_of_f)
             if not self.number_of_f:
@@ -117,7 +129,7 @@ class ConvertToMd:
         return result
 
     def convert_file(self) -> bool:
-        """ファイルの種類を判定して、変換を実行します"""
+        """変換します"""
         result: bool = False
         try:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
