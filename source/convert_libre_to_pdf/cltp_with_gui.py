@@ -119,7 +119,7 @@ class MainApp_Of_CLTP(QMainWindow):
             overview_area.setReadOnly(True)
             lines_of_overview: list = []
             lines_of_overview.append("以下が変換元に指定できるファイルの拡張子の一覧です。\n")
-            for key, info in self.obj_of_cls.file_type.items():
+            for key, info in self.obj_of_cls.file_types.items():
                 values: str = ""
                 for value in info:
                     values += f"{value}, "
