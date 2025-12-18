@@ -14,7 +14,7 @@ class ConvertToMd:
         self.log: Logger = logger
         self.log.info(self.__class__.__doc__)
         # 拡張子の辞書
-        self.file_type: dict = {
+        self.file_types: dict = {
             "PDF": [".pdf"],
             "Excel": [".xlsx"],
             "Word": [".docx"],
@@ -25,10 +25,10 @@ class ConvertToMd:
             "XML": [".xml"],
         }
         # 拡張子のリスト
-        self.valid_exts: list = sum(self.file_type.values(), [])
+        self.valid_exts: list = sum(self.file_types.values(), [])
         # 拡張子をログに出力する
         self.log.info("以下が変換元に指定できるファイルの拡張子の一覧です。\n")
-        for key, info in self.file_type.items():
+        for key, info in self.file_types.items():
             values: str = ""
             for value in info:
                 values += f"{value}, "
