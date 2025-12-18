@@ -135,7 +135,7 @@ class MainApp_Of_CTM(QMainWindow):
             btn_select_from.clicked.connect(lambda *args, lbl=label_from: self.select_folder_from(lbl))
             btn_open_from: QPushButton = QPushButton("変換元のフォルダを開く")
             main_container_layout.addRow(btn_open_from)
-            btn_open_from.clicked.connect(lambda *args, folder_path=self.obj_of_cls.folder_path_from: self.open_explorer(folder_path))
+            btn_open_from.clicked.connect(self.open_explorer(self.obj_of_cls.folder_path_from))
             # 対象ファイルの一覧
             main_container_layout.addRow(QLabel("変換対象ファイルの一覧: "))
             self.lst_widget: QListWidget = QListWidget()
@@ -148,7 +148,7 @@ class MainApp_Of_CTM(QMainWindow):
             btn_select_to.clicked.connect(lambda *args, lbl=label_to: self.select_folder_to(lbl))
             btn_open_to: QPushButton = QPushButton("変換先のフォルダを開く")
             main_container_layout.addRow(btn_open_to)
-            btn_open_to.clicked.connect(lambda *args, folder_path=self.obj_of_cls.folder_path_to: self.open_explorer(folder_path))
+            btn_open_to.clicked.connect(self.open_explorer(self.obj_of_cls.folder_path_to))
             # 進行状況
             main_container_layout.addRow(QLabel("進行状況: "))
             self.progress_bar: QProgressBar = QProgressBar()

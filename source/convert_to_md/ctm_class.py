@@ -1,3 +1,4 @@
+import warnings
 from logging import Logger
 from pathlib import Path
 
@@ -36,6 +37,8 @@ class ConvertToMd:
             self.log.info(f"{key}: {values}")
         # 拡張子をログに出力した後は、改行する
         self.log.info("")
+        # 警告を無視する
+        warnings.filterwarnings("ignore", message="Couldn't find ffmpeg or avconv", category=RuntimeWarning)
         # 変換元のフォルダパス
         self.folder_path_from: str = ""
         # 変換先のフォルダパス
