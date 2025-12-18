@@ -206,7 +206,7 @@ class MainApp_Of_COTP(QMainWindow):
             pass
         return result
 
-    def open_explorer(self, folder_path: str = "") -> bool:
+    def open_explorer(self, folder_path: str) -> bool:
         """エクスプローラーを開きます"""
         result: bool = False
         try:
