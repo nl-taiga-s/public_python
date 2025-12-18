@@ -17,3 +17,6 @@
 ### get_government_statistics(G2S)
 * You can get and see government statistics.
 > ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1762310098/icon_of_g2s_hp3j8b.svg)
+### convert_to_md(CTM)
+* You can convert to Markdown files.
+> ![icon](https://res.cloudinary.com/nl-taiga-s/image/upload/v1766019905/icon_of_ctm_w0rtpf.svg)
