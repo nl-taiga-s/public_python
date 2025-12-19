@@ -45,7 +45,7 @@ class ConvertToMd:
         # 変換元のフォルダのファイルの数
         self.number_of_f: int = 0
         # マークダウンのオブジェクト
-        self.md: MarkItDown | None = None
+        self.md: MarkItDown = MarkItDown()
         # ファイルリストのポインタ
         self.p: int = 0
         # 変換元のファイルパス
@@ -85,7 +85,6 @@ class ConvertToMd:
             if not self.number_of_f:
                 raise Exception("変換元のファイルがありません。")
             self._set_file_path()
-            self.md = MarkItDown()
         except Exception:
             raise
         else:
