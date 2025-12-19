@@ -67,7 +67,7 @@ class MainApp_Of_PT(QMainWindow):
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def _show_result(self, label: str, success: bool):
+    def _show_result(self, label: str | None, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -282,7 +282,7 @@ class MainApp_Of_PT(QMainWindow):
         try:
             # 既存のレイアウトをクリア（再表示に対応）
             for i in reversed(range(self.center_container_layout.count())):
-                widget: QWidget = self.center_container_layout.itemAt(i).widget()
+                widget: QWidget | None = self.center_container_layout.itemAt(i).widget()
                 if widget is not None:
                     widget.setParent(None)
             if not images:

@@ -21,7 +21,7 @@ class PdfTools:
         # ページ数
         self.num_of_pages: int = 0
         self.writer: PdfWriter = None
-        self.metadata_of_reader: DocumentInformation = None
+        self.metadata_of_reader: DocumentInformation | None = None
         self.metadata_of_writer: dict = {}
         # ファイルの読み込みが初回かどうか判定する
         self.first_read: bool = True
@@ -45,9 +45,9 @@ class PdfTools:
             "modification_date": "/ModDate",  # 更新日
         }
         # メタデータの書き込み用の作成日
-        self.creation_date: str = ""
+        self.creation_date: DocumentInformation | None = None
         # メタデータの書き込み用の更新日
-        self.modification_date: str = ""
+        self.modification_date: DocumentInformation | None = None
 
     def read_file(self, file_path: str = "") -> bool:
         """ファイルを読み込みます"""
@@ -61,7 +61,8 @@ class PdfTools:
                 raise Exception("ファイルが暗号化されています。")
             self.metadata_of_reader = self.reader.metadata
             self.num_of_pages = len(self.reader.pages)
-            self.creation_date = self.metadata_of_reader.get("/CreationDate")
+            if self.metadata_of_reader is not None:
+                self.creation_date = self.metadata_of_reader.get("/CreationDate")
         except Exception:
             raise
         else:
