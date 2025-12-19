@@ -285,8 +285,6 @@ def main() -> bool:
         # 最大化して、表示させる
         window.showMaximized()
         sys.exit(app.exec())
-    except ImportError as e:
-        obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     except Exception as e:
         obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     else:
