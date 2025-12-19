@@ -101,7 +101,7 @@ class MainApp_Of_G2S(QMainWindow):
         QMessageBox.information(self, "情報", msg)
         self.obj_of_lt.logger.info(msg)
 
-    def _show_result(self, label: str, success: bool):
+    def _show_result(self, label: str | None, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
         if success:
@@ -380,7 +380,7 @@ class MainApp_Of_G2S(QMainWindow):
             pass
         return result
 
-    def _clear_widget(self, widget: QWidget) -> bool:
+    def _clear_widget(self, widget: QWidget | None) -> bool:
         """ウィジェットの中身を安全に削除します"""
         result: bool = False
         try:
