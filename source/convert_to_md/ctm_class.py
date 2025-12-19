@@ -45,7 +45,7 @@ class ConvertToMd:
         # 変換元のフォルダのファイルの数
         self.number_of_f: int = 0
         # マークダウンのオブジェクト
-        self.md: MarkItDown = None
+        self.md: MarkItDown | None = None
         # ファイルリストのポインタ
         self.p: int = 0
         # 変換元のファイルパス
