@@ -27,8 +27,9 @@ from source.common.common import DatetimeTools, GUITools, LogTools
 from source.pdf_tools.pt_class import PdfTools
 
 
-# QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
+    """QTextEdit にログを流すためのハンドラ"""
+
     def __init__(self, widget: QTextEdit):
         super().__init__()
         self.widget: QTextEdit = widget
