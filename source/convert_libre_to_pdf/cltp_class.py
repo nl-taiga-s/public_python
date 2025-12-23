@@ -71,7 +71,10 @@ class ConvertLibreToPDF:
             self.log.info(f"{self.number_of_f}件のファイルが見つかりました。")
             self.log.info(f"変換先のフォルダ: {self.folder_path_to}")
         finally:
-            pass
+            # 初期化する
+            self.p = 0
+            self.count = 0
+            self.success = 0
         return result
 
     def move_to_previous_file(self) -> bool:
