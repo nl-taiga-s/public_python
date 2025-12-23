@@ -24,8 +24,9 @@ from PySide6.QtWidgets import (
 from source.common.common import DatetimeTools, GUITools, LogTools
 
 
-# QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
+    """QTextEdit にログを流すためのハンドラ"""
+
     def __init__(self, widget: QTextEdit):
         super().__init__()
         self.widget: QTextEdit = widget
