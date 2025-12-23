@@ -51,8 +51,9 @@ def run_with_cui(tool: str) -> bool:
                 from source.pdf_tools.pt_with_cui import main
             case _:
                 raise
-        if inspect.iscoroutinefunction(main):
-            asyncio.run(main())
+        obj = main()
+        if inspect.iscoroutine(obj):
+            asyncio.run(obj)
         else:
             main()
     except KeyboardInterrupt:
@@ -101,7 +102,7 @@ def run_gui_launcher() -> bool:
     """GUIランチャーを実行します"""
     result: bool = False
     try:
-        from gui_launcher import main
+        from source.common.gui_launcher import main
 
         main()
     except KeyboardInterrupt:
