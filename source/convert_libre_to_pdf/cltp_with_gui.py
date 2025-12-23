@@ -276,7 +276,12 @@ def main() -> bool:
     result: bool = False
     try:
         obj_of_gt: GUITools = GUITools()
-        app: QApplication = QApplication(sys.argv)
+        # GUIランチャーからの起動にも対応させておく
+        app: QApplication = QApplication.instance()
+        created: bool = False
+        if app is None:
+            app: QApplication = QApplication(sys.argv)
+            created = True
         # アプリ単位でフォントを設定する
         font: QFont = QFont()
         font.setPointSize(12)
@@ -289,7 +294,8 @@ def main() -> bool:
         window.resize(1000, 800)
         # 最大化して、表示させる
         window.showMaximized()
-        sys.exit(app.exec())
+        if created:
+            sys.exit(app.exec())
     except ImportError as e:
         obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     except Exception as e:
