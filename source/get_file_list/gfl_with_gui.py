@@ -25,8 +25,9 @@ from source.common.common import DatetimeTools, GUITools, LogTools, PlatformTool
 from source.get_file_list.gfl_class import GetFileList
 
 
-# QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
+    """QTextEdit にログを流すためのハンドラ"""
+
     def __init__(self, widget: QTextEdit):
         super().__init__()
         self.widget: QTextEdit = widget
