@@ -69,8 +69,9 @@ class GetIdsWorker(QObject):
         self.obj_of_cls.cancel = True
 
 
-# QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
+    """QTextEdit にログを流すためのハンドラ"""
+
     def __init__(self, widget: QTextEdit):
         super().__init__()
         self.widget: QTextEdit = widget
