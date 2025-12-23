@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -277,9 +278,9 @@ def main() -> bool:
     try:
         obj_of_gt: GUITools = GUITools()
         # GUIランチャーからの起動にも対応させておく
-        app: QApplication = QApplication.instance()
+        instance: QCoreApplication | None = QApplication.instance()
         created: bool = False
-        if app is None:
+        if instance is None:
             app: QApplication = QApplication(sys.argv)
             created = True
         # アプリ単位でフォントを設定する
