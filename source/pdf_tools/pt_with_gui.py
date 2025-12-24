@@ -563,11 +563,12 @@ class MainApp_Of_PT(QMainWindow):
         return result
 
 
-def create_window():
+def create_window() -> MainApp_Of_PT:
     window: MainApp_Of_PT = MainApp_Of_PT()
     window.resize(1000, 800)
     # 最大化して、表示させる
     window.showMaximized()
+    return window
 
 
 def main() -> bool:
