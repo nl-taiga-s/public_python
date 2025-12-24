@@ -280,11 +280,12 @@ class MainApp_Of_CTM(QMainWindow):
         return result
 
 
-def create_window():
+def create_window() -> MainApp_Of_CTM:
     window: MainApp_Of_CTM = MainApp_Of_CTM()
     window.resize(1000, 800)
     # 最大化して、表示させる
     window.showMaximized()
+    return window
 
 
 def main() -> bool:
