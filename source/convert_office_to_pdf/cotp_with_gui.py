@@ -272,7 +272,7 @@ class MainApp_Of_COTP(QMainWindow):
         return result
 
 
-def create_window():
+def create_window() -> MainApp_Of_COTP:
     # エラーチェック
     from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
 
@@ -281,6 +281,7 @@ def create_window():
     window.resize(1000, 800)
     # 最大化して、表示させる
     window.showMaximized()
+    return window
 
 
 def main() -> bool:
