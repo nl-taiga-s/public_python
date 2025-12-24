@@ -1,9 +1,24 @@
 import sys
+from dataclasses import dataclass
+from typing import Callable
 
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QFormLayout, QMainWindow, QMessageBox, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QGridLayout, QMainWindow, QMessageBox, QPushButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget
 
 from source.common.common import GUITools
+from source.convert_libre_to_pdf.cltp_class import ConvertLibreToPDF
+from source.convert_office_to_pdf.cotp_class import ConvertOfficeToPDF
+from source.convert_to_md.ctm_class import ConvertToMd
+from source.get_file_list.gfl_class import GetFileList
+from source.get_government_statistics.g2s_class import GetGovernmentStatistics
+from source.pdf_tools.pt_class import PdfTools
+
+
+@dataclass
+class LauncherItem:
+    title: str
+    callback: Callable
+    description: str | None
 
 
 class MainApp_Of_Gui_Launcher(QMainWindow):
@@ -19,20 +34,14 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
     def _show_info(self, msg: str):
         """情報を表示します"""
         QMessageBox.information(self, "情報", msg)
-        self.obj_of_lt.logger.info(msg)
 
     def _show_result(self, label: str | None, success: bool):
         """結果を表示します"""
         QMessageBox.information(self, "結果", f"{label} => {'成功' if success else '失敗'}しました。")
-        if success:
-            self.obj_of_lt.logger.info(f"{label} => 成功しました。")
-        else:
-            self.obj_of_lt.logger.error(f"{label} => 失敗しました。")
 
     def _show_error(self, msg: str):
         """エラーを表示します"""
         QMessageBox.warning(self, "エラー", msg)
-        self.obj_of_lt.logger.warning(msg)
 
     def _setup_ui(self) -> bool:
         """User Interfaceを設定します"""
@@ -48,21 +57,31 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
             main_scroll_area.setWidgetResizable(True)
             base_layout.addWidget(main_scroll_area)
             main_container: QWidget = QWidget()
-            main_container_layout: QFormLayout = QFormLayout(main_container)
+            main_container_layout: QGridLayout = QGridLayout(main_container)
             main_scroll_area.setWidget(main_container)
             # 選択
-            buttons: dict = {
-                "source/convert_libre_to_pdf": self.launch_cltp,
-                "source/convert_office_to_pdf": self.launch_cotp,
-                "source/convert_to_md": self.launch_ctm,
-                "source/get_file_list": self.launch_gfl,
-                "source/get_government_statistics": self.launch_g2s,
-                "source/pdf_tools": self.launch_pt,
-            }
-            for text, func in buttons.items():
-                btn: QPushButton = QPushButton(text)
-                btn.clicked.connect(func)
-                main_container_layout.addRow(btn)
+            launcher_items: list = [
+                LauncherItem(title="source/convert_libre_to_pdf", callback=self.launch_cltp, description=ConvertLibreToPDF.__doc__),
+                LauncherItem(title="source/convert_office_to_pdf", callback=self.launch_cotp, description=ConvertOfficeToPDF.__doc__),
+                LauncherItem(title="source/convert_to_md", callback=self.launch_ctm, description=ConvertToMd.__doc__),
+                LauncherItem(title="source/get_file_list", callback=self.launch_gfl, description=GetFileList.__doc__),
+                LauncherItem(title="source/get_government_statistics", callback=self.launch_g2s, description=GetGovernmentStatistics.__doc__),
+                LauncherItem(title="source/pdf_tools", callback=self.launch_pt, description=PdfTools.__doc__),
+            ]
+            COLUMNS: int = 4
+            for index, item in enumerate(launcher_items):
+                btn: QPushButton = QPushButton(item.title)
+                btn.clicked.connect(item.callback)
+                description: QTextEdit = QTextEdit()
+                description.setReadOnly(True)
+                description.setText(item.description)
+                # 奇数
+                odd_row: int = (index * 2 - 1) // COLUMNS
+                # 偶数
+                even_row: int = index * 2 // COLUMNS
+                column: int = index % COLUMNS
+                main_container_layout.addWidget(btn, odd_row, column)
+                main_container_layout.addWidget(description, even_row, column)
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
