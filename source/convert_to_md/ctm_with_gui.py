@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,15 +26,19 @@ from source.common.common import DatetimeTools, GUITools, LogTools, PlatformTool
 from source.convert_to_md.ctm_class import ConvertToMd
 
 
+class LogEmitter(QObject):
+    log_signal: Signal = Signal(str)
+
+
 # QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
-    def __init__(self, widget: QTextEdit):
+    def __init__(self, emitter: LogEmitter):
         super().__init__()
-        self.widget: QTextEdit = widget
+        self.emitter: LogEmitter = emitter
 
     def emit(self, record: logging.LogRecord):
         msg: str = self.format(record)
-        self.widget.append(msg)
+        self.emitter.log_signal.emit(msg)
 
 
 class MainApp_Of_CTM(QMainWindow):
@@ -52,6 +56,9 @@ class MainApp_Of_CTM(QMainWindow):
         """終了します"""
         if self.obj_of_lt:
             self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        for h in self.obj_of_lt.logger.handlers[:]:
+            if isinstance(h, QTextEditHandler):
+                self.obj_of_lt.logger.removeHandler(h)
         super().closeEvent(event)
 
     def _show_info(self, msg: str):
@@ -87,7 +94,9 @@ class MainApp_Of_CTM(QMainWindow):
             file_p: Path = folder_p / file_name
             self.obj_of_lt.file_path_of_log = str(file_p)
             self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
-            text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
+            self.log_emitter: LogEmitter = LogEmitter()
+            self.log_emitter.log_signal.connect(self.log_area.append)
+            text_handler: QTextEditHandler = QTextEditHandler(self.log_emitter)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
@@ -271,27 +280,25 @@ class MainApp_Of_CTM(QMainWindow):
         return result
 
 
+def create_window():
+    window: MainApp_Of_CTM = MainApp_Of_CTM()
+    window.resize(1000, 800)
+    # 最大化して、表示させる
+    window.showMaximized()
+
+
 def main() -> bool:
     """主要関数"""
     result: bool = False
     try:
         obj_of_gt: GUITools = GUITools()
-        # GUIランチャーからの起動にも対応させておく
-        instance: QCoreApplication | None = QApplication.instance()
-        created: bool = False
-        if instance is None:
-            app: QApplication = QApplication(sys.argv)
-            created = True
+        app: QApplication = QApplication(sys.argv)
         # アプリ単位でフォントを設定する
         font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window: MainApp_Of_CTM = MainApp_Of_CTM()
-        window.resize(1000, 800)
-        # 最大化して、表示させる
-        window.showMaximized()
-        if created:
-            sys.exit(app.exec())
+        create_window()
+        sys.exit(app.exec())
     except Exception as e:
         obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
     else:
