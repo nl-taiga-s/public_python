@@ -1,9 +1,18 @@
 import sys
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QGridLayout, QMainWindow, QMessageBox, QPushButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from source.common.common import GUITools
 from source.convert_libre_to_pdf.cltp_class import ConvertLibreToPDF
@@ -57,31 +66,50 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
             main_scroll_area.setWidgetResizable(True)
             base_layout.addWidget(main_scroll_area)
             main_container: QWidget = QWidget()
-            main_container_layout: QGridLayout = QGridLayout(main_container)
+            main_container_layout: QVBoxLayout = QVBoxLayout(main_container)
             main_scroll_area.setWidget(main_container)
+            main_container_layout.addWidget(QLabel("以下の一覧から選択してください。"))
             # 選択
             launcher_items: list = [
-                LauncherItem(title="source/convert_libre_to_pdf", callback=self.launch_cltp, description=ConvertLibreToPDF.__doc__),
-                LauncherItem(title="source/convert_office_to_pdf", callback=self.launch_cotp, description=ConvertOfficeToPDF.__doc__),
-                LauncherItem(title="source/convert_to_md", callback=self.launch_ctm, description=ConvertToMd.__doc__),
-                LauncherItem(title="source/get_file_list", callback=self.launch_gfl, description=GetFileList.__doc__),
-                LauncherItem(title="source/get_government_statistics", callback=self.launch_g2s, description=GetGovernmentStatistics.__doc__),
-                LauncherItem(title="source/pdf_tools", callback=self.launch_pt, description=PdfTools.__doc__),
+                LauncherItem(
+                    title="source/convert_libre_to_pdf",
+                    callback=self.launch_cltp,
+                    description=ConvertLibreToPDF.__doc__,
+                ),
+                LauncherItem(
+                    title="source/convert_office_to_pdf",
+                    callback=self.launch_cotp,
+                    description=ConvertOfficeToPDF.__doc__,
+                ),
+                LauncherItem(
+                    title="source/convert_to_md",
+                    callback=self.launch_ctm,
+                    description=ConvertToMd.__doc__,
+                ),
+                LauncherItem(
+                    title="source/get_file_list",
+                    callback=self.launch_gfl,
+                    description=GetFileList.__doc__,
+                ),
+                LauncherItem(
+                    title="source/get_government_statistics",
+                    callback=self.launch_g2s,
+                    description=GetGovernmentStatistics.__doc__,
+                ),
+                LauncherItem(
+                    title="source/pdf_tools",
+                    callback=self.launch_pt,
+                    description=PdfTools.__doc__,
+                ),
             ]
-            COLUMNS: int = 4
-            for index, item in enumerate(launcher_items):
+            for item in launcher_items:
                 btn: QPushButton = QPushButton(item.title)
                 btn.clicked.connect(item.callback)
-                description: QTextEdit = QTextEdit()
-                description.setReadOnly(True)
-                description.setText(item.description)
-                # 奇数
-                odd_row: int = (index * 2 - 1) // COLUMNS
-                # 偶数
-                even_row: int = index * 2 // COLUMNS
-                column: int = index % COLUMNS
-                main_container_layout.addWidget(btn, odd_row, column)
-                main_container_layout.addWidget(description, even_row, column)
+                description: QLabel = QLabel(item.description)
+                description.setWordWrap(True)
+                main_container_layout.addWidget(btn)
+                main_container_layout.addWidget(description)
+            main_container_layout.addStretch()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -94,9 +122,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """CLTP"""
         result: bool = False
         try:
-            from source.convert_libre_to_pdf.cltp_with_gui import main
+            from source.convert_libre_to_pdf.cltp_with_gui import create_window
 
-            main()
+            self.cltp_window: Any = create_window()
+            self.cltp_window.show()
         except Exception:
             raise
         else:
@@ -109,9 +138,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """COTP"""
         result: bool = False
         try:
-            from source.convert_office_to_pdf.cotp_with_gui import main
+            from source.convert_office_to_pdf.cotp_with_gui import create_window
 
-            main()
+            self.cotp_window: Any = create_window()
+            self.cotp_window.show()
         except Exception:
             raise
         else:
@@ -124,9 +154,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """CTM"""
         result: bool = False
         try:
-            from source.convert_to_md.ctm_with_gui import main
+            from source.convert_to_md.ctm_with_gui import create_window
 
-            main()
+            self.ctm_window: Any = create_window()
+            self.ctm_window.show()
         except Exception:
             raise
         else:
@@ -139,9 +170,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """GFL"""
         result: bool = False
         try:
-            from source.get_file_list.gfl_with_gui import main
+            from source.get_file_list.gfl_with_gui import create_window
 
-            main()
+            self.gfl_window: Any = create_window()
+            self.gfl_window.show()
         except Exception:
             raise
         else:
@@ -154,9 +186,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """G2S"""
         result: bool = False
         try:
-            from source.get_government_statistics.g2s_with_gui import main
+            from source.get_government_statistics.g2s_with_gui import create_window
 
-            main()
+            self.g2s_window: Any = create_window()
+            self.g2s_window.show()
         except Exception:
             raise
         else:
@@ -169,9 +202,10 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """PT"""
         result: bool = False
         try:
-            from source.pdf_tools.pt_with_gui import main
+            from source.pdf_tools.pt_with_gui import create_window
 
-            main()
+            self.pt_window: Any = create_window()
+            self.pt_window.show()
         except Exception:
             raise
         else:
