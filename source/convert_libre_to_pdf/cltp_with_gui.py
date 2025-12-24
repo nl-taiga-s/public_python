@@ -281,7 +281,7 @@ class MainApp_Of_CLTP(QMainWindow):
         return result
 
 
-def create_window():
+def create_window() -> MainApp_Of_CLTP:
     # エラーチェック
     LIBRE_COMMAND: str = "soffice"
     if not shutil.which(LIBRE_COMMAND):
@@ -290,6 +290,7 @@ def create_window():
     window.resize(1000, 800)
     # 最大化して、表示させる
     window.showMaximized()
+    return window
 
 
 def main() -> bool:
