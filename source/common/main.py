@@ -120,9 +120,9 @@ def print_usage():
     """使用方法を表示します"""
     print(
         "usage: ",
-        "main.exe => GUI Launcher",
-        "main.exe cui <tool_name> => CUI",
-        "main.exe gui <tool_name> => GUI",
+        "main.py => GUI Launcher",
+        "main.py cui <tool_name> => CUI",
+        "main.py gui <tool_name> => GUI",
         sep="\n",
     )
 
