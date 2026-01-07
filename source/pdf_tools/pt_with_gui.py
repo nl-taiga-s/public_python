@@ -28,11 +28,14 @@ from source.pdf_tools.pt_class import PdfTools
 
 
 class LogEmitter(QObject):
+    """loggingの出力をQtのSignalに変換し、GUIスレッドへ安全にログを伝達するためのクラス"""
+
     log_signal: Signal = Signal(str)
 
 
-# QTextEdit にログを流すためのハンドラ
 class QTextEditHandler(logging.Handler):
+    """QTextEditにログを流すためのハンドラ"""
+
     def __init__(self, emitter: LogEmitter):
         super().__init__()
         self.emitter: LogEmitter = emitter
