@@ -3,13 +3,12 @@ import csv
 import logging
 import re
 import sys
-import threading
 from pathlib import Path
 from typing import Any
 
 import httpx
 import pandas
-from PySide6.QtCore import QModelIndex, QObject, Signal
+from PySide6.QtCore import QModelIndex, QObject, QThread, Signal
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QApplication,
@@ -17,6 +16,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QLayout,
+    QLayoutItem,
     QLineEdit,
     QMainWindow,
     QMessageBox,
@@ -61,7 +62,7 @@ class GetIdsWorker(QObject):
             result = True
         finally:
             loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close
+            loop.close()
         self.finished.emit(result)
 
     def cancel(self):
@@ -69,16 +70,19 @@ class GetIdsWorker(QObject):
         self.obj_of_cls.cancel = True
 
 
-class QTextEditHandler(logging.Handler):
-    """QTextEdit にログを流すためのハンドラ"""
+class LogEmitter(QObject):
+    log_signal: Signal = Signal(str)
 
-    def __init__(self, widget: QTextEdit):
+
+# QTextEdit にログを流すためのハンドラ
+class QTextEditHandler(logging.Handler):
+    def __init__(self, emitter: LogEmitter):
         super().__init__()
-        self.widget: QTextEdit = widget
+        self.emitter: LogEmitter = emitter
 
     def emit(self, record: logging.LogRecord):
         msg: str = self.format(record)
-        self.widget.append(msg)
+        self.emitter.log_signal.emit(msg)
 
 
 class MainApp_Of_G2S(QMainWindow):
@@ -95,6 +99,9 @@ class MainApp_Of_G2S(QMainWindow):
         """終了します"""
         if self.obj_of_lt:
             self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        for h in self.obj_of_lt.logger.handlers[:]:
+            if isinstance(h, QTextEditHandler):
+                self.obj_of_lt.logger.removeHandler(h)
         super().closeEvent(event)
 
     def _show_info(self, msg: str):
@@ -130,7 +137,9 @@ class MainApp_Of_G2S(QMainWindow):
             file_p: Path = folder_p / file_name
             self.obj_of_lt.file_path_of_log = str(file_p)
             self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
-            text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
+            self.log_emitter: LogEmitter = LogEmitter()
+            self.log_emitter.log_signal.connect(self.log_area.append)
+            text_handler: QTextEditHandler = QTextEditHandler(self.log_emitter)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
@@ -386,24 +395,37 @@ class MainApp_Of_G2S(QMainWindow):
         result: bool = False
         try:
             if widget is None:
-                raise Exception("ウィジェットが存在しません。")
-            # QScrollArea の場合は中身を削除
-            elif isinstance(widget, QScrollArea):
-                if inner_widget := widget.widget():
-                    self._clear_widget(inner_widget)
-                    inner_widget.deleteLater()
-                    widget.takeWidget()
+                raise
+            # QScrollArea
+            if isinstance(widget, QScrollArea):
+                inner: QWidget = widget.takeWidget()
+                if inner:
+                    inner.deleteLater()
             else:
-                # 通常の QWidget の場合
-                if layout := widget.layout():
-                    while layout.count():
-                        item = layout.takeAt(0)
-                        if child_widget := item.widget():
-                            self._clear_widget(child_widget)
-                            child_widget.deleteLater()
-                        elif child_layout := item.layout():
-                            # 子レイアウトを再帰的にクリア
-                            self._clear_widget(QWidget().setLayout(child_layout))
+                layout: QLayout | None = widget.layout()
+                if layout:
+                    self._clear_layout(layout)
+        except Exception:
+            raise
+        else:
+            result = True
+        finally:
+            pass
+        return result
+
+    def _clear_layout(self, layout: QLayout) -> bool:
+        """レイアウトの中身を安全に削除します"""
+        result: bool = False
+        try:
+            while layout.count():
+                item: QLayoutItem = layout.takeAt(0)
+                child_widget: QWidget | None = item.widget()
+                if child_widget:
+                    child_widget.deleteLater()
+                    continue
+                child_layout: QLayout = item.layout()
+                if child_layout:
+                    self._clear_layout(child_layout)
         except Exception:
             raise
         else:
@@ -497,10 +519,15 @@ class MainApp_Of_G2S(QMainWindow):
             # 取得方法は非同期のみ
             self.get_type_combo.setCurrentIndex(0)
             self.worker: GetIdsWorker = GetIdsWorker(self.obj_of_cls)
-            self.thread_of_worker = threading.Thread(target=self.worker.run, daemon=True)
-            self.worker.error.connect(lambda msg: self._show_error(msg))
+            self.thread: QThread = QThread()
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.run)
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.worker.error.connect(self._show_error)
             self.worker.finished.connect(lambda ok: self._show_result(self.get_lst_of_ids.__doc__, ok))
-            self.thread_of_worker.start()
+            self.thread.start()
         except Exception as e:
             self._show_error(f"error: \n{str(e)}")
         else:
@@ -628,6 +655,14 @@ class MainApp_Of_G2S(QMainWindow):
         return result
 
 
+def create_window() -> MainApp_Of_G2S:
+    window: MainApp_Of_G2S = MainApp_Of_G2S()
+    window.resize(1000, 800)
+    # 最大化して、表示させる
+    window.showMaximized()
+    return window
+
+
 def main() -> bool:
     """主要関数"""
     result: bool = False
@@ -638,10 +673,7 @@ def main() -> bool:
         font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window: MainApp_Of_G2S = MainApp_Of_G2S()
-        window.resize(1000, 800)
-        # 最大化して、表示させる
-        window.showMaximized()
+        create_window()
         sys.exit(app.exec())
     except Exception as e:
         obj_of_gt._show_start_up_error(f"error: \n{str(e)}")

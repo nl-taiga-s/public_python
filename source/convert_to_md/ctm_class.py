@@ -1,7 +1,8 @@
 from logging import Logger
 from pathlib import Path
+from typing import Any
 
-from markitdown import DocumentConverterResult, MarkItDown
+from markitdown import MarkItDown
 
 
 class ConvertToMd:
@@ -140,7 +141,7 @@ class ConvertToMd:
             self.log.info(f"* [{self.count + 1} / {self.number_of_f}] {self.convert_file.__doc__}: ")
             self.log.info(f"{self.current_file_path_from} => {self.current_file_path_to}")
             try:
-                doc: DocumentConverterResult = self.md.convert(self.current_file_path_from)
+                doc: Any = self.md.convert(self.current_file_path_from)
                 current_file_to_p: Path = Path(self.current_file_path_to)
                 current_file_to_p.write_text(doc.text_content, encoding="utf-8")
             except Exception:

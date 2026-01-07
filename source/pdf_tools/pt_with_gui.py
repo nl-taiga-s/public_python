@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import pypdfium2
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -27,16 +27,19 @@ from source.common.common import DatetimeTools, GUITools, LogTools
 from source.pdf_tools.pt_class import PdfTools
 
 
-class QTextEditHandler(logging.Handler):
-    """QTextEdit にログを流すためのハンドラ"""
+class LogEmitter(QObject):
+    log_signal: Signal = Signal(str)
 
-    def __init__(self, widget: QTextEdit):
+
+# QTextEdit にログを流すためのハンドラ
+class QTextEditHandler(logging.Handler):
+    def __init__(self, emitter: LogEmitter):
         super().__init__()
-        self.widget: QTextEdit = widget
+        self.emitter: LogEmitter = emitter
 
     def emit(self, record: logging.LogRecord):
         msg: str = self.format(record)
-        self.widget.append(msg)
+        self.emitter.log_signal.emit(msg)
 
 
 class MainApp_Of_PT(QMainWindow):
@@ -61,6 +64,9 @@ class MainApp_Of_PT(QMainWindow):
                     element.unlink()
         if self.obj_of_lt:
             self._show_info(f"ログファイルは、\n{self.obj_of_lt.file_path_of_log}\nに出力されました。")
+        for h in self.obj_of_lt.logger.handlers[:]:
+            if isinstance(h, QTextEditHandler):
+                self.obj_of_lt.logger.removeHandler(h)
         super().closeEvent(event)
 
     def _show_info(self, msg: str):
@@ -96,7 +102,9 @@ class MainApp_Of_PT(QMainWindow):
             file_p: Path = folder_p / file_name
             self.obj_of_lt.file_path_of_log = str(file_p)
             self.obj_of_lt._setup_file_handler(self.obj_of_lt.file_path_of_log)
-            text_handler: QTextEditHandler = QTextEditHandler(self.log_area)
+            self.log_emitter: LogEmitter = LogEmitter()
+            self.log_emitter.log_signal.connect(self.log_area.append)
+            text_handler: QTextEditHandler = QTextEditHandler(self.log_emitter)
             text_handler.setFormatter(self.obj_of_lt.file_formatter)
             self.obj_of_lt.logger.addHandler(text_handler)
         except Exception as e:
@@ -555,6 +563,14 @@ class MainApp_Of_PT(QMainWindow):
         return result
 
 
+def create_window() -> MainApp_Of_PT:
+    window: MainApp_Of_PT = MainApp_Of_PT()
+    window.resize(1000, 800)
+    # 最大化して、表示させる
+    window.showMaximized()
+    return window
+
+
 def main() -> bool:
     """主要関数"""
     result: bool = False
@@ -565,10 +581,7 @@ def main() -> bool:
         font: QFont = QFont()
         font.setPointSize(12)
         app.setFont(font)
-        window: MainApp_Of_PT = MainApp_Of_PT()
-        window.resize(1000, 800)
-        # 最大化して、表示させる
-        window.showMaximized()
+        create_window()
         sys.exit(app.exec())
     except Exception as e:
         obj_of_gt._show_start_up_error(f"error: \n{str(e)}")
