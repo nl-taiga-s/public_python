@@ -1,6 +1,6 @@
 import sys
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -122,9 +122,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """CLTP"""
         result: bool = False
         try:
-            from source.convert_libre_to_pdf.cltp_with_gui import create_window
+            from source.convert_libre_to_pdf.cltp_with_gui import MainApp_Of_CLTP, create_window
 
-            self.cltp_window: Any = create_window()
+            self.cltp_window: MainApp_Of_CLTP = create_window()
             self.cltp_window.show()
         except Exception:
             raise
@@ -138,9 +138,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """COTP"""
         result: bool = False
         try:
-            from source.convert_office_to_pdf.cotp_with_gui import create_window
+            from source.convert_office_to_pdf.cotp_with_gui import MainApp_Of_COTP, create_window
 
-            self.cotp_window: Any = create_window()
+            self.cotp_window: MainApp_Of_COTP = create_window()
             self.cotp_window.show()
         except Exception:
             raise
@@ -154,9 +154,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """CTM"""
         result: bool = False
         try:
-            from source.convert_to_md.ctm_with_gui import create_window
+            from source.convert_to_md.ctm_with_gui import MainApp_Of_CTM, create_window
 
-            self.ctm_window: Any = create_window()
+            self.ctm_window: MainApp_Of_CTM = create_window()
             self.ctm_window.show()
         except Exception:
             raise
@@ -170,9 +170,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """GFL"""
         result: bool = False
         try:
-            from source.get_file_list.gfl_with_gui import create_window
+            from source.get_file_list.gfl_with_gui import MainApp_Of_GFL, create_window
 
-            self.gfl_window: Any = create_window()
+            self.gfl_window: MainApp_Of_GFL = create_window()
             self.gfl_window.show()
         except Exception:
             raise
@@ -186,9 +186,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """G2S"""
         result: bool = False
         try:
-            from source.get_government_statistics.g2s_with_gui import create_window
+            from source.get_government_statistics.g2s_with_gui import MainApp_Of_G2S, create_window
 
-            self.g2s_window: Any = create_window()
+            self.g2s_window: MainApp_Of_G2S = create_window()
             self.g2s_window.show()
         except Exception:
             raise
@@ -202,9 +202,9 @@ class MainApp_Of_Gui_Launcher(QMainWindow):
         """PT"""
         result: bool = False
         try:
-            from source.pdf_tools.pt_with_gui import create_window
+            from source.pdf_tools.pt_with_gui import MainApp_Of_PT, create_window
 
-            self.pt_window: Any = create_window()
+            self.pt_window: MainApp_Of_PT = create_window()
             self.pt_window.show()
         except Exception:
             raise
